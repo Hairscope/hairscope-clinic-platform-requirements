@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hairscope Clinic Platform — Requirements</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f6f8fa;
+      color: #24292f;
+      min-height: 100vh;
+    }
+    header {
+      background: #0d1117;
+      color: #fff;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    header p { color: #8b949e; font-size: 1rem; }
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: #58a6ff;
+    }
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #24292f;
+      border-bottom: 1px solid #d0d7de;
+      padding-bottom: 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card:hover {
+      border-color: #0969da;
+      box-shadow: 0 2px 8px rgba(9,105,218,0.15);
+    }
+    .card-icon { font-size: 1.5rem; }
+    .card-title { font-weight: 600; font-size: 1rem; }
+    .card-desc { font-size: 0.85rem; color: #57606a; line-height: 1.5; }
+    .card-tag {
+      display: inline-block;
+      background: #ddf4ff;
+      color: #0550ae;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      margin-top: auto;
+      width: fit-content;
+    }
+    .master-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      color: #fff;
+      border-color: #30363d;
+    }
+    .master-card .card-desc { color: #8b949e; }
+    .master-card .card-tag { background: #388bfd26; color: #58a6ff; }
+    .master-card:hover { border-color: #58a6ff; }
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: #57606a;
+      font-size: 0.85rem;
+      border-top: 1px solid #d0d7de;
+      margin-top: 40px;
+    }
+    footer a { color: #0969da; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🔬 Hairscope Clinic Platform</h1>
+  <p>Requirements Documentation — Enterprise SaaS for Hair Treatment Clinics</p>
+  <div class="badges">
+    <span class="badge">✅ GDPR Compliant</span>
+    <span class="badge">✅ HIPAA Compliant</span>
+    <span class="badge">✅ Audit Logging</span>
+    <span class="badge">✅ Multi-Tenant</span>
+  </div>
+</header>
+
+<main>
+  <h2>Requirements Documents</h2>
+  <div class="grid">
+
+    <a class="card master-card" href="requirements.html">
+      <div class="card-icon">📋</div>
+      <div class="card-title">Master Requirements</div>
+      <div class="card-desc">Platform overview, multi-tenancy, GDPR/HIPAA compliance, authentication, roles &amp; permissions, audit logging, notifications, and subscription plan gating.</div>
+      <span class="card-tag">Cross-cutting · CC-1 to CC-9</span>
+    </a>
+
+    <a class="card" href="requirements-patients.html">
+      <div class="card-icon">🧑‍⚕️</div>
+      <div class="card-title">Patients Management</div>
+      <div class="card-desc">Patient profiles, analysis sessions, global &amp; trichoscopy image capture, AI analysis, annotation editing, questionnaires, and PDF report generation.</div>
+      <span class="card-tag">PAT-1 to PAT-11</span>
+    </a>
+
+    <a class="card" href="requirements-staff.html">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Staff Management</div>
+      <div class="card-desc">Organization/clinic hierarchy, self-registration onboarding, email invite flow, role management, permissions, deactivation, and data transfer on deletion.</div>
+      <span class="card-tag">STF-1 to STF-9</span>
+    </a>
+
+    <a class="card" href="requirements-leads.html">
+      <div class="card-icon">📊</div>
+      <div class="card-title">Leads Management CRM</div>
+      <div class="card-desc">Lead capture via manual entry, webhooks, and selfie analysis web component. CRM actions, status pipeline, and conversion to patient records.</div>
+      <span class="card-tag">LM-1 to LM-8</span>
+    </a>
+
+    <a class="card" href="requirements-appointments.html">
+      <div class="card-icon">📅</div>
+      <div class="card-title">Appointments</div>
+      <div class="card-desc">Service configuration, working hours, staff and patient booking flows, calendar view, status lifecycle, rescheduling, and embeddable booking widget.</div>
+      <span class="card-tag">APT-1 to APT-8</span>
+    </a>
+
+    <a class="card" href="requirements-products.html">
+      <div class="card-icon">💊</div>
+      <div class="card-title">Products</div>
+      <div class="card-desc">Per-clinic product catalog, cosmetic and medical product types, session recommendations with routines, purchase links, and prescription generation.</div>
+      <span class="card-tag">PRD-1 to PRD-4</span>
+    </a>
+
+    <a class="card" href="requirements-billing.html">
+      <div class="card-icon">🧾</div>
+      <div class="card-title">Billing</div>
+      <div class="card-desc">Automatic invoice generation per session, miscellaneous charges, tax configuration, invoice finalization, PDF export, and billing analytics.</div>
+      <span class="card-tag">BIL-1 to BIL-6</span>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <p>Hairscope Clinic Platform · <a href="https://github.com/Hairscope/hairscope-clinic-platform-requirements" target="_blank">View on GitHub</a></p>
+</footer>
+
+</body>
+</html>
