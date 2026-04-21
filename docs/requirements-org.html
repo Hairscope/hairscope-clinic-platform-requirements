@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Staff Management — Hairscope Clinic Platform</title>
+  <title>Organization Management — Hairscope Clinic Platform</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,7 +11,7 @@
   <nav><a href="index.html">← Back to Index</a></nav>
   <main id="content"><p>Loading...</p></main>
   <script>
-    const RAW = "https://raw.githubusercontent.com/Hairscope/hairscope-clinic-platform-requirements/main/.kiro/specs/hairscope-clinic-platform/requirements/requirements-staff.md";
+    const RAW = "https://raw.githubusercontent.com/Hairscope/hairscope-clinic-platform-requirements/main/.kiro/specs/hairscope-clinic-platform/requirements/requirements-org.md";
     fetch(RAW).then(r => r.text()).then(md => {
       document.getElementById("content").innerHTML = marked.parse(md);
     });

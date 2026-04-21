@@ -1,0 +1,11 @@
+# Supporting files — internal reference only, not for version control
+supporting files/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+*.swo
