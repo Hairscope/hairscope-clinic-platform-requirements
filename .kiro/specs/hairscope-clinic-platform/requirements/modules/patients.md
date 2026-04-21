@@ -46,6 +46,8 @@
 8. THE Platform SHALL allow Staff to search Patients by name (first name, last name, or full name).
 9. WHEN a Patient profile is created or updated, THE Platform SHALL record the action in the Audit_Log.
 10. THE Platform SHALL allow the same physical person to have Patient records at multiple Clinics, including across different Organizations. There is no global uniqueness constraint on email or phone across Clinics.
+11. WHEN a Patient record is created, THE Platform SHALL perform a global lookup by `email` and `phone` to determine if a `globalPatientId` already exists for that person. If found, THE Platform SHALL assign the existing `globalPatientId` to the new Patient record. If not found, THE Platform SHALL generate and assign a new `globalPatientId`.
+12. THE `globalPatientId` SHALL NOT be used by any Staff member or Clinic to access Patient records belonging to other Clinics. It is reserved exclusively for the future Patient app to aggregate the cross-clinic treatment journey.
 
 #### Failure Cases
 
@@ -56,6 +58,7 @@
 | Duplicate phone within the same Clinic | `DUPLICATE_PATIENT_PHONE` |
 | Attempt to delete a Patient | `PATIENT_DELETE_NOT_ALLOWED` |
 | Invalid date format for `dateOfBirth` | `INVALID_DATE_FORMAT` |
+| Staff attempting cross-clinic access via `globalPatientId` | `FORBIDDEN` |
 
 #### Correctness Properties
 
@@ -63,6 +66,8 @@
 - For any two distinct Patients P1 and P2 in the same Clinic: `P1.email ≠ P2.email` and `P1.phone ≠ P2.phone`.
 - Two Patients in different Clinics MAY share the same email or phone — this is permitted and expected.
 - For any Patient P created at time T, P SHALL remain retrievable at all times T' > T unless a GDPR erasure is processed.
+- For any two Patient records P1 and P2 where `P1.email = P2.email` or `P1.phone = P2.phone` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
+- For any Staff member S in Clinic C, a query using `globalPatientId` SHALL NOT return Patient records from any Clinic other than C.
 
 ---
 
@@ -360,3 +365,32 @@
 - For any Session comparison, every paired Trichoscopy_Image comparison SHALL satisfy `image1.position = image2.position`.
 - After any permitted post-completion edit E to Session S, the regenerated Report SHALL reflect the updated values from E.
 - The shareable link for Report R SHALL resolve to the same content as the downloaded PDF for S.
+
+---
+
+### PAT-12: Global Patient Identity and Cross-Clinic Journey
+
+**User Story:** As a patient, I want my complete treatment history across all clinics to be accessible in one place so that any clinic I visit has context about my full hair treatment journey.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL assign a `globalPatientId` (UUID v4) to every Patient record at creation time.
+2. WHEN a new Patient is being created, THE Platform SHALL perform a global lookup by `email` and `phone` to check if a `globalPatientId` already exists for that person across any Clinic or Organization.
+3. IF a matching `globalPatientId` is found, THE Platform SHALL assign it to the new Patient record.
+4. IF no matching `globalPatientId` is found, THE Platform SHALL generate a new `globalPatientId` and assign it.
+5. THE `globalPatientId` SHALL be stored on every Patient record but SHALL NOT be exposed in any Staff-facing GraphQL query that could be used to access records from other Clinics.
+6. THE Platform SHALL reserve the `globalPatientId` exclusively for the future Patient app, which will use it to aggregate the full cross-clinic treatment journey for the patient.
+7. WHEN a GDPR erasure is processed for a Patient record, THE Platform SHALL anonymize the personal identifiers on that specific Clinic's Patient record only. If the same `globalPatientId` exists in other Clinics, those records are unaffected unless separate erasure requests are submitted for each.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Staff querying cross-clinic data via `globalPatientId` | `FORBIDDEN` |
+
+#### Correctness Properties
+
+- For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
+- For any two Patient records P1 and P2 where `P1.phone = P2.phone` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
+- For any Staff member S in Clinic C, no GraphQL query SHALL return Patient records from Clinic C' (C ≠ C') regardless of shared `globalPatientId`.
+- The `globalPatientId` lookup at creation time SHALL be atomic — concurrent Patient creations with the same email SHALL result in both records sharing the same `globalPatientId`, not two different ones.
