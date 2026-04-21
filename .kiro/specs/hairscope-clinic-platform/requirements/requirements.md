@@ -7,7 +7,7 @@ Hairscope Clinic Platform is an enterprise SaaS patient management platform for 
 The platform comprises six functional modules:
 
 1. **Patients Management** — patient profiles, analysis sessions, AI-powered trichoscopy, and report generation
-2. **Staff Management** — staff lifecycle, roles, permissions, and audit logging
+2. **Organization Management** — organization/clinic hierarchy, staff lifecycle, roles, permissions, dashboards, and audit logging
 3. **Leads Management CRM** — lead capture, nurturing, and conversion to patients
 4. **Appointments** — scheduling, calendar, and service configuration
 5. **Products** — product catalog for session recommendations
@@ -21,8 +21,8 @@ Detailed requirements for each module are maintained in separate files within th
 
 - **Organization**: The top-level tenant entity representing a clinic business or chain. Owns one or more Clinics.
 - **Clinic**: A physical or logical treatment location belonging to an Organization.
-- **Organization_Admin**: A Staff member with organization-level administrative privileges spanning all Clinics within the Organization.
-- **Admin**: A Staff member with administrative privileges scoped to a single Clinic.
+- **Organization_Admin**: A Staff member with organization-level administrative privileges spanning all Clinics within the Organization. Scoped to staff management, clinic details, and the organization dashboard only — cannot access Patients, Appointments, Leads, Billing, or Products in any Clinic. Multiple Organization_Admins are allowed; at least one must exist at all times.
+- **Clinic_Admin**: A Staff member with full administrative privileges scoped to a single Clinic, including all modules. Multiple Clinic_Admins are allowed per Clinic; at least one must exist at all times.
 - **Doctor**: A Staff member with clinical privileges (can perform analyses and generate reports).
 - **Receptionist**: A Staff member with front-desk privileges (can manage appointments and leads).
 - **Staff**: Any authenticated user belonging to a Clinic (includes all roles).
@@ -36,10 +36,10 @@ Detailed requirements for each module are maintained in separate files within th
 - **Role**: A named set of permissions assignable to one or more Staff members.
 - **Permission**: A granular action right (view, create, edit, delete) scoped to a specific module.
 - **Invite**: A time-limited email link sent to a prospective Staff member to complete registration.
+- **Data_Transfer**: The process of reassigning all owned clinical and operational records from a departing Staff member to a designated recipient before deletion. Transferable records include: analysis sessions, patient records created by the staff member, assigned appointments, assigned leads, invoices created by the staff member, uploaded medical documents, and doctor's notes. Audit log entries are never transferred.
 - **Audit_Log**: An immutable, timestamped record of significant platform actions including the original actor name.
 - **Plan**: A subscription tier that controls which modules and features are accessible to an Organization.
 - **Web_Component**: An embeddable Stencil widget (Selfie Analysis or Appointment Booking) hosted on a clinic website.
-- **Selfie_Analysis**: An AI hair-loss assessment performed via the Web_Component using patient-submitted selfies.
 - **Service**: A treatment offering configured per Clinic with name, description, price, currency, and duration.
 - **Product**: A cosmetic or medical item listed in the clinic catalog for recommendation within a Session Report.
 - **Invoice**: A PDF billing document auto-generated per completed Session.
@@ -66,7 +66,7 @@ Detailed requirements for each module are maintained in separate files within th
 1. THE Platform SHALL enforce data isolation such that every database query is scoped to the authenticated user's Organization.
 2. WHEN a Staff member authenticates, THE Platform SHALL restrict all data access to the Clinic(s) to which that Staff member belongs.
 3. WHILE a Staff member holds only Clinic-level roles, THE Platform SHALL prevent that Staff member from reading or modifying data belonging to other Clinics within the same Organization.
-4. WHEN an Organization_Admin accesses Clinic details, THE Platform SHALL permit read access to all Clinics within that Organization and SHALL deny write access to Clinic-level records.
+4. WHEN an Organization_Admin accesses Clinic data, THE Platform SHALL permit access to staff management, clinic details, and the organization dashboard only; access to Patients, Appointments, Leads, Billing, and Products SHALL be denied.
 5. THE Platform SHALL support a Staff member holding multiple Roles simultaneously, applying the union of all granted Permissions.
 6. IF a request attempts to access a resource outside the authenticated user's tenant scope, THEN THE Platform SHALL return an authorization error and SHALL record the attempt in the Audit_Log.
 
@@ -75,6 +75,7 @@ Detailed requirements for each module are maintained in separate files within th
 - **Isolation invariant**: For any two Organizations O1 and O2, no query executed in the context of O1 SHALL return data owned by O2.
 - **Role union**: The effective permissions of a Staff member with roles R1 and R2 SHALL equal the union of permissions(R1) ∪ permissions(R2).
 - **Cross-clinic denial**: For any Staff member S with only Clinic-level roles assigned to Clinic C1, every request by S targeting data in Clinic C2 (C1 ≠ C2) SHALL be denied.
+- **Org admin clinical module denial**: For any Organization_Admin A, every request by A targeting Patients, Appointments, Leads, Billing, or Products data SHALL be denied.
 
 ---
 
@@ -107,10 +108,10 @@ Detailed requirements for each module are maintained in separate files within th
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL provide the following default Roles: Admin, Doctor, Receptionist, Nurse, Sales, Marketing, and Frontdesk.
-2. THE Platform SHALL allow an Admin to create, edit, and delete custom Roles.
-3. WHEN an Admin attempts to delete the last remaining Role designated as Admin, THE Platform SHALL reject the deletion and return a descriptive error.
-4. WHEN an Admin attempts to delete the last remaining Staff member assigned the Admin Role, THE Platform SHALL reject the deletion and return a descriptive error.
+1. THE Platform SHALL provide the following default Roles: Organization_Admin, Clinic_Admin, Doctor, Receptionist, Nurse, Sales, Marketing, and Frontdesk.
+2. THE Platform SHALL allow a Clinic_Admin to create, edit, and delete custom Roles.
+3. WHEN an Admin attempts to delete a Role that would leave a Clinic with no active Clinic_Admin, THE Platform SHALL reject the deletion and return a descriptive error.
+4. WHEN an Admin attempts to delete or deactivate the last remaining active Clinic_Admin or Organization_Admin, THE Platform SHALL reject the action and return a descriptive error.
 5. THE Platform SHALL allow Permissions to be configured at the module level with the following actions: view, create, edit, and delete.
 6. WHEN a Staff member attempts an action for which their combined Roles grant no Permission, THE Platform SHALL deny the action and return an authorization error.
 7. THE Platform SHALL allow a Staff member to be assigned multiple Roles simultaneously.
@@ -119,8 +120,10 @@ Detailed requirements for each module are maintained in separate files within th
 #### Correctness Properties
 
 - **Permission denial completeness**: For every module M and action A, if no Role assigned to Staff member S grants (M, A), then every request by S for action A on module M SHALL be denied.
-- **Last-admin guard**: After any Role deletion or Staff deletion, the count of Staff members with Admin-level access SHALL remain ≥ 1.
+- **Last-clinic-admin guard**: After any Role deletion or Staff deletion or deactivation, the count of active Clinic_Admins in each Clinic SHALL remain ≥ 1.
+- **Last-org-admin guard**: After any Role deletion or Staff deletion or deactivation, the count of active Organization_Admins in the Organization SHALL remain ≥ 1.
 - **Immediate permission propagation**: For any Staff member S holding Role R, within one request cycle after Role R is updated, S's effective permissions SHALL reflect the updated Role R.
+- **Org admin scope enforcement**: The Organization_Admin role SHALL NOT grant access to Patients, Appointments, Leads, Billing, or Products modules in any Clinic.
 
 ---
 
@@ -217,11 +220,11 @@ Detailed requirements for each module are maintained in separate files within th
 
 #### Acceptance Criteria
 
-1. WHEN a Staff member is deleted, THE Platform SHALL require all data owned by that Staff member to be transferred to another Staff member of equal or higher Role level before deletion proceeds.
-2. THE Platform SHALL preserve the original Staff member's name in all historical records and Audit_Log entries after deletion.
+1. WHEN a Staff member is deleted, THE Platform SHALL require all transferable records owned by that Staff member to be transferred to another Staff member of equal or higher Role level before deletion proceeds. Transferable records include: analysis sessions created by the staff member, patient records created by the staff member, assigned appointments, assigned leads, invoices created by the staff member, uploaded medical documents, and doctor's notes.
+2. THE Platform SHALL preserve the original Staff member's name in all historical records and Audit_Log entries after deletion. Audit_Log entries SHALL NOT be transferred to the recipient.
 3. WHEN a Staff member is deactivated (set to Inactive), THE Platform SHALL preserve all data associated with that Staff member unchanged.
 4. THE Platform SHALL NOT allow deletion of a Staff member without completing the data transfer step.
-5. WHEN data is transferred from a deleted Staff member to a recipient, THE Platform SHALL record the transfer in the Audit_Log.
+5. WHEN data is transferred from a deleted Staff member to a recipient, THE Platform SHALL record the transfer in the Audit_Log including the list of transferred record types.
 
 #### Correctness Properties
 
