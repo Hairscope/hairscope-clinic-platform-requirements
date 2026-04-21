@@ -31,7 +31,7 @@ These invariants must hold at all times across the entire system. Any operation 
 | GI-4 | Every Organization has at least one active Organization_Admin at all times. |
 | GI-5 | Every Clinic has at least one active Clinic_Admin at all times. |
 | GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person — across any Clinic or Organization — share the same `globalPatientId`. This enables the future Patient app to aggregate the full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` — it is a linking key for the Patient app only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
-| GI-7 | A Patient may have at most one active Session per Clinic at any point in time. Active means status is Draft or Saved. Only Sessions with status Saved or Completed contribute to the Treatment Progress Graph and patient progress tracking. |
+| GI-7 | A Patient may have at most one active Session per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
 | GI-8 | A Session in Saved or Completed status cannot be deleted. |
 | GI-9 | Audit log entries are immutable and are never reassigned, transferred, or deleted. |
 | GI-10 | All timestamps stored in the system are in UTC. |
@@ -95,7 +95,20 @@ Organization
 
 Permissions are defined as `(module, action)` pairs where action ∈ `{view, create, edit, delete}`.
 
-Modules: `patients`, `sessions`, `leads`, `appointments`, `products`, `billing`, `staff`, `clinic_settings`, `roles`, `audit_log`, `dashboard`.
+Modules and their logical grouping:
+
+| Module | Belongs To | Notes |
+|--------|-----------|-------|
+| `patients` | Clinical | Includes sessions as a sub-resource of patients |
+| `leads` | Clinical | |
+| `appointments` | Clinical | |
+| `products` | Clinical | |
+| `billing` | Clinical | |
+| `dashboard` | Shared | Scope varies by role (org-wide vs clinic-only) |
+| `organization` | Org Management | Includes staff, clinic_settings, and roles as sub-resources |
+| `audit_log` | Org Management | |
+
+> **Note on sub-resources:** Sessions are a sub-resource of Patients — a permission on `patients` implicitly covers session access within that patient's record. Similarly, `staff`, `clinic_settings`, and `roles` are sub-resources of the `organization` module and do not require separate top-level permission entries.
 
 ### 4.3 Failure Behaviour
 
@@ -116,7 +129,7 @@ Modules: `patients`, `sessions`, `leads`, `appointments`, `products`, `billing`,
 3. All GraphQL inputs that include a date or time must be in ISO 8601 UTC format.
 4. Display conversion to the Clinic's configured timezone is performed client-side only.
 5. Appointment slot availability is calculated in the Clinic's configured timezone, then stored as UTC.
-6. The Clinic timezone is a required field on the Clinic profile. If not set, UTC is used as the fallback.
+6. The Clinic timezone is a required field that must be configured before the Appointments module can be used. Attempting to book or display appointment slots without a configured timezone SHALL return a `CLINIC_TIMEZONE_NOT_SET` error. UTC is not used as a fallback for appointments — timezone must be explicitly set.
 
 ---
 
@@ -260,15 +273,22 @@ Each audit log entry must contain:
 
 ### 10.1 Retention Policies
 
-| Data Type | Default Retention | Configurable |
-|-----------|------------------|--------------|
-| Patient records | Indefinite (no delete) | No — GDPR erasure only |
-| Session data | Indefinite | No |
-| Audit logs | 7 years minimum | No |
-| Medical documents | Indefinite | No |
-| Leads | Indefinite | No |
-| Invoices | 7 years minimum | No |
-| Staff records (deleted) | Name preserved in logs | N/A |
+| Data Type | Active Subscription Retention | Post-Cancellation Retention | Configurable |
+|-----------|------------------------------|----------------------------|--------------|
+| Patient records | Indefinite (no delete) | 7 years after subscription cancellation, then anonymized | No |
+| Session data (images, AI analysis, reports) | Indefinite | 7 years after subscription cancellation, then deleted | No |
+| Audit logs | Indefinite | 7 years after subscription cancellation (HIPAA minimum) | No |
+| Medical documents | Indefinite | 7 years after subscription cancellation, then deleted | No |
+| Leads | Indefinite | 7 years after subscription cancellation, then deleted | No |
+| Invoices | Indefinite | 7 years after subscription cancellation (financial records) | No |
+| Staff records (deleted) | Name preserved in audit logs | Preserved for duration of audit log retention | N/A |
+
+**Post-cancellation behaviour:**
+- WHEN an Organization's subscription is cancelled, THE Platform SHALL begin a 7-year retention countdown for all data belonging to that Organization.
+- WHEN the 7-year retention period expires, THE Platform SHALL permanently delete or anonymize all data for that Organization in accordance with GDPR and HIPAA requirements.
+- THE Platform SHALL notify the Organization_Admin via email at 90 days, 30 days, and 7 days before data deletion.
+- THE Platform SHALL allow an Organization to export all their data at any point during the 7-year retention period.
+- IF an Organization reactivates their subscription before the retention period expires, THE Platform SHALL cancel the deletion countdown and restore full access to all retained data.
 
 ### 10.2 GDPR Erasure
 

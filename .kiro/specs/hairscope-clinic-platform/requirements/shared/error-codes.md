@@ -124,6 +124,7 @@
 | `SLOT_OUTSIDE_WORKING_HOURS` | Selected slot is outside the Clinic's configured working hours |
 | `INVALID_APPOINTMENT_STATUS_TRANSITION` | Attempted status transition is not in the valid set |
 | `APPOINTMENT_NOT_CANCELLABLE` | Appointment is in Completed or No_Show status |
+| `CLINIC_TIMEZONE_NOT_SET` | Clinic timezone must be configured before appointments can be booked or displayed |
 
 ---
 

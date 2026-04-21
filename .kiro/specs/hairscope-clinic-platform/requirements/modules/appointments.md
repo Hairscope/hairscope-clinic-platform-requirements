@@ -60,6 +60,7 @@
 3. WHEN Working_Hours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
 4. THE Platform SHALL derive available Appointment_Slots from Working_Hours and the duration of the selected Service, excluding already-occupied slots.
 5. WHEN a Staff member or patient attempts to book a slot outside Working_Hours, THE Platform SHALL reject the booking.
+6. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
 
 #### Failure Cases
 
@@ -68,6 +69,7 @@
 | Booking slot outside Working_Hours | `SLOT_OUTSIDE_WORKING_HOURS` |
 | Booking on a closed day | `SLOT_OUTSIDE_WORKING_HOURS` |
 | `startTime` ≥ `endTime` for a day | `VALIDATION_ERROR` |
+| Clinic timezone not configured | `CLINIC_TIMEZONE_NOT_SET` |
 
 #### Correctness Properties
 

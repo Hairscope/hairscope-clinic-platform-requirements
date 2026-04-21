@@ -78,13 +78,13 @@
 #### Acceptance Criteria
 
 1. THE Patient_Page SHALL display: analysis history list, medical documents, and Treatment_Progress_Graph.
-2. THE Treatment_Progress_Graph SHALL plot `hairCount`, `thickness`, and `coverage` metrics across all `SAVED` and `COMPLETED` Sessions in chronological order. `DRAFT` Sessions are excluded from the graph.
-3. WHEN a new Session reaches `SAVED` or `COMPLETED` status, THE Treatment_Progress_Graph SHALL include its metrics on the next load.
+2. THE Treatment_Progress_Graph SHALL plot `hairCount`, `thickness`, and `coverage` metrics across all `COMPLETED` Sessions only, in chronological order. `DRAFT` and `SAVED` Sessions are excluded from the graph.
+3. WHEN a new Session reaches `COMPLETED` status, THE Treatment_Progress_Graph SHALL include its metrics on the next load.
 4. THE Platform SHALL allow Staff to navigate from the Patient_Page to any individual Session in the history.
 
 #### Correctness Properties
 
-- Data points on the Treatment_Progress_Graph for metric M = count of `SAVED` or `COMPLETED` Sessions for that Patient containing a value for M. `DRAFT` Sessions are never included.
+- Data points on the Treatment_Progress_Graph for metric M = count of `COMPLETED` Sessions for that Patient containing a value for M. `DRAFT` and `SAVED` Sessions are never included.
 - For any two Sessions S1 and S2 where S1.date < S2.date, S1 SHALL appear to the left of S2 on the time axis.
 
 ---
@@ -125,7 +125,7 @@
 #### Acceptance Criteria
 
 1. THE Platform SHALL allow any Staff member with session create permission to create a Session for a Patient, either independently or from an Appointment.
-2. WHEN a Session is created for a Patient who already has an active (`DRAFT` or `SAVED`) Session in the same Clinic, THE Platform SHALL reject the creation.
+2. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session in the same Clinic, THE Platform SHALL reject the creation.
 3. THE Platform SHALL persist Session data across logins until the Session is explicitly saved or deleted.
 4. WHEN a Staff member saves a Session, THE Platform SHALL:
    - Validate that exactly 6 Trichoscopy_Images are present (GI-13)
@@ -152,7 +152,7 @@
 
 #### Correctness Properties
 
-- For any Patient P in Clinic C at any time: count of Sessions with status `DRAFT` or `SAVED` for P in C ≤ 1.
+- For any Patient P in Clinic C at any time: count of Sessions with status `DRAFT` for P in C ≤ 1.
 - Valid status transitions: `DRAFT → SAVED`, `SAVED → COMPLETED`, `DRAFT → DELETED`.
 - After a Session is deleted, no associated data SHALL be retrievable.
 - After `DRAFT → SAVED`, the count of images in that Session SHALL NOT change.
