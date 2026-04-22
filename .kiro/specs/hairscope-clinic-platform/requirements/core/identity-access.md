@@ -14,6 +14,7 @@
 - **JWT**: JSON Web Token issued on successful authentication, scoped to the Staff member's organization, clinic, and effective permissions.
 - **Effective_Permissions**: The union of all permissions granted by all roles assigned to a Staff member.
 - **Deactivation**: Setting a Staff member's status to `Inactive`, revoking authentication while preserving all associated data.
+- **System_Role**: A platform-defined role (`Organization_Admin` or `Clinic_Admin`) that cannot be deleted. These roles are always present in every Clinic and their existence is required for the platform's last-admin guards to function.
 
 ---
 
@@ -186,28 +187,40 @@ The invite flow has two distinct phases with different actors:
 
 **User Story:** As a Clinic_Admin, I want to create and manage roles with granular permissions so that I can precisely control what each staff member can do.
 
+#### Role Classification
+
+| Category | Roles | Permissions Editable | Deletable |
+|----------|-------|---------------------|-----------|
+| System roles | `Organization_Admin`, `Clinic_Admin` | `Organization_Admin`: No. `Clinic_Admin`: Yes | No — cannot be deleted under any circumstance |
+| Default clinic roles | `Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk` | Yes | Yes — subject to last-admin guard |
+| Custom roles | Any role created by a Clinic_Admin | Yes | Yes — subject to last-admin guard |
+
 #### Acceptance Criteria
 
-1. THE Platform SHALL provide default roles as defined in `requirements.md` Section 3.2.
+1. THE Platform SHALL provide the system and default clinic roles defined in `requirements.md` Section 3.2.
 2. THE Platform SHALL allow a Clinic_Admin to create custom roles with a name and a set of `(module, action)` permissions.
-3. THE Platform SHALL allow a Clinic_Admin to edit any role's name and permissions, except the `Organization_Admin` role whose permissions are fixed.
-4. THE Platform SHALL allow a Clinic_Admin to delete any role except when doing so would leave the Clinic with no active Clinic_Admin.
-5. WHEN a role's permissions are updated, THE Platform SHALL apply the change to all Staff members holding that role within one request cycle.
-6. WHEN a Staff member holds multiple roles, THE Platform SHALL apply the union of all permissions as the effective permissions.
-7. WHEN a role is created, edited, or deleted, THE Platform SHALL record the change in the Audit_Log.
+3. THE Platform SHALL allow a Clinic_Admin to edit the name and permissions of any non-system role (`Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk`, and custom roles).
+4. THE Platform SHALL allow a Clinic_Admin to edit the permissions of the `Clinic_Admin` role, but SHALL NOT allow editing of the `Organization_Admin` role's permissions.
+5. THE Platform SHALL NOT allow deletion of `Organization_Admin` or `Clinic_Admin` roles under any circumstance — they are system roles.
+6. THE Platform SHALL allow a Clinic_Admin to delete any non-system role, provided doing so would not leave the Clinic with no active Clinic_Admin.
+7. WHEN a role's permissions are updated, THE Platform SHALL apply the change to all Staff members holding that role within one request cycle.
+8. WHEN a Staff member holds multiple roles, THE Platform SHALL apply the union of all permissions as the effective permissions.
+9. WHEN a role is created, edited, or deleted, THE Platform SHALL record the change in the Audit_Log.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Editing Organization_Admin permissions | `ROLE_NOT_EDITABLE` |
-| Deleting role that would remove last Clinic_Admin | `LAST_CLINIC_ADMIN` |
-| Assigning clinical module permission to Organization_Admin role | `ORG_SCOPE_VIOLATION` |
+| Editing `Organization_Admin` permissions | `ROLE_NOT_EDITABLE` |
+| Deleting `Organization_Admin` or `Clinic_Admin` role | `ROLE_NOT_DELETABLE` |
+| Deleting a role that would leave the Clinic with no active Clinic_Admin | `LAST_CLINIC_ADMIN` |
+| Assigning clinical module permission to `Organization_Admin` role | `ORG_SCOPE_VIOLATION` |
 
 #### Correctness Properties
 
+- `Organization_Admin` and `Clinic_Admin` roles SHALL exist in every Clinic at all times and SHALL NOT be deletable by any operation.
 - For any Staff member S holding roles R1 and R2: `effective_permissions(S) = permissions(R1) ∪ permissions(R2)`.
-- For any Staff member S holding the Organization_Admin role, S SHALL NOT have permissions to `patients`, `appointments`, `leads`, `billing`, or `products` modules regardless of other roles.
+- For any Staff member S holding the `Organization_Admin` role, S SHALL NOT have permissions to `patients`, `appointments`, `leads`, `billing`, or `products` modules regardless of other roles.
 - For every `(module, action)` pair not granted by any role assigned to S, every request by S for that action SHALL be denied.
 
 ---

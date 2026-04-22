@@ -76,6 +76,7 @@
 | `RECIPIENT_INACTIVE` | Selected recipient is inactive |
 | `TRANSFER_FAILED` | Reassignment failed mid-operation; full rollback applied |
 | `ROLE_NOT_EDITABLE` | Attempted to edit a fixed system role (e.g., Organization_Admin) |
+| `ROLE_NOT_DELETABLE` | Attempted to delete a system role (Organization_Admin or Clinic_Admin) |
 | `CROSS_ORG_TRANSFER_DENIED` | Inter-clinic transfer attempted across different Organizations |
 
 ---

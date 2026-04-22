@@ -61,16 +61,18 @@ Organization
 
 ### 3.2 Default Roles
 
-| Role | Scope | Editable |
-|------|-------|----------|
-| Organization_Admin | `org` | Permissions fixed — not editable |
-| Clinic_Admin | `clinic` | Editable |
-| Doctor | `clinic` | Editable |
-| Receptionist | `clinic` | Editable |
-| Nurse | `clinic` | Editable |
-| Sales | `clinic` | Editable |
-| Marketing | `clinic` | Editable |
-| Frontdesk | `clinic` | Editable |
+Default roles are provided by the platform. Some are **system roles** — they cannot be deleted and have fixed or restricted permissions. Custom roles created by a Clinic_Admin are always deletable (subject to the last-admin guard).
+
+| Role | Scope | Permissions Editable | Deletable | Notes |
+|------|-------|---------------------|-----------|-------|
+| Organization_Admin | `org` | No — fixed | No — system role | Permissions are platform-defined and cannot be changed |
+| Clinic_Admin | `clinic` | Yes | No — system role | Cannot be deleted; ensures last-admin guard is always enforceable |
+| Doctor | `clinic` | Yes | Yes | Subject to last-admin guard |
+| Receptionist | `clinic` | Yes | Yes | Subject to last-admin guard |
+| Nurse | `clinic` | Yes | Yes | Subject to last-admin guard |
+| Sales | `clinic` | Yes | Yes | Subject to last-admin guard |
+| Marketing | `clinic` | Yes | Yes | Subject to last-admin guard |
+| Frontdesk | `clinic` | Yes | Yes | Subject to last-admin guard |
 
 ### 3.3 Staff Authentication
 
