@@ -275,19 +275,22 @@ Each audit log entry must contain:
 
 | Data Type | Active Subscription Retention | Post-Cancellation Retention | Configurable |
 |-----------|------------------------------|----------------------------|--------------|
-| Patient records | Indefinite (no delete) | 7 years after subscription cancellation, then anonymized | No |
-| Session data (images, AI analysis, reports) | Indefinite | 7 years after subscription cancellation, then deleted | No |
-| Audit logs | Indefinite | 7 years after subscription cancellation (HIPAA minimum) | No |
+| Patient records | Indefinite | 7 years after subscription cancellation, then deleted | No |
+| Session data (images, AI analysis, reports) | Indefinite | 7 years after subscription cancellation, then anonymized | No |
+| Audit logs | Indefinite | 7 years after subscription cancellation (as per HIPAA minimum) | No |
 | Medical documents | Indefinite | 7 years after subscription cancellation, then deleted | No |
-| Leads | Indefinite | 7 years after subscription cancellation, then deleted | No |
-| Invoices | Indefinite | 7 years after subscription cancellation (financial records) | No |
-| Staff records (deleted) | Name preserved in audit logs | Preserved for duration of audit log retention | N/A |
+| Leads | Indefinite | 2 years after subscription cancellation, then deleted | No |
+| Appointments | Indefinite | 2 years after subscription cancellation, then deleted | No |
+| Invoices | Indefinite | 2 years after subscription cancellation, then deleted | No |
+| Staff records | Name preserved in audit logs | Preserved for duration of audit log retention | No |
+| All other data (products, services, routines) | Indefinite | 2 years after subscription cancellation, then deleted | No |
+| Backups | After 30 days | 30 days rolling retention | Yes |
 
 **Post-cancellation behaviour:**
-- WHEN an Organization's subscription is cancelled, THE Platform SHALL begin a 7-year retention countdown for all data belonging to that Organization.
-- WHEN the 7-year retention period expires, THE Platform SHALL permanently delete or anonymize all data for that Organization in accordance with GDPR and HIPAA requirements.
+- WHEN an Organization's subscription is cancelled, THE Platform SHALL begin retention countdown for all data belonging to that Organization.
+- WHEN the retention period expires, THE Platform SHALL permanently delete or anonymize all data for that Organization in accordance with GDPR and HIPAA requirements.
 - THE Platform SHALL notify the Organization_Admin via email at 90 days, 30 days, and 7 days before data deletion.
-- THE Platform SHALL allow an Organization to export all their data at any point during the 7-year retention period.
+- THE Platform SHALL allow an Organization to export all their data at any point during the retention period.
 - IF an Organization reactivates their subscription before the retention period expires, THE Platform SHALL cancel the deletion countdown and restore full access to all retained data.
 
 ### 10.2 GDPR Erasure
@@ -298,20 +301,36 @@ Each audit log entry must contain:
 - Erasure is recorded in the audit log with the actor and timestamp.
 - Erasure cannot be undone.
 
-### 10.3 Data Transfer on Staff Deletion
+### 10.3 Staff Deletion and Responsibility Reassignment
 
-When a Staff member is deleted, the following records are transferred to the designated recipient:
+#### Principle
 
-| Record Type | Transfer Rule |
-|-------------|---------------|
-| Sessions created by staff | Reassigned to recipient |
-| Patient records created by staff | Reassigned to recipient |
-| Assigned appointments | Reassigned to recipient |
-| Assigned leads | Reassigned to recipient |
-| Invoices created by staff | Reassigned to recipient |
-| Uploaded medical documents | Reassigned to recipient |
-| Doctor's notes | Reassigned to recipient |
-| Audit log entries | Never transferred — remain attributed to original staff name |
+THE Platform SHALL distinguish between:
+
+- **Attribution** (who created or performed an action) — immutable, never modified
+- **Responsibility** (who is currently assigned to a record) — reassignable
+
+THE Platform SHALL NOT modify historical attribution under any circumstance.
+
+#### Reassignment Scope
+
+WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassigned. The specific list of reassignable record types is defined in `core/data-ownership.md`.
+
+#### Deletion Execution Rules
+
+- THE Platform SHALL require completion of reassignment before allowing Staff deletion.
+- THE Platform SHALL support multi-recipient reassignment — different record categories may be reassigned to different Staff members.
+- THE Platform SHALL validate that all recipients:
+  - belong to the same Clinic (or valid target Clinic in case of inter-clinic transfer)
+  - are Active
+- THE Platform SHALL mark the Staff record as `INACTIVE` and revoke all access tokens immediately.
+- THE Platform SHALL NOT physically delete the underlying Staff record — it is retained for audit log attribution.
+
+#### Constraints
+
+- THE Platform SHALL NOT allow deletion of the last active Clinic_Admin in a Clinic.
+- THE Platform SHALL NOT allow deletion of the last active Organization_Admin in an Organization.
+- THE Platform SHALL block deletion if any reassignable data remains unassigned.
 
 ---
 

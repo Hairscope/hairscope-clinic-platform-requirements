@@ -126,12 +126,14 @@
 
 #### Acceptance Criteria
 
-1. WHEN an Admin initiates deletion, THE Platform SHALL return the full list of transferable records owned by the departing Staff member (see `core/data-ownership.md` for the complete list).
-2. THE Platform SHALL require selection of a recipient Staff member of equal or higher role level before deletion proceeds.
-3. WHEN confirmed, THE Platform SHALL atomically transfer all transferable records to the recipient and permanently delete the Staff member account.
-4. THE Platform SHALL NOT transfer Audit_Log entries — they remain attributed to the original Staff member's name permanently.
-5. THE Platform SHALL NOT allow deletion of the last remaining active Clinic_Admin or Organization_Admin.
-6. WHEN deleted, THE Platform SHALL record the deletion, the recipient identity, and the list of transferred record types in the Audit_Log.
+1. WHEN an Admin initiates deletion, THE Platform SHALL return the full list of reassignable records owned by the departing Staff member (see `core/data-ownership.md` for the complete list).
+2. THE Platform SHALL require selection of one or more recipient Staff members before deletion proceeds. Different record categories may be reassigned to different recipients (multi-recipient reassignment).
+3. THE Platform SHALL validate that all recipients belong to the same Clinic (or valid target Clinic in case of inter-clinic transfer) and are Active.
+4. WHEN confirmed, THE Platform SHALL atomically reassign all responsibility-based fields to the designated recipients and mark the Staff member as `INACTIVE`.
+5. THE Platform SHALL NOT physically delete the Staff record — it is retained for audit log attribution.
+6. THE Platform SHALL NOT reassign Audit_Log entries — they remain attributed to the original Staff member's name permanently.
+7. THE Platform SHALL NOT allow deletion of the last remaining active Clinic_Admin or Organization_Admin.
+8. WHEN deleted, THE Platform SHALL record the deletion, the recipient identities, and the list of reassigned record types in the Audit_Log.
 
 #### Failure Cases
 

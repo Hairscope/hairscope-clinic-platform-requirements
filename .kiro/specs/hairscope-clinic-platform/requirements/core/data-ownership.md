@@ -6,36 +6,39 @@
 
 ## Ownership Model
 
-Every record in the platform has an owner. Ownership determines:
-1. Who is responsible for the record when a Staff member is deleted.
-2. Which records are transferred during a staff deletion data transfer.
-3. Which records are scoped to a Clinic vs. an Organization.
+Every record in the platform has two distinct ownership concepts:
+
+- **Attribution** — who created or performed an action on a record. This is immutable and is captured in the `createdBy`, `authoredBy`, `uploadedBy` fields and in Audit_Log entries. Attribution is never modified under any circumstance, including Staff deletion.
+- **Responsibility** — who is currently assigned to or responsible for a record. This is captured in `assignedTo` and similar fields. Responsibility is reassignable when a Staff member is deleted.
+
+Ownership determines:
+1. Which records require reassignment when a Staff member is deleted.
+2. Which records are scoped to a Clinic vs. an Organization.
 
 ---
 
 ## Ownership Table
 
-| Record Type | Owner | Scope | Transferable on Staff Deletion |
-|-------------|-------|-------|-------------------------------|
-| Organization | Self (no owner) | Organization | No |
-| Clinic | Organization | Organization | No |
-| Clinic_Profile | Clinic | Clinic | No |
-| Staff | Clinic / Organization | Clinic or Org | No (deleted) |
-| Role | Clinic | Clinic | No |
-| Patient | Clinic (created_by Staff) | Clinic | Yes — reassigned to recipient |
-| Session | Staff (created_by) | Clinic | Yes — reassigned to recipient |
-| Trichoscopy_Image | Session | Clinic | No (follows Session) |
-| Global_Image | Session | Clinic | No (follows Session) |
-| Medical_Document | Staff (uploaded_by) | Clinic | Yes — reassigned to recipient |
-| Doctor's Note | Staff (authored_by) | Clinic | Yes — reassigned to recipient |
-| Lead | Clinic (unassigned) | Clinic | No (unassigned leads remain) |
-| Assigned Lead | Staff (assigned_to) | Clinic | Yes — reassigned to recipient |
-| Appointment | Staff (created_by) | Clinic | Yes — reassigned to recipient |
-| Invoice | Staff (created_by) | Clinic | Yes — reassigned to recipient |
-| Product | Clinic | Clinic | No |
-| Report | Session | Clinic | No (follows Session) |
-| Audit_Log entry | Staff (actor) | Organization | Never transferred |
-| Webhook_Source config | Clinic | Clinic | No |
+| Record Type | Attribution Field | Responsibility Field | Scope | Reassignable on Staff Deletion |
+|-------------|------------------|---------------------|-------|-------------------------------|
+| Organization | — | — | Organization | No |
+| Clinic | — | — | Organization | No |
+| Clinic_Profile | — | — | Clinic | No |
+| Staff | — | — | Clinic or Org | No (marked INACTIVE, not deleted) |
+| Role | — | — | Clinic | No |
+| Patient | `createdBy` (attribution) | — | Clinic | No (patient belongs to clinic, not staff) |
+| Session | `createdBy` (attribution) | `assignedTo` | Clinic | Yes — `assignedTo` reassigned to recipient |
+| Trichoscopy_Image | — | — | Clinic | No (follows Session) |
+| Global_Image | — | — | Clinic | No (follows Session) |
+| Medical_Document | `uploadedBy` (attribution) | — | Clinic | No (document belongs to patient record) |
+| Doctor's Note | `authoredBy` (attribution) | — | Clinic | No (note belongs to session record) |
+| Lead | — | `assignedTo` | Clinic | Yes — `assignedTo` reassigned to recipient |
+| Appointment | `createdBy` (attribution) | `assignedTo` | Clinic | Yes — `assignedTo` reassigned to recipient |
+| Invoice | `createdBy` (attribution) | — | Clinic | No (invoice belongs to session/patient) |
+| Product | — | — | Clinic | No |
+| Report | — | — | Clinic | No (follows Session) |
+| Audit_Log entry | `actorId` / `actorName` (attribution) | — | Organization | Never reassigned — immutable |
+| Webhook_Source config | — | — | Clinic | No |
 
 ---
 
@@ -57,52 +60,53 @@ Every record in the platform has an owner. Ownership determines:
 
 ---
 
-### OWN-2: Transferable Records on Staff Deletion
+### OWN-2: Reassignable Records on Staff Deletion
 
-When a Staff member is deleted, the following records are transferred to the designated recipient. The transfer is atomic — either all records are transferred or none are.
+When a Staff member is deleted, only **responsibility-based fields** are reassigned. Attribution fields are never modified. The Platform supports multi-recipient reassignment — different record categories may be reassigned to different Staff members.
 
-#### Transferable Record Types
+#### Reassignable Fields
 
-| Record Type | Transfer Rule |
-|-------------|---------------|
-| Sessions created by the staff member | `createdBy` field updated to recipient |
-| Patient records created by the staff member | `createdBy` field updated to recipient |
-| Assigned appointments | `assignedTo` field updated to recipient |
-| Assigned leads | `assignedTo` field updated to recipient |
-| Invoices created by the staff member | `createdBy` field updated to recipient |
-| Uploaded medical documents | `uploadedBy` field updated to recipient |
-| Doctor's notes | `authoredBy` field updated to recipient |
+| Record Type | Field Reassigned | Notes |
+|-------------|-----------------|-------|
+| Sessions | `assignedTo` | `createdBy` (attribution) remains unchanged |
+| Assigned leads | `assignedTo` | Unassigned leads are unaffected |
+| Appointments | `assignedTo` | `createdBy` (attribution) remains unchanged |
 
-#### Non-Transferable Records
+#### Non-Reassignable Records
 
 | Record Type | Rule |
 |-------------|------|
-| Audit_Log entries | Remain attributed to original staff name permanently |
-| Unassigned leads | Remain unassigned — not transferred |
-| Products | Belong to Clinic, not Staff — not transferred |
-| Roles | Belong to Clinic, not Staff — not transferred |
+| Audit_Log entries | Immutable — `actorName` remains the original staff name permanently |
+| Patient records | Belong to the Clinic, not the Staff member |
+| Medical documents | Belong to the Patient record, not the Staff member |
+| Doctor's notes | Belong to the Session record, not the Staff member |
+| Invoices | Belong to the Session/Patient, not the Staff member |
+| Products | Belong to the Clinic, not the Staff member |
+| Roles | Belong to the Clinic, not the Staff member |
+| Unassigned leads | Remain unassigned |
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL display the count and type of transferable records before deletion is confirmed.
-2. THE Platform SHALL require selection of a recipient Staff member of equal or higher role level.
-3. THE transfer SHALL be atomic — if any record transfer fails, the entire deletion is rolled back.
-4. WHEN transfer is complete, THE Platform SHALL record the transfer in the Audit_Log including the list of transferred record types and counts.
+1. THE Platform SHALL display the list of reassignable records (with counts) before deletion is confirmed.
+2. THE Platform SHALL allow the Admin to assign different recipients for different record categories (multi-recipient).
+3. THE Platform SHALL validate that all recipients are Active and belong to the same Clinic.
+4. THE reassignment SHALL be atomic — if any reassignment fails, the entire deletion is rolled back.
+5. WHEN reassignment is complete, THE Platform SHALL record the deletion and all recipient assignments in the Audit_Log.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| No recipient selected | `RECIPIENT_REQUIRED` |
-| Recipient has lower role level | `RECIPIENT_INSUFFICIENT_ROLE` |
+| No recipient selected for a reassignable category | `RECIPIENT_REQUIRED` |
 | Recipient is inactive | `RECIPIENT_INACTIVE` |
-| Transfer fails mid-operation | `TRANSFER_FAILED` — full rollback |
+| Recipient belongs to a different Clinic | `FORBIDDEN` |
+| Reassignment fails mid-operation | `TRANSFER_FAILED` — full rollback |
 
 #### Correctness Properties
 
-- After deletion, every transferable record previously owned by S SHALL be owned by recipient R.
-- Audit_Log entries attributed to S SHALL continue to reference S's original name, not R's name.
-- The total count of transferable records before and after transfer SHALL be equal.
+- After deletion, every reassignable record's `assignedTo` field SHALL reference a valid active Staff member.
+- Attribution fields (`createdBy`, `authoredBy`, `uploadedBy`, `actorName`) SHALL remain unchanged after deletion.
+- Audit_Log entries attributed to the deleted Staff member SHALL continue to reference their original name.
 
 ---
 

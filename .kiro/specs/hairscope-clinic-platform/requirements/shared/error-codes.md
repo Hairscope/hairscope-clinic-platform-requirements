@@ -69,10 +69,10 @@
 |------|-------------|
 | `LAST_CLINIC_ADMIN` | Operation would leave a Clinic with no active Clinic_Admin |
 | `LAST_ORG_ADMIN` | Operation would leave an Organization with no active Organization_Admin |
-| `RECIPIENT_REQUIRED` | Staff deletion requires a data transfer recipient |
-| `RECIPIENT_INSUFFICIENT_ROLE` | Recipient has a lower role level than the departing Staff member |
+| `LAST_ACTIVE_CLINIC` | Operation would leave an Organization with no active Clinic |
+| `RECIPIENT_REQUIRED` | Staff deletion requires at least one data reassignment recipient |
 | `RECIPIENT_INACTIVE` | Selected recipient is inactive |
-| `TRANSFER_FAILED` | Data transfer failed mid-operation; full rollback applied |
+| `TRANSFER_FAILED` | Reassignment failed mid-operation; full rollback applied |
 | `ROLE_NOT_EDITABLE` | Attempted to edit a fixed system role (e.g., Organization_Admin) |
 | `CROSS_ORG_TRANSFER_DENIED` | Inter-clinic transfer attempted across different Organizations |
 

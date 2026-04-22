@@ -167,3 +167,35 @@
 - For any Organization_Admin A, the aggregated Dashboard SHALL include data from every Clinic in A's Organization.
 - For any Clinic-level Staff member S in Clinic C, the Dashboard SHALL only include data from Clinic C.
 - For any Organization_Admin A filtering to Clinic C, the displayed KPIs SHALL equal what a Clinic_Admin of C would see.
+
+---
+
+### ORG-6: Clinic Deactivation
+
+**User Story:** As an Organization_Admin, I want to deactivate a clinic so that I can suspend its operations without permanently deleting its data.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL allow an Organization_Admin to deactivate any Clinic within their Organization.
+2. WHEN a Clinic is deactivated, THE Platform SHALL:
+   - Revoke authentication for all Staff members assigned to that Clinic.
+   - Prevent new appointments, sessions, leads, and invoices from being created for that Clinic.
+   - Preserve all existing data for that Clinic unchanged.
+3. WHEN a Clinic is deactivated, THE Platform SHALL NOT delete any data belonging to that Clinic.
+4. THE Platform SHALL allow an Organization_Admin to reactivate a deactivated Clinic, restoring full access for its Staff members.
+5. WHEN a Clinic is deactivated or reactivated, THE Platform SHALL record the action in the Audit_Log including the actor and timestamp.
+6. THE Platform SHALL NOT allow deactivation of the last active Clinic in an Organization — an Organization must have at least one active Clinic at all times.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Deactivating the last active Clinic in an Organization | `LAST_ACTIVE_CLINIC` |
+| Non-Organization_Admin attempting to deactivate a Clinic | `FORBIDDEN` |
+
+#### Correctness Properties
+
+- After Clinic C is deactivated, every authentication attempt by any Staff member assigned to C SHALL fail.
+- After Clinic C is deactivated, all data belonging to C SHALL remain retrievable by the Organization_Admin.
+- After Clinic C is reactivated, all Staff members assigned to C SHALL be able to authenticate (subject to their individual Active/Inactive status).
+- At all times, the count of active Clinics within any Organization SHALL be ≥ 1.
