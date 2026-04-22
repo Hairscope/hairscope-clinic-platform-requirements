@@ -256,6 +256,7 @@ Emitted when a new Appointment is created.
 
 **Consumers:**
 - Notification Service → sends email confirmation to patient/lead
+- Smart_Scheduling Service → triggers staff assignment
 
 ---
 
@@ -294,6 +295,26 @@ Emitted when an Appointment is cancelled.
 **Consumers:**
 - Notification Service → sends cancellation email
 - Slot availability service → releases the slot
+
+---
+
+### `StaffAssigned`
+Emitted by the Smart_Scheduling Service when a Staff member is assigned to an appointment.
+
+**Payload:**
+```json
+{
+  "appointmentId": "uuid",
+  "clinicId": "uuid",
+  "assignedStaffId": "uuid | null",
+  "assignmentRule": "CONTINUITY_OF_CARE | LEAST_BUSY | ANY_AVAILABLE | UNASSIGNED",
+  "requiresManualAssignment": "boolean"
+}
+```
+
+**Consumers:**
+- Appointment Module → updates `assignedStaffId` on the appointment record
+- Notification Service → notifies Clinic_Admin if `requiresManualAssignment = true`
 
 ---
 

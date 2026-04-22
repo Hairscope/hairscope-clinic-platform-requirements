@@ -128,6 +128,7 @@
 | `INVALID_APPOINTMENT_STATUS_TRANSITION` | Attempted status transition is not in the valid set |
 | `APPOINTMENT_NOT_CANCELLABLE` | Appointment is in Completed or No_Show status |
 | `CLINIC_TIMEZONE_NOT_SET` | Clinic timezone must be configured before appointments can be booked or displayed |
+| `SERVICE_NO_QUALIFIED_STAFF` | Service has no qualified staff configured; cannot be booked until at least one qualified staff member is assigned |
 
 ---
 

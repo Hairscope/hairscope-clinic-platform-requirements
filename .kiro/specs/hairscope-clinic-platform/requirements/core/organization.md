@@ -12,7 +12,10 @@
 - **Organization_Admin**: Staff with `org`-scoped access. Can manage staff and clinic details across all clinics. Cannot access clinical modules (Patients, Appointments, Leads, Billing, Products).
 - **Clinic_Admin**: Staff with full `clinic`-scoped access within their assigned Clinic, including all modules.
 - **Inter_Clinic_Transfer**: Reassignment of a Staff member from one Clinic to another within the same Organization.
-- **Working_Hours**: Per-day operating schedule for a Clinic, used to derive available appointment slots.
+- **Clinic_Working_Hours**: Per-day operating schedule for a Clinic. Defines when the clinic is open. Used to derive patient-facing appointment slot availability.
+- **Staff_Availability**: Per-day working schedule for an individual Staff member. Used internally by the smart scheduling engine to determine which qualified staff can be assigned to a given slot. Never exposed to patients.
+- **Qualified_Staff**: Staff members who are configured as able to provide a specific Service.
+- **Smart_Scheduling**: The internal engine that assigns the least busy qualified Staff member to a booked appointment, based on Staff_Availability and existing appointment load.
 - **Report_Header**: Clinic branding (logo, name, address) printed at the top of generated Reports.
 - **Dashboard**: Role-specific landing page showing business KPIs. Org-scoped for Organization_Admins; clinic-scoped for all other roles.
 
@@ -199,3 +202,32 @@
 - After Clinic C is deactivated, all data belonging to C SHALL remain retrievable by the Organization_Admin.
 - After Clinic C is reactivated, all Staff members assigned to C SHALL be able to authenticate (subject to their individual Active/Inactive status).
 - At all times, the count of active Clinics within any Organization SHALL be ≥ 1.
+
+---
+
+### ORG-7: Staff Availability
+
+**User Story:** As a Clinic_Admin, I want to configure each staff member's working schedule so that the smart scheduling engine can assign appointments only to staff who are available at that time.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL allow Clinic_Admins to configure a weekly availability schedule per Staff member, with `startTime`, `endTime`, and `available` (boolean) per day of the week.
+2. Staff_Availability is independent of Clinic_Working_Hours — a staff member may be available on days the clinic is open, or unavailable on days the clinic is open.
+3. THE Platform SHALL allow Staff_Availability to be updated at any time by a Clinic_Admin or by the Staff member themselves.
+4. Staff_Availability SHALL NOT be exposed to patients or leads at any point — it is used exclusively by the Smart_Scheduling engine.
+5. WHEN Staff_Availability is updated, THE Platform SHALL apply the new schedule to all future appointment assignments.
+6. WHEN Staff_Availability is updated, THE Platform SHALL record the change in the Audit_Log.
+7. THE Platform SHALL allow a Staff member to have no availability configured — in this case, they are excluded from Smart_Scheduling assignment.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| `startTime` ≥ `endTime` for a day | `VALIDATION_ERROR` |
+| Staff member not found | `NOT_FOUND` |
+
+#### Correctness Properties
+
+- Staff_Availability is never returned in any patient-facing or web-component-facing GraphQL query.
+- For any Staff member S with no availability configured, S SHALL NOT be assigned to any appointment by the Smart_Scheduling engine.
+- Staff_Availability is scoped to the Clinic the Staff member is currently assigned to. After an inter-clinic transfer, the previous Clinic's availability configuration is no longer active.

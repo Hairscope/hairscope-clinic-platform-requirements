@@ -8,12 +8,15 @@
 
 ## Glossary
 
-- **Service**: A treatment offering configured per Clinic with name, description, image, price, currency, and duration.
-- **Appointment_Slot**: A specific date/time window available for booking, derived from Working_Hours and existing appointments.
+- **Service**: A treatment offering configured per Clinic with name, description, image, price, currency, duration, and a list of Qualified_Staff.
+- **Qualified_Staff**: The set of Staff members configured as able to provide a specific Service. Used by the Smart_Scheduling engine for assignment.
+- **Appointment_Slot**: A specific date/time window available for booking, derived from Clinic_Working_Hours and existing appointments. Slot availability is patient-facing and does not expose staff details.
 - **Appointment_Status**: `SCHEDULED` | `CONFIRMED` | `COMPLETED` | `CANCELLED` | `NO_SHOW` — see `shared/enums.md`.
 - **Calendar_View**: The main appointments page displaying all appointments for a Clinic in a calendar layout.
 - **Appointment_Web_Component**: The Stencil-based embeddable widget for leads/patients to book and manage appointments on a clinic website.
-- **Working_Hours**: Per-day operating schedule for a Clinic. Drives slot availability.
+- **Clinic_Working_Hours**: Per-day operating schedule for a Clinic. Drives patient-facing slot availability.
+- **Staff_Availability**: Per-staff working schedule. Used internally by Smart_Scheduling. Never exposed to patients.
+- **Smart_Scheduling**: The internal engine that assigns a qualified, available Staff member to a booked appointment. The assignment logic is pluggable and can be updated independently.
 
 ---
 
@@ -21,16 +24,18 @@
 
 ### APT-1: Service Configuration
 
-**User Story:** As a Clinic_Admin, I want to configure the services my clinic offers so that staff and patients can select the correct treatment when booking.
+**User Story:** As a Clinic_Admin, I want to configure the services my clinic offers — including which staff can provide them — so that the scheduling engine can assign the right person to each appointment.
 
 #### Acceptance Criteria
 
 1. THE Platform SHALL allow Clinic_Admins to create, edit, and delete Services for their Clinic.
-2. THE Platform SHALL store the following fields per Service: `name`, `description`, `image`, `price`, `currency`, `duration` (minutes).
-3. WHEN a Service is created, `name`, `price`, `currency`, and `duration` are required.
-4. THE Platform SHALL display the list of configured Services when a Staff member initiates an appointment booking.
-5. WHEN a Service is deleted, THE Platform SHALL retain the Service name and details on all existing appointments that reference that Service (soft reference preservation).
-6. WHEN a Service is created, edited, or deleted, THE Platform SHALL record the action in the Audit_Log.
+2. THE Platform SHALL store the following fields per Service: `name`, `description`, `image`, `price`, `currency`, `duration` (minutes), `qualifiedStaff[]` (list of Staff member IDs).
+3. WHEN a Service is created, `name`, `price`, `currency`, and `duration` are required. `qualifiedStaff` is optional at creation but required before the service can be booked.
+4. THE Platform SHALL allow Clinic_Admins to add or remove Staff members from a Service's `qualifiedStaff` list at any time.
+5. THE Platform SHALL display the list of configured Services when a Staff member initiates an appointment booking.
+6. THE `qualifiedStaff` list SHALL NOT be exposed to patients or leads — it is used exclusively by the Smart_Scheduling engine.
+7. WHEN a Service is deleted, THE Platform SHALL retain the Service name and details on all existing appointments that reference that Service (soft reference preservation).
+8. WHEN a Service is created, edited, or deleted, THE Platform SHALL record the action in the Audit_Log.
 
 #### Failure Cases
 
@@ -41,39 +46,42 @@
 | Missing `currency` | `VALIDATION_ERROR` (field: `currency`) |
 | Missing `duration` | `VALIDATION_ERROR` (field: `duration`) |
 | `duration` ≤ 0 | `VALIDATION_ERROR` (field: `duration`) |
+| Booking a Service with no `qualifiedStaff` configured | `SERVICE_NO_QUALIFIED_STAFF` |
 
 #### Correctness Properties
 
 - For any appointment A referencing Service S, if S is deleted: `A.serviceName` and `A.serviceDetails` SHALL remain unchanged.
 - For any Service S: `S.duration > 0`.
+- `qualifiedStaff` is never returned in any patient-facing or web-component-facing GraphQL query.
 
 ---
 
-### APT-2: Working Hours Configuration
+### APT-2: Working Hours and Slot Availability
 
-**User Story:** As a Clinic_Admin, I want to configure my clinic's working hours so that the booking system only offers valid time slots.
+**User Story:** As a Clinic_Admin, I want to configure my clinic's working hours so that the booking system only offers valid time slots to patients.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow Clinic_Admins to configure Working_Hours per day of the week, with `startTime` and `endTime` per day.
+1. THE Platform SHALL allow Clinic_Admins to configure Clinic_Working_Hours per day of the week, with `startTime` and `endTime` per day.
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
-3. WHEN Working_Hours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
-4. THE Platform SHALL derive available Appointment_Slots from Working_Hours and the duration of the selected Service, excluding already-occupied slots.
-5. WHEN a Staff member or patient attempts to book a slot outside Working_Hours, THE Platform SHALL reject the booking.
-6. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
+3. WHEN Clinic_Working_Hours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
+4. THE Platform SHALL derive available Appointment_Slots from Clinic_Working_Hours and the duration of the selected Service, excluding already-occupied slots.
+5. Appointment_Slot availability shown to patients is based on Clinic_Working_Hours only — Staff_Availability is not factored into patient-facing slot display.
+6. WHEN a Staff member or patient attempts to book a slot outside Clinic_Working_Hours, THE Platform SHALL reject the booking.
+7. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Booking slot outside Working_Hours | `SLOT_OUTSIDE_WORKING_HOURS` |
+| Booking slot outside Clinic_Working_Hours | `SLOT_OUTSIDE_WORKING_HOURS` |
 | Booking on a closed day | `SLOT_OUTSIDE_WORKING_HOURS` |
 | `startTime` ≥ `endTime` for a day | `VALIDATION_ERROR` |
 | Clinic timezone not configured | `CLINIC_TIMEZONE_NOT_SET` |
 
 #### Correctness Properties
 
-- For any Appointment_Slot on day D: `slot.start ≥ WorkingHours[D].start` and `slot.end ≤ WorkingHours[D].end`.
+- For any Appointment_Slot on day D: `slot.start ≥ Clinic_Working_Hours[D].start` and `slot.end ≤ Clinic_Working_Hours[D].end`.
 - For any two appointments A1 and A2 on the same day in the same Clinic: their time slots SHALL NOT overlap.
 - For any day D marked as closed: no Appointment_Slot SHALL be generated for D.
 
@@ -229,3 +237,49 @@
 #### Correctness Properties
 
 - After appointment A is cancelled, the Appointment_Slot previously occupied by A SHALL be available for new bookings.
+
+---
+
+### APT-9: Smart Scheduling Engine
+
+> **Design note:** The Smart_Scheduling engine is intentionally defined as a separate, pluggable component. Its assignment logic can be updated independently without changing the booking flow or patient-facing API. New rules can be added or reordered without modifying other appointment requirements.
+
+**User Story:** As a Clinic_Admin, I want the platform to automatically assign the most appropriate available staff member to each booked appointment so that patients are served by the right person without manual intervention.
+
+#### Scheduling Trigger
+
+WHEN an appointment is booked (by Staff or via web component), THE Platform SHALL invoke the Smart_Scheduling engine to assign a Staff member to that appointment. The assignment is internal and is NOT communicated to the patient.
+
+#### Assignment Rules (evaluated in priority order)
+
+The Smart_Scheduling engine SHALL apply the following rules in order, moving to the next rule only if the current rule yields no eligible candidate:
+
+| Priority | Rule | Condition |
+|----------|------|-----------|
+| 1 | **Continuity of care** | If the booker is an existing Patient in this Clinic AND that Patient has a previous completed appointment for the same Service AND the previously assigned Staff member is in the `qualifiedStaff` list for this Service AND is available in the requested slot → assign that Staff member. |
+| 2 | **Least busy qualified staff** | From the `qualifiedStaff` list for the Service, select the Staff member who is available in the requested slot AND has the fewest `SCHEDULED` or `CONFIRMED` appointments on that day. |
+| 3 | **Any available qualified staff** | From the `qualifiedStaff` list, select any Staff member who is available in the requested slot, regardless of load. |
+| 4 | **No assignment** | If no qualified Staff member is available in the requested slot, THE Platform SHALL still create the appointment with `assignedStaff = null` and flag it for manual assignment by a Clinic_Admin. |
+
+#### Acceptance Criteria
+
+1. THE Smart_Scheduling engine SHALL run automatically after every successful appointment booking.
+2. THE assignment result SHALL be stored on the appointment record as `assignedStaffId`.
+3. THE `assignedStaffId` SHALL NOT be exposed to patients or leads in any patient-facing or web-component-facing query.
+4. WHEN no qualified Staff member is available (Rule 4), THE Platform SHALL notify the Clinic_Admin that the appointment requires manual staff assignment.
+5. THE Platform SHALL allow a Clinic_Admin to manually override the assigned Staff member on any appointment at any time.
+6. WHEN the assigned Staff member is manually overridden, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
+7. THE Smart_Scheduling logic SHALL be implemented as a separate, independently deployable service so that assignment rules can be updated without modifying the booking flow.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Service has no `qualifiedStaff` configured | `SERVICE_NO_QUALIFIED_STAFF` |
+
+#### Correctness Properties
+
+- For any appointment A with `assignedStaffId` set, the assigned Staff member SHALL be in the `qualifiedStaff` list of `A.service`.
+- `assignedStaffId` is never returned in any patient-facing or web-component-facing GraphQL query.
+- Rule priority is deterministic — for any given appointment, the same input state SHALL always produce the same assignment result.
+- An appointment with `assignedStaff = null` SHALL be bookable — the slot is reserved even without an assignment.
