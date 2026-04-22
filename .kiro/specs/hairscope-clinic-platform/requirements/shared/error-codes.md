@@ -44,10 +44,12 @@
 | Code | Description |
 |------|-------------|
 | `INVITE_NOT_FOUND` | Invite token does not exist |
-| `INVITE_EXPIRED` | Invite token has passed its 24-hour expiry |
-| `INVITE_ALREADY_USED` | Invite token has already been used |
+| `INVITE_EXPIRED` | Invite token has passed its 7-day expiry |
+| `INVITE_ALREADY_USED` | Invite token has already been used (password was set) |
 | `INVITE_REVOKED` | Invite token was invalidated by a resend |
-| `EMAIL_ALREADY_EXISTS` | Email address is already registered |
+| `INVITE_CANCELLED` | Invite was cancelled by an Admin |
+| `EMAIL_ALREADY_EXISTS` | Email address already has an Active or Inactive Staff record in this Clinic |
+| `EMAIL_ALREADY_INVITED` | Email address already has a Pending_Registration Staff record in this Clinic |
 
 ---
 

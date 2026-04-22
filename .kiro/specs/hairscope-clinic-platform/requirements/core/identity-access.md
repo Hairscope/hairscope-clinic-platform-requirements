@@ -9,7 +9,8 @@
 - **Staff**: Any authenticated human user of the platform belonging to a Clinic or Organization.
 - **Role**: A named set of `(module, action)` permissions assignable to one or more Staff members.
 - **Permission**: A single `(module, action)` grant where action ∈ `{view, create, edit, delete}`.
-- **Invite**: A single-use, time-limited email link that allows a prospective Staff member to register.
+- **Invite**: A single-use, time-limited email link sent to a prospective Staff member to complete registration.
+- **Pending_Registration**: The status of a Staff record that has been created by an Admin invite but whose password has not yet been set by the invitee.
 - **JWT**: JSON Web Token issued on successful authentication, scoped to the Staff member's organization, clinic, and effective permissions.
 - **Effective_Permissions**: The union of all permissions granted by all roles assigned to a Staff member.
 - **Deactivation**: Setting a Staff member's status to `Inactive`, revoking authentication while preserving all associated data.
@@ -22,31 +23,59 @@
 
 **User Story:** As a Clinic_Admin or Organization_Admin, I want to invite staff via email so that new members can securely create their own accounts.
 
+#### Invite Flow
+
+The invite flow has two distinct phases with different actors:
+
+**Phase 1 — Admin sends invite:**
+1. Admin enters the invitee's email address and assigns one or more roles.
+2. THE Platform validates the email is not already registered or already invited.
+3. THE Platform creates a Staff record with status `PENDING_REGISTRATION` and the assigned roles.
+4. THE Platform generates a unique single-use token and sends the invite link to the invitee's email.
+
+**Phase 2 — Invitee accepts invite:**
+1. Invitee follows the link and sets a password.
+2. THE Platform transitions the Staff record from `PENDING_REGISTRATION` → `ACTIVE`.
+3. THE Platform issues a JWT and the invitee is logged in.
+4. The invitee can then complete their profile (First Name, Last Name, Phone, Specialization, Experience) from within the platform.
+
 #### Acceptance Criteria
 
-1. WHEN an Admin sends an invitation, THE Platform SHALL generate a unique single-use registration token and send it to the invitee's email address as a link.
-2. THE invite link SHALL expire exactly 24 hours after issuance.
-3. WHEN an invitee follows a valid invite link, THE Platform SHALL present a registration form to set a password and complete their Staff profile (First Name, Last Name, Phone, Specialization, Experience).
-4. WHEN registration is completed, THE Platform SHALL set the Staff member's status to `Active` and issue a JWT.
-5. IF an invitee follows an expired invite link, THE Platform SHALL return an `INVITE_EXPIRED` error and SHALL NOT create a Staff account.
-6. IF an invitee follows an already-used invite link, THE Platform SHALL return an `INVITE_ALREADY_USED` error and SHALL NOT create a second Staff account.
-7. THE Platform SHALL allow an Admin to resend an invite; resending invalidates the previous token and issues a new one with a fresh 24-hour expiry.
-8. THE Platform SHALL record invite sent, invite used, and invite expired events in the Audit_Log.
+1. WHEN an Admin sends an invitation, THE Platform SHALL require the invitee's email address and at least one role assignment.
+2. WHEN an Admin sends an invitation, THE Platform SHALL create a Staff record with status `PENDING_REGISTRATION` and the assigned roles, then send the invite link to the invitee's email.
+3. THE invite link SHALL expire exactly 7 days after issuance.
+4. WHEN an invitee follows a valid invite link, THE Platform SHALL present a form to set a new password. Once the password is set, the Staff record transitions to `ACTIVE` and a JWT is issued.
+5. WHEN the Staff record is activated, THE Platform SHALL allow the Staff member to complete their profile (First Name, Last Name, Phone, Specialization, Experience) from within the platform.
+6. IF an invitee follows an expired invite link, THE Platform SHALL return an `INVITE_EXPIRED` error. The Staff record remains in `PENDING_REGISTRATION` status.
+7. IF an invitee follows an already-used invite link (password already set), THE Platform SHALL return an `INVITE_ALREADY_USED` error. If the password was not yet set, the link SHALL work normally.
+8. THE Platform SHALL allow an Admin to resend an invite to a Staff member in `PENDING_REGISTRATION` status; resending invalidates the previous token and issues a new one with a fresh 7-day expiry.
+9. THE Platform SHALL allow an Admin to cancel a pending invite, which deletes the `PENDING_REGISTRATION` Staff record.
+10. THE Platform SHALL record invite sent, invite used, invite expired, and invite cancelled events in the Audit_Log.
 
-#### Failure Cases
+#### Failure Cases — Admin-facing (at invite send time)
 
 | Condition | Error Code | Behaviour |
 |-----------|------------|-----------|
-| Invite token not found | `INVITE_NOT_FOUND` | Return error, no account created |
-| Invite token expired | `INVITE_EXPIRED` | Return error, no account created |
-| Invite token already used | `INVITE_ALREADY_USED` | Return error, no account created |
-| Email already registered | `EMAIL_ALREADY_EXISTS` | Return error, no account created |
+| Email already has an `ACTIVE` or `INACTIVE` Staff record in this Clinic | `EMAIL_ALREADY_EXISTS` | Shown to Admin; no new record created |
+| Email already has a `PENDING_REGISTRATION` record in this Clinic | `EMAIL_ALREADY_INVITED` | Shown to Admin; Admin can resend instead |
+| No role assigned | `VALIDATION_ERROR` (field: `roles`) | Shown to Admin; no record created |
+
+#### Failure Cases — Invitee-facing (at link follow time)
+
+| Condition | Error Code | Behaviour |
+|-----------|------------|-----------|
+| Invite token not found | `INVITE_NOT_FOUND` | Staff record status unchanged |
+| Invite token expired | `INVITE_EXPIRED` | Staff record remains `PENDING_REGISTRATION` |
+| Invite token already used (password set) | `INVITE_ALREADY_USED` | Staff record already `ACTIVE` |
+| Invite token revoked (resend issued) | `INVITE_REVOKED` | Staff record remains `PENDING_REGISTRATION` |
 
 #### Correctness Properties
 
-- For any Invite issued at time T, it is valid for all instants in `[T, T+24h)` and invalid for all instants `≥ T+24h`.
-- Using the same invite link twice SHALL NOT create a second Staff account.
+- For any Invite issued at time T, it is valid for all instants in `[T, T+7d)` and invalid for all instants `≥ T+7d`.
+- Using the same invite link after password has been set SHALL NOT create a second Staff account.
 - After resend, the previous invite token SHALL be invalid regardless of its remaining TTL.
+- At the moment an invite is sent, exactly one Staff record with status `PENDING_REGISTRATION` SHALL exist for that email in that Clinic.
+- A Staff record in `PENDING_REGISTRATION` status SHALL NOT be able to authenticate.
 
 ---
 
@@ -139,8 +168,9 @@
 
 | Condition | Error Code |
 |-----------|------------|
-| No recipient selected | `RECIPIENT_REQUIRED` |
-| Recipient has lower role level | `RECIPIENT_INSUFFICIENT_ROLE` |
+| No recipient selected for a reassignable category | `RECIPIENT_REQUIRED` |
+| Recipient is inactive | `RECIPIENT_INACTIVE` |
+| Recipient belongs to a different Clinic | `FORBIDDEN` |
 | Deleting last active Clinic_Admin | `LAST_CLINIC_ADMIN` |
 | Deleting last active Organization_Admin | `LAST_ORG_ADMIN` |
 

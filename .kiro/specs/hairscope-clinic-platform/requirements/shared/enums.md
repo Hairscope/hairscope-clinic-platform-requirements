@@ -10,12 +10,14 @@
 StaffStatus
   ACTIVE
   INACTIVE
+  PENDING_REGISTRATION   # Invite sent by Admin, password not yet set by invitee
 
 InviteStatus
   PENDING
   USED
   EXPIRED
   REVOKED
+  CANCELLED
 
 UserRole
   USER
