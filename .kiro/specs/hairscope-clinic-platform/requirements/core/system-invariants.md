@@ -6,8 +6,8 @@
 
 ## Identity & Access Invariants
 
-| ID | Invariant | Enforced By |
-|----|-----------|-------------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
+|:------------|-----------|-------------|
 | GI-1 | Every record belongs to exactly one Organization. Cross-organization data access is impossible. | All GraphQL resolvers |
 | GI-2 | Every Clinic belongs to exactly one Organization. | DB constraint + resolver |
 | GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. Organization_Admins span all Clinics in their Organization. Staff may be transferred between Clinics within the same Organization by an Organization_Admin only. | DB constraint + resolver |
@@ -23,8 +23,8 @@
 
 ## Patient & Session Invariants
 
-| ID | Invariant | Enforced By |
-|----|-----------|-------------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
+|:------------|-----------|-------------|
 | GI-11 | No two Patients within the same Clinic may share the same `email`. | DB unique constraint (per clinic) |
 | GI-12 | No two Patients within the same Clinic may share the same `phone`. | DB unique constraint (per clinic) |
 | GI-13 | A Patient may have at most one active Session (status: `Draft` or `Saved`) per Clinic at any point in time. | Session create guard |
@@ -39,8 +39,8 @@
 
 ## Data Integrity Invariants
 
-| ID | Invariant | Enforced By |
-|----|-----------|-------------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
+|:------------|-----------|-------------|
 | GI-20 | All timestamps are stored in UTC. | DB constraint + serializer |
 | GI-21 | All entity IDs are server-generated UUIDs (v4). Client-supplied IDs are rejected. | Resolver input validation |
 | GI-22 | Invoice numbers are sequential integers scoped per Clinic and are never reused. | DB sequence per Clinic |
@@ -51,8 +51,8 @@
 
 ## Audit Invariants
 
-| ID | Invariant | Enforced By |
-|----|-----------|-------------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
+|:------------|-----------|-------------|
 | GI-25 | Audit_Log entries are append-only and cannot be edited, deleted, or soft-deleted. | No update/delete mutation exposed; DB append-only policy |
 | GI-26 | Audit_Log entries are never transferred when a Staff member is deleted. | Data transfer logic |
 | GI-27 | Audit_Log entries retain the original actor name even after the actor is deleted. | Snapshot at write time |
@@ -62,8 +62,8 @@
 
 ## API & Architecture Invariants
 
-| ID | Invariant | Enforced By |
-|----|-----------|-------------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
+|:------------|-----------|-------------|
 | GI-29 | All API operations are GraphQL except file uploads (HTTP multipart) and webhook ingestion (HTTP POST). | Architecture |
 | GI-30 | No module may directly call another module's internal resolver, service, or repository. | Architecture + code review |
 | GI-31 | All cross-module communication uses domain events via the event bus. | Architecture |
