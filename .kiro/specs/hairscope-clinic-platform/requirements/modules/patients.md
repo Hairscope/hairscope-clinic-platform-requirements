@@ -43,16 +43,18 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `genderAssignedAtBirth`.
-2. THE Platform SHALL accept an optional `externalPatientId` (alphanumeric) for mapping to external clinic systems. This field is clinic-assigned and separate from the platform-generated UUID.
-3. WHEN a Patient record is created or updated, THE Platform SHALL auto-calculate and store `age` from `dateOfBirth`.
-4. WHEN a Staff member attempts to create a Patient with an `email` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
-5. WHEN a Staff member attempts to create a Patient with a `phone` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
-6. THE Platform SHALL NOT expose a delete or archive mutation for Patient records. Removal is only possible via GDPR erasure.
-7. WHEN a `LeadConverted` event is received, THE Platform SHALL auto-populate the Patient profile fields from the Lead's data without requiring manual re-entry.
-8. THE Platform SHALL allow Staff to search Patients by name (first name, last name, or full name).
-9. WHEN a Patient profile is created or updated, THE Platform SHALL record the action in the Audit_Log.
-10. THE Platform SHALL allow the same physical person to have Patient records at multiple Clinics, including across different Organizations. There is no global uniqueness constraint on email or phone across Clinics.
+1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `phone`.
+2. THE Platform SHALL accept the following optional fields: `dateOfBirth`, `age`, `genderAssignedAtBirth`, `externalPatientId` (alphanumeric, for mapping to external clinic systems).
+3. WHEN `dateOfBirth` is provided, THE Platform SHALL auto-calculate and store `age` from `dateOfBirth`, overriding any manually entered `age` value.
+4. WHEN `dateOfBirth` is not provided, THE Platform SHALL accept a manually entered `age` value.
+5. WHEN neither `dateOfBirth` nor `age` is provided, both fields SHALL remain null on the Patient record.
+6. WHEN a Staff member attempts to create a Patient with an `email` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
+7. WHEN a Staff member attempts to create a Patient with a `phone` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
+8. THE Platform SHALL NOT expose a delete or archive mutation for Patient records. Removal is only possible via GDPR erasure.
+9. WHEN a `LeadConverted` event is received, THE Platform SHALL auto-populate the Patient profile fields from the Lead's data without requiring manual re-entry.
+10. THE Platform SHALL allow Staff to search Patients by name (first name, last name, or full name).
+11. WHEN a Patient profile is created or updated, THE Platform SHALL record the action in the Audit_Log.
+12. THE Platform SHALL allow the same physical person to have Patient records at multiple Clinics, including across different Organizations. There is no global uniqueness constraint on email or phone across Clinics.
 
 #### Failure Cases
 
@@ -67,7 +69,8 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 #### Correctness Properties
 
-- For any Patient P with `dateOfBirth` D: stored `age` = `floor((current_date − D) / 365.25)` at time of creation or update.
+- For any Patient P where `dateOfBirth` is provided: stored `age` = `floor((current_date − dateOfBirth) / 365.25)` at time of creation or update, overriding any manually entered value.
+- For any Patient P where `dateOfBirth` is not provided: `age` reflects the manually entered value, or null if not entered.
 - For any two distinct Patients P1 and P2 in the same Clinic: `P1.email ≠ P2.email` and `P1.phone ≠ P2.phone`.
 - Two Patients in different Clinics MAY share the same email or phone — this is permitted and expected.
 - For any Patient P created at time T, P SHALL remain retrievable at all times T' > T unless a GDPR erasure is processed.
@@ -153,12 +156,12 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 ### PAT-5: GDPR Erasure
 
-**User Story:** As a Clinic_Admin, I want to process a patient's right-to-erasure request so that the platform complies with GDPR obligations.
+**User Story:** As a Clinic_Admin or Organization_Admin, I want to process a patient's right-to-erasure request so that the platform complies with GDPR obligations.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow a Clinic_Admin to trigger GDPR erasure for a specific Patient record.
-2. WHEN erasure is triggered, THE Platform SHALL anonymize the following personal identifiers: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, replacing them with anonymized placeholders.
+1. THE Platform SHALL allow a Clinic_Admin or Organization_Admin to trigger GDPR erasure for a specific Patient record within their Clinic or Organization.
+2. WHEN erasure is triggered, THE Platform SHALL anonymize the following personal identifiers: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `age`, replacing them with anonymized placeholders.
 3. Erasure SHALL NOT delete Session clinical data (images, AI analysis results, reports) — only personal identifiers are anonymized.
 4. Erasure SHALL NOT affect Patient records in other Clinics that share the same `globalPatientId`. Each Clinic handles its own erasure independently.
 5. THE Platform SHALL require explicit confirmation (`confirmed: true`) before proceeding with erasure.
@@ -171,7 +174,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 |-----------|------------|
 | Erasure attempted without confirmation | `CONFIRMATION_REQUIRED` |
 | Patient not found | `PATIENT_NOT_FOUND` |
-| Non-Clinic_Admin attempting erasure | `FORBIDDEN` |
+| Non-admin attempting erasure (regular Staff) | `FORBIDDEN` |
 
 #### Correctness Properties
 
