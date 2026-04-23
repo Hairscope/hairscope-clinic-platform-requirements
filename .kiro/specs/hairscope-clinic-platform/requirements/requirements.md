@@ -155,6 +155,7 @@ All platform API operations use GraphQL unless explicitly noted.
 |-----------|----------|--------|
 | File uploads (images, PDFs) | HTTP multipart | GraphQL does not natively support binary uploads |
 | Webhook lead ingestion | HTTP POST | External campaign systems send standard HTTP webhooks |
+| Video/virtual consultation sessions | WebRTC or equivalent | Real-time video requires a dedicated signaling and media protocol |
 
 ### 7.2 GraphQL Operation Naming
 

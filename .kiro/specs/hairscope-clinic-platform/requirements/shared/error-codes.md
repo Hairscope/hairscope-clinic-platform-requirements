@@ -100,7 +100,8 @@
 | `ACTIVE_SESSION_EXISTS` | Patient already has an active (Draft or Saved) Session |
 | `SESSION_NOT_DELETABLE` | Session is in Saved or Completed status and cannot be deleted |
 | `SESSION_SAVE_VALIDATION` | Session does not meet save requirements (missing images, etc.) |
-| `TRICHOSCOPY_COUNT_INVALID` | Session does not have exactly 6 Trichoscopy_Images |
+| `TRICHOSCOPY_COUNT_INVALID` | Session has fewer than 6 Trichoscopy_Images |
+| `TRICHOSCOPY_MANDATORY_POSITION_MISSING` | One or more of the 6 mandatory trichoscopy positions (P1 Frontal, P2 Left Temporal, P3 Right Temporal, P4 Top of Head, P5 Crown, P6 Occipital) is missing |
 | `FRONTAL_IMAGE_REQUIRED` | Session must have at least one Frontal Global_Image |
 | `SESSION_LOCKED` | Session is Saved or Completed; image capture is not allowed |
 

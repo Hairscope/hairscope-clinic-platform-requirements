@@ -29,7 +29,7 @@
 | GI-12 | No two Patients within the same Clinic may share the same `phone`. | DB unique constraint (per clinic) |
 | GI-13 | A Patient may have at most one active Session (status: `Draft` or `Saved`) per Clinic at any point in time. | Session create guard |
 | GI-14 | A Session in `Saved` or `Completed` status cannot be deleted. | Session delete guard |
-| GI-15 | A saved Session must contain exactly 6 Trichoscopy_Images. | Session save validation |
+| GI-15 | A saved Session must contain a minimum of 6 Trichoscopy_Images, one from each of the 6 mandatory positions: Frontal (P1), Left Temporal (P2), Right Temporal (P3), Top of the Head (P4), Crown (P5), Occipital (P6). Additional images beyond these 6 are permitted. | Session save validation |
 | GI-16 | A saved Session must contain at least one Frontal Global_Image. | Session save validation |
 | GI-17 | Patient records cannot be deleted or archived except via GDPR erasure. | No delete mutation exposed |
 | GI-18 | Each Questionnaire_Category must have exactly 5 active questions per Clinic at all times. | Question toggle guard |
@@ -45,7 +45,7 @@
 | GI-21 | All entity IDs are server-generated UUIDs (v4). Client-supplied IDs are rejected. | Resolver input validation |
 | GI-22 | Invoice numbers are sequential integers scoped per Clinic and are never reused. | DB sequence per Clinic |
 | GI-23 | An Invoice associated with a Completed Session is immutable once Finalized. | Invoice finalize guard |
-| GI-24 | A Lead's status cannot be manually set to `Converted` — it is set only by the conversion process. | Lead status mutation guard |
+| GI-24 | A Lead's status cannot be manually set to `Converted` - it is set only by the conversion process. | Lead status mutation guard |
 
 ---
 
@@ -64,7 +64,7 @@
 
 | ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
 |:------------|-----------|-------------|
-| GI-29 | All API operations are GraphQL except file uploads (HTTP multipart) and webhook ingestion (HTTP POST). | Architecture |
+| GI-29 | All API operations are GraphQL except file uploads (HTTP multipart), webhook ingestion (HTTP POST), and video/virtual consultation sessions (WebRTC or equivalent real-time protocol). | Architecture |
 | GI-30 | No module may directly call another module's internal resolver, service, or repository. | Architecture + code review |
 | GI-31 | All cross-module communication uses domain events via the event bus. | Architecture |
 | GI-32 | GraphQL mutations are atomic. Partial success is not permitted. | Resolver transaction wrapping |

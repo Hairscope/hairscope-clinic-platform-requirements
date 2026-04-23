@@ -187,26 +187,36 @@
 
 ### PAT-6: Trichoscopy Image Capture
 
-**User Story:** As a Doctor, I want to capture exactly six trichoscopy images with positional markers so that the AI can perform detailed per-image hair analysis.
+**User Story:** As a Doctor, I want to capture trichoscopy images from all mandatory positions so that the AI can perform detailed per-image hair analysis and generate a complete hair report.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require exactly 6 Trichoscopy_Images per Session before the Session can be saved (GI-13).
-2. WHEN capturing a Trichoscopy_Image, THE Platform SHALL present one of 4 predefined Head_Diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) and allow the user to place a single positional point on the diagram.
-3. THE Platform SHALL store the `(x, y)` positional point coordinates for each Trichoscopy_Image.
-4. WHEN the Report is generated, THE Platform SHALL include the positional point for each Trichoscopy_Image.
-5. WHEN Trichoscopy_Images are submitted for AI analysis, THE AI analysis SHALL produce `hairCount`, `density`, and `thickness` values per image.
+1. THE Platform SHALL require a minimum of 6 Trichoscopy_Images per Session before the Session can be saved, one from each of the following mandatory positions:
+   - **P1 — Frontal**
+   - **P2 — Left Temporal**
+   - **P3 — Right Temporal**
+   - **P4 — Top of the Head**
+   - **P5 — Crown**
+   - **P6 — Occipital**
+2. THE Platform SHALL allow Doctors to capture additional Trichoscopy_Images beyond the 6 mandatory positions at their discretion.
+3. WHEN capturing a Trichoscopy_Image, THE Platform SHALL present one of 4 predefined Head_Diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) and allow the user to place a single positional point on the diagram.
+4. THE Platform SHALL store the `(x, y)` positional point coordinates for each Trichoscopy_Image.
+5. WHEN the Report is generated, THE Platform SHALL include the positional point for each Trichoscopy_Image.
+6. WHEN Trichoscopy_Images are submitted for AI analysis, THE AI analysis SHALL produce `hairCount`, `density`, and `thickness` values per image.
+7. All 6 mandatory position images are required to generate the hair score in the report. IF any mandatory position is missing, THE Platform SHALL reject the session save.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Save attempted with ≠ 6 Trichoscopy_Images | `TRICHOSCOPY_COUNT_INVALID` |
+| Save attempted with fewer than 6 Trichoscopy_Images | `TRICHOSCOPY_COUNT_INVALID` |
+| One or more mandatory positions (P1–P6) missing | `TRICHOSCOPY_MANDATORY_POSITION_MISSING` |
 | Missing positional point on a Trichoscopy_Image | `VALIDATION_ERROR` (field: `position`) |
 
 #### Correctness Properties
 
-- For any saved Session S: `count(S.trichoscopyImages) = 6`.
+- For any saved Session S: `count(S.trichoscopyImages) ≥ 6`.
+- For any saved Session S: all 6 mandatory positions (P1–P6) SHALL each have at least one Trichoscopy_Image.
 - For every Trichoscopy_Image T in a saved Session: `T.positionCoordinates` is non-null.
 - For every Trichoscopy_Image T in a COMPLETED Session: `T.hairCount`, `T.density`, `T.thickness` are non-null.
 
