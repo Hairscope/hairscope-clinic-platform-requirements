@@ -116,6 +116,8 @@
 | `CONVERSION_DUPLICATE_EMAIL` | A Patient with this email already exists; conversion blocked |
 | `CONVERSION_DUPLICATE_PHONE` | A Patient with this phone already exists; conversion blocked |
 | `INVALID_STATUS_TRANSITION` | Attempted lead status change is not permitted |
+| `INVALID_LEAD_REASSIGNMENT` | Lead cannot be reassigned in its current status (must be NEW or LOST) |
+| `NO_ELIGIBLE_STAFF` | No active Staff member with lead access found in the Clinic for Round_Robin assignment |
 
 ---
 
