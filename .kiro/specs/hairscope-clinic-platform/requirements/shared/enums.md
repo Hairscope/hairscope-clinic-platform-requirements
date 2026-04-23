@@ -70,6 +70,10 @@ LeadPriority
   MEDIUM
   HIGH
   URGENT
+
+LeadAssignmentMode
+  AUTO_ASSIGN    # Default — leads auto-assigned to clinic from source
+  MANUAL_ASSIGN  # Org Admin reviews and confirms clinic assignment
 ```
 
 ---
