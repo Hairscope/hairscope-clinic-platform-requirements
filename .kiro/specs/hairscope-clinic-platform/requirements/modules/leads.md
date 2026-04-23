@@ -442,3 +442,41 @@ Lead created
 #### Correctness Properties
 
 - For any configuration mutation on Webhook_Sources, API keys, web component settings, or `leadAssignmentMode`, the actor SHALL be an Organization_Admin or the mutation SHALL fail.
+
+---
+
+### LM-13: Lead Distribution Algorithm
+
+> **Design note:** The Lead_Distribution_Algorithm is intentionally defined as a separate, pluggable component. Its assignment logic can be updated independently without changing the lead capture flow, assignment mode, or any other lead requirement. New rules can be added or reordered without modifying other lead requirements.
+
+**User Story:** As a Clinic_Admin, I want the platform to automatically assign incoming leads to the most appropriate available staff member so that leads are handled promptly and fairly.
+
+#### Distribution Trigger
+
+WHEN a Lead is assigned to a Clinic (at creation in `AUTO_ASSIGN` mode, or upon Org Admin confirmation in `MANUAL_ASSIGN` mode), THE Platform SHALL invoke the Lead_Distribution_Algorithm to assign a Staff member to that Lead.
+
+#### Assignment Rules (current implementation: Round_Robin)
+
+The current implementation distributes leads evenly across eligible Staff members in rotation order. The algorithm SHALL be implemented as a separate, independently deployable service so that the distribution logic can be updated without modifying the lead capture or assignment flow.
+
+| Priority | Rule |
+|----------|------|
+| 1 | Select the active Staff member with lead access in the Clinic who has received the fewest leads in the current rotation cycle (Round_Robin). |
+| 2 | If all eligible Staff members have equal lead counts, select the next Staff member in the defined rotation order. |
+| 3 | If no eligible Staff member is found (all inactive or no lead access), assign to the Clinic_Admin as the fallback. |
+
+#### Acceptance Criteria
+
+1. THE Lead_Distribution_Algorithm SHALL run automatically whenever a Lead is assigned to a Clinic.
+2. THE assignment result SHALL be stored on the Lead record as `assignedStaffId`.
+3. THE Platform SHALL allow a Clinic_Admin or Staff member with reassign permission to manually override the assigned Staff member on any Lead in `NEW` or `LOST` status.
+4. WHEN the assigned Staff member is manually overridden, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
+5. THE Lead_Distribution_Algorithm logic SHALL be implemented as a separate, independently deployable service so that distribution rules can be updated without modifying the lead capture flow.
+6. THE Platform SHALL NEVER reject lead creation from API sources (webhook, selfie analysis) due to staff availability — the Clinic_Admin is always the fallback assignee.
+
+#### Correctness Properties
+
+- For any Lead L assigned to Clinic C, `L.assignedStaffId` SHALL reference an active Staff member in Clinic C with lead access.
+- The Lead_Distribution_Algorithm SHALL distribute leads evenly across eligible Staff members over time. The current implementation is Round_Robin.
+- After manual reassignment, `L.assignedStaffId` SHALL reference the new assignee and the Audit_Log SHALL record the previous assignee.
+- `assignedStaffId` is always set when `clinicId` is set — a clinic-scoped lead without a staff assignment is not permitted.

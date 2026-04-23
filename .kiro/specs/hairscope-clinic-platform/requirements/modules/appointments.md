@@ -24,11 +24,11 @@
 
 ### APT-1: Service Configuration
 
-**User Story:** As a Clinic_Admin, I want to configure the services my clinic offers — including which staff can provide them — so that the scheduling engine can assign the right person to each appointment.
+**User Story:** As a Clinic_Admin or Organization_Admin, I want to configure the services my clinic offers — including which staff can provide them — so that the scheduling engine can assign the right person to each appointment.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow Clinic_Admins to create, edit, and delete Services for their Clinic.
+1. THE Platform SHALL allow Clinic_Admins and Organization_Admins to create, edit, and delete Services for a Clinic.
 2. THE Platform SHALL store the following fields per Service: `name`, `description`, `image`, `price`, `currency`, `duration` (minutes), `qualifiedStaff[]` (list of Staff member IDs).
 3. WHEN a Service is created, `name`, `price`, `currency`, and `duration` are required. `qualifiedStaff` is optional at creation but required before the service can be booked.
 4. THE Platform SHALL allow Clinic_Admins to add or remove Staff members from a Service's `qualifiedStaff` list at any time.
@@ -58,11 +58,11 @@
 
 ### APT-2: Working Hours and Slot Availability
 
-**User Story:** As a Clinic_Admin, I want to configure my clinic's working hours so that the booking system only offers valid time slots to patients.
+**User Story:** As a Clinic_Admin or Organization_Admin, I want to configure my clinic's working hours so that the booking system only offers valid time slots to patients.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow Clinic_Admins to configure Clinic_Working_Hours per day of the week, with `startTime` and `endTime` per day.
+1. THE Platform SHALL allow Clinic_Admins and Organization_Admins to configure Clinic_Working_Hours per day of the week, with `startTime` and `endTime` per day.
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
 3. WHEN Clinic_Working_Hours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
 4. THE Platform SHALL derive available Appointment_Slots from Clinic_Working_Hours and the duration of the selected Service, excluding already-occupied slots.
