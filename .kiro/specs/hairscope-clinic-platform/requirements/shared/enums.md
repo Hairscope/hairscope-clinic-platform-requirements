@@ -34,14 +34,18 @@ UserRole
 ```
 SessionStatus
   DRAFT          # In progress, not yet saved. Excluded from progress tracking.
-  SAVED          # Images locked, submitted for AI analysis. Counts toward progress tracking.
-  COMPLETED      # AI analysis done, report generated. Counts toward progress tracking.
+  SAVED          # Images locked, submitted for AI analysis. Excluded from progress tracking.
+  COMPLETED      # AI analysis done, report generated. Contributes to progress tracking.
   DELETED        # Permanently removed (only from DRAFT)
 
 SessionType
-  TRICHOSCOPY
-  GLOBAL
-  AI
+  # Current session types
+  HAIR_ANALYSIS     # Trichoscopy + global image hair analysis (current implementation)
+
+  # Future session types (not yet implemented)
+  # SKIN_TREATMENT
+  # HAIR_REMOVAL
+  # GENERAL_CONSULTATION
 ```
 
 ---

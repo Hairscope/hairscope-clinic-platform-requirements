@@ -101,7 +101,7 @@ Modules and their logical grouping:
 
 | Module | Belongs To | Notes |
 |--------|-----------|-------|
-| `patients` | Clinical | Includes sessions as a sub-resource of patients |
+| `patients` | Clinical | Includes sessions as a sub-resource of patients. Sessions cannot exist without a Patient. |
 | `leads` | Clinical | |
 | `appointments` | Clinical | |
 | `products` | Clinical | |
@@ -406,6 +406,7 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 | Leads | `modules/leads.md` |
 | Appointments | `modules/appointments.md` |
 | Patients | `modules/patients.md` |
+| Sessions | `modules/sessions.md` |
 | Products | `modules/products.md` |
 | Billing | `modules/billing.md` |
 | Enums | `shared/enums.md` |
