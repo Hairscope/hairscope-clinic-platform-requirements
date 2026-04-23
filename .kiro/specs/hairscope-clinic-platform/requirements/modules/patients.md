@@ -5,6 +5,8 @@
 > Events emitted: none (patient module emits no domain events directly)
 > Events consumed: `LeadConverted`
 
+> **Out of scope:** Patient-facing features — including patient login, viewing reports, prescriptions, treatment history, and the Hairscope Care App — are NOT in scope for this document. These will be elaborated in a separate specification for the **Hairscope Care App**. The `globalPatientId` defined here is the linking key that will enable the Hairscope Care App to aggregate a patient's full cross-clinic treatment journey.
+
 ---
 
 ## Glossary
@@ -12,7 +14,7 @@
 - **Patient**: A person receiving or having received treatment at a Clinic. Scoped to the Clinic where the record was created.
 - **Patient_Page**: The dedicated view for a single Patient showing profile, analysis history, medical documents, and treatment progress graph.
 - **Treatment_Progress_Graph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute — `DRAFT` and `SAVED` Sessions are excluded.
-- **globalPatientId**: A platform-wide UUID assigned to each unique physical person at Patient creation time, determined by email or phone lookup. Enables the future Patient app to aggregate cross-clinic treatment history. Never used for cross-clinic data access by Staff.
+- **globalPatientId**: A platform-wide UUID assigned to each unique physical person at Patient creation time, determined by email or phone lookup. Enables the **Hairscope Care App** to aggregate a patient's full cross-clinic treatment history. Never used for cross-clinic data access by Staff.
 - **Medical_Document**: An image or PDF file uploaded to a Patient's profile with a title and optional description.
 - **GDPR_Erasure**: The process of anonymizing a Patient's personal identifiers in response to a verified right-to-erasure request. Does not delete clinical data.
 
@@ -83,7 +85,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 3. IF a matching `globalPatientId` is found, THE Platform SHALL assign it to the new Patient record.
 4. IF no matching `globalPatientId` is found, THE Platform SHALL generate a new `globalPatientId` and assign it.
 5. THE `globalPatientId` SHALL be stored on every Patient record but SHALL NOT be exposed in any Staff-facing GraphQL query that could be used to access records from other Clinics.
-6. THE Platform SHALL reserve the `globalPatientId` exclusively for the future Patient app to aggregate the full cross-clinic treatment journey.
+6. THE Platform SHALL reserve the `globalPatientId` exclusively for the **Hairscope Care App**, which will use it to aggregate the patient's full cross-clinic treatment journey. Patient-facing features are out of scope for this document.
 7. WHEN a GDPR erasure is processed for a Patient record, THE Platform SHALL anonymize the personal identifiers on that specific Clinic's Patient record only. Records in other Clinics sharing the same `globalPatientId` are unaffected unless separate erasure requests are submitted.
 
 #### Failure Cases
