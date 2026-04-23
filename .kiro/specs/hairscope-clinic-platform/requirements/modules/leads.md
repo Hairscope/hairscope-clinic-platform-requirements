@@ -158,7 +158,7 @@ Within Clinic (all leads MUST have assignedStaffId)
 
 1. THE Platform SHALL provide a Selfie_Analysis web component built with Stencil, embeddable on any Organization's website or app.
 2. THE Selfie_Analysis web component is authenticated using the Organization's API key. There are no clinic-level API keys.
-3. WHEN a visitor starts the Selfie_Analysis flow, THE Platform SHALL display a list of Clinics belonging to the Organization, allowing the visitor to select their preferred Clinic (e.g., by location proximity or convenience).
+3. WHEN a visitor starts the Selfie_Analysis flow and the Organization has more than one active Clinic, THE Platform SHALL display a list of Clinics for the visitor to select their preferred Clinic (e.g., by location proximity or convenience). If the Organization has exactly one active Clinic, the Clinic is automatically assigned without presenting a selection screen.
 4. WHEN a visitor completes the Selfie_Analysis flow, THE Platform SHALL capture: `name`, `age`, `gender`, `email`, `phone`.
 5. WHEN a visitor completes the Selfie_Analysis flow and has selected a Clinic, THE Platform SHALL generate a `Selfie_Analysis_Report`, create a Lead record assigned to the selected Clinic, and distribute the Lead via Round_Robin to an active Staff member with lead access in that Clinic.
 6. WHEN a visitor completes the Selfie_Analysis flow without selecting a Clinic, THE Platform SHALL create the Lead as an Unassigned_Lead visible only to the Organization_Admin.
@@ -175,9 +175,10 @@ Within Clinic (all leads MUST have assignedStaffId)
 
 #### Correctness Properties
 
-- For every completed Selfie_Analysis flow with a Clinic selected, exactly one Lead record SHALL be created with `clinicId` set to the selected Clinic.
-- For every completed Selfie_Analysis flow without a Clinic selected, exactly one Unassigned_Lead SHALL be created with `clinicId = null`.
-- For any Lead L created via Selfie_Analysis: `L.selfieAnalysisReport` is non-null.
+- For every completed Selfie_Analysis flow where the Organization has more than one active Clinic and the visitor selected a Clinic, exactly one Lead record SHALL be created with `clinicId` set to the selected Clinic.
+- For every completed Selfie_Analysis flow where the Organization has exactly one active Clinic, the Lead SHALL be automatically assigned to that Clinic without presenting a selection screen.
+- For every completed Selfie_Analysis flow where the visitor did not select a Clinic (multi-clinic org), exactly one Unassigned_Lead SHALL be created with `clinicId = null`.
+- For any Lead L created via Selfie_Analysis: `L.selfieAnalysisReport` may be null if image capture failed or required questions were incomplete. The Lead is still created and assigned regardless.
 - The Clinic list displayed to the visitor SHALL only include active Clinics belonging to the Organization.
 
 ---
@@ -190,20 +191,21 @@ Within Clinic (all leads MUST have assignedStaffId)
 
 1. WHEN a Lead is assigned to a Clinic (at creation or by Organization_Admin), THE Platform SHALL automatically assign the Lead to an active Staff member with lead access in that Clinic using Round_Robin rotation.
 2. THE Round_Robin rotation SHALL cycle through all active Staff members with lead access in the Clinic in a consistent order, distributing leads evenly.
-3. IF no active Staff member with lead access exists in the Clinic, THE Platform SHALL reject the lead creation or clinic assignment and return a `NO_ELIGIBLE_STAFF` error. A clinic-scoped lead without a staff assignment is not permitted.
-4. WHEN an Organization_Admin assigns a Clinic to an Unassigned_Lead, THE Platform SHALL trigger Round_Robin distribution within that Clinic.
-5. THE Platform SHALL allow a Clinic_Admin or Staff member with reassign permission to manually reassign a Lead to another active Staff member within the same Clinic, provided the Lead's status is `NEW` or `LOST`.
-6. THE Platform SHALL NOT allow reassignment of Leads in `CONTACTED`, `QUALIFIED`, or `CONVERTED` status.
-7. WHEN a Lead is reassigned, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
+3. THE Platform SHALL NEVER reject lead creation from API sources (webhook, selfie analysis) due to staff availability. If no other eligible Staff member is found, the Lead SHALL be assigned to the Clinic_Admin as the fallback assignee.
+4. Manual lead creation by unauthorized users (no lead create permission) SHALL be rejected with `FORBIDDEN`.
+5. WHEN an Organization_Admin assigns a Clinic to an Unassigned_Lead, THE Platform SHALL trigger Round_Robin distribution within that Clinic.
+6. THE Platform SHALL allow a Clinic_Admin or Staff member with reassign permission to manually reassign a Lead to another active Staff member within the same Clinic, provided the Lead's status is `NEW` or `LOST`.
+7. THE Platform SHALL NOT allow regular Staff to reassign Leads in `CONTACTED`, `QUALIFIED`, or `CONVERTED` status.
+8. WHEN a Lead is reassigned, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Reassigning a Lead not in `NEW` or `LOST` status | `INVALID_LEAD_REASSIGNMENT` |
+| Reassigning a Lead not in `NEW` or `LOST` status (by non-admin) | `INVALID_LEAD_REASSIGNMENT` |
 | Recipient Staff member is inactive | `RECIPIENT_INACTIVE` |
 | Recipient Staff member belongs to a different Clinic | `FORBIDDEN` |
-| No active Staff with lead access in Clinic | `NO_ELIGIBLE_STAFF` |
+| Unauthorized user attempting manual lead creation | `FORBIDDEN` |
 
 #### Correctness Properties
 
@@ -248,9 +250,9 @@ Within Clinic (all leads MUST have assignedStaffId)
 1. THE Platform SHALL allow Staff to add Lead_Actions to a Lead record, each with: `actionType` (from dropdown), optional `statusChange`, and `content` text.
 2. THE Platform SHALL support the following `actionType` values: `WHATSAPP`, `EMAIL`, `FACEBOOK_MESSAGE`, `PHONE_CALL`, `IN_PERSON_MEETING`, `OTHER`.
 3. WHEN a Lead_Action is added, THE Platform SHALL record: `actionType`, `content`, `timestamp` (UTC), and the Staff member who added it.
-4. THE Platform SHALL display all Lead_Actions for a Lead in chronological order.
-5. THE Platform SHALL preserve all Lead_Actions until the Lead is converted to a Patient.
-6. WHEN a Lead is converted to a Patient, THE Platform SHALL transfer all Lead_Actions to the Patient record for historical reference.
+4. THE Platform SHALL display all Lead_Actions for a Lead in reverse chronological order (newest first).
+5. THE Platform SHALL preserve all Lead_Actions on the Lead record permanently. They are not deleted upon conversion.
+6. WHEN a Lead is converted to a Patient, THE Platform SHALL link the Patient record to the originating Lead record so that Lead_Actions remain accessible via the Patient's history. Lead_Actions are referenced, not copied — no data is duplicated.
 7. WHEN a Lead_Action is added, THE Platform SHALL record the action in the Audit_Log.
 
 #### Failure Cases
@@ -262,8 +264,8 @@ Within Clinic (all leads MUST have assignedStaffId)
 
 #### Correctness Properties
 
-- For any two Lead_Actions A1 and A2 on the same Lead where `A1.timestamp < A2.timestamp`, A1 SHALL appear before A2 in the list.
-- For any Lead L with N Lead_Actions, after conversion to Patient P, P SHALL have at least N historical records corresponding to L's Lead_Actions.
+- For any two Lead_Actions A1 and A2 on the same Lead where `A1.timestamp > A2.timestamp`, A1 SHALL appear before A2 in the list (newest first).
+- For any Lead L converted to Patient P, all Lead_Actions on L SHALL remain accessible via P's linked lead reference. No Lead_Action data is duplicated or moved.
 
 ---
 
@@ -274,24 +276,26 @@ Within Clinic (all leads MUST have assignedStaffId)
 #### Acceptance Criteria
 
 1. THE Platform SHALL support `Lead_Status` values: `NEW`, `CONTACTED`, `QUALIFIED`, `CONVERTED`, `LOST`.
-2. THE Platform SHALL allow Staff to change a Lead's status to any value except `CONVERTED` (set only by the conversion process).
+2. Regular Staff SHALL be able to change a Lead's status to any value except `CONVERTED` (set only by the conversion process).
 3. WHEN a Lead's status is changed to `LOST`, THE Platform SHALL require explicit confirmation (`confirmed: true` in the mutation input).
 4. THE Platform SHALL allow Staff to set and update `priority` and `tags`.
 5. WHEN status, priority, or tags are changed, THE Platform SHALL record the change in the Audit_Log.
+6. THE Platform SHALL allow a Clinic_Admin or Organization_Admin to override a Lead's status to any value including reverting from `CONVERTED`, to correct mistakes made by Staff. This override bypasses the normal conversion guard and is recorded in the Audit_Log with the actor's identity.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Attempting to set status to `CONVERTED` manually | `INVALID_STATUS_TRANSITION` |
-| Changing status of already-CONVERTED Lead | `LEAD_ALREADY_CONVERTED` |
+| Regular Staff attempting to set status to `CONVERTED` manually | `INVALID_STATUS_TRANSITION` |
+| Regular Staff attempting to change status of a `CONVERTED` Lead | `LEAD_ALREADY_CONVERTED` |
 | Setting status to `LOST` without confirmation | `CONFIRMATION_REQUIRED` |
 | Lead not found | `LEAD_NOT_FOUND` |
 
 #### Correctness Properties
 
-- After a Lead L is converted to a Patient: `L.status = CONVERTED` and SHALL NOT be changeable by any Staff action.
-- `CONVERTED` status SHALL only be set via the conversion process in LM-9.
+- Regular Staff SHALL NOT be able to set `L.status = CONVERTED` directly.
+- Clinic_Admin and Organization_Admin MAY set `L.status` to any value including reverting from `CONVERTED`, and the change SHALL be recorded in the Audit_Log.
+- `CONVERTED` status set via the conversion process in LM-9 SHALL be the standard path; admin override is an exception for error correction only.
 
 ---
 
@@ -307,7 +311,7 @@ Within Clinic (all leads MUST have assignedStaffId)
 4. IF the Lead's `email` already exists as a Patient's `email` in the same Clinic, THE Platform SHALL block the conversion.
 5. IF the Lead's `phone` already exists as a Patient's `phone` in the same Clinic, THE Platform SHALL block the conversion.
 6. WHEN a Lead is successfully converted, THE Platform SHALL emit a `LeadConverted` event and record the conversion in the Audit_Log including the resulting Patient ID.
-7. WHEN a Lead is converted, THE Platform SHALL transfer all Lead_Actions and the `Selfie_Analysis_Report` (if present) to the Patient record.
+7. WHEN a Lead is converted, THE Platform SHALL link the Patient record to the originating Lead so that Lead_Actions and the `Selfie_Analysis_Report` (if present) remain accessible via the Patient's history. No data is copied or moved.
 
 #### Failure Cases
 
