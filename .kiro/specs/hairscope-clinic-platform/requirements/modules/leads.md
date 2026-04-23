@@ -28,18 +28,38 @@
 ```
 Lead created
     │
-    ├── Source: MANUAL by Clinic Staff → assigned to current Clinic, distributed via Round_Robin
-    ├── Source: MANUAL by Organization_Admin → Admin selects Clinic (optional); if no Clinic selected → Unassigned_Lead
-    ├── Source: SELFIE_ANALYSIS → visitor selects Clinic from list; if no Clinic selected → Unassigned_Lead
-    └── Source: WEBHOOK → Clinic determined by field mapping; if no Clinic in payload → Unassigned_Lead
+    ├── Source: MANUAL by Clinic Staff → assigned to current Clinic, Round_Robin to Staff (MUST succeed)
+    ├── Source: MANUAL by Organization_Admin → Admin selects Clinic (optional)
+    │       ├── Clinic selected → Round_Robin to Staff (MUST succeed)
+    │       └── No Clinic selected → Unassigned_Lead (clinicId = null, assignedStaffId = null)
+    ├── Source: SELFIE_ANALYSIS → visitor selects Clinic from list
+    │       ├── Clinic selected → Round_Robin to Staff (MUST succeed)
+    │       └── No Clinic selected → Unassigned_Lead (clinicId = null, assignedStaffId = null)
+    └── Source: WEBHOOK → Clinic determined by field mapping
+            ├── Clinic in payload → Round_Robin to Staff (MUST succeed)
+            └── No Clinic in payload → Unassigned_Lead (clinicId = null, assignedStaffId = null)
 
-Unassigned_Lead
-    └── Organization_Admin assigns Clinic → Lead becomes clinic-scoped → Round_Robin distributes to Staff
+Unassigned_Lead (org-level, no clinicId)
+    └── Organization_Admin assigns Clinic → Round_Robin to Staff (MUST succeed)
 
-Within Clinic
+Within Clinic (all leads MUST have assignedStaffId)
     └── Round_Robin assigns Lead to Staff member
-    └── Clinic_Admin can reassign Lead to another Staff if status is NEW or LOST
+    └── Clinic_Admin or Staff with reassign permission can reassign Lead if status is NEW or LOST
 ```
+
+**Invariant:** For any Lead L where `L.clinicId` is non-null, `L.assignedStaffId` MUST also be non-null. A clinic-scoped lead without a staff assignment is not permitted.
+
+---
+
+## Lead Visibility Model
+
+| Role | Sees |
+|------|------|
+| Any Clinic Staff (with lead access) | All leads in their Clinic, regardless of `assignedStaffId` |
+| Clinic_Admin | All leads in their Clinic, regardless of `assignedStaffId` |
+| Organization_Admin | All leads across all Clinics + Unassigned_Leads (`clinicId = null`) |
+
+> **Note:** Per-staff lead visibility (staff seeing only their own assigned leads) is deferred to a future iteration when the permission model is extended with `leads.view.own` vs `leads.view.all` granularity.
 
 ---
 
@@ -58,7 +78,7 @@ Within Clinic
 5. WHEN a Lead is created, THE Platform SHALL set the initial `status` to `NEW`.
 6. WHEN a Lead is created, THE Platform SHALL emit a `LeadCreated` event.
 7. WHEN a Lead is created, THE Platform SHALL record the action in the Audit_Log.
-8. Clinic-level Staff SHALL only see Leads belonging to their Clinic (`clinicId` matches their Clinic).
+8. Any Clinic Staff member with lead access SHALL see all leads belonging to their Clinic (`clinicId` matches their Clinic), regardless of which staff member is assigned.
 9. Organization_Admins SHALL see all Leads across all Clinics within their Organization, including Unassigned_Leads.
 
 #### Failure Cases
@@ -71,8 +91,9 @@ Within Clinic
 
 - Two Lead records with identical email values SHALL both be creatable and retrievable without error.
 - For any newly created Lead L: `L.status = NEW` immediately after creation.
-- For any Clinic-level Staff member S in Clinic C: the Lead list query SHALL only return Leads where `clinicId = C`.
+- For any Clinic Staff member S in Clinic C with lead access: the Lead list query SHALL return all Leads where `clinicId = C`.
 - For any Organization_Admin A: the Lead list query SHALL return all Leads in A's Organization including those with `clinicId = null`.
+- For any Lead L where `L.clinicId` is non-null: `L.assignedStaffId` SHALL also be non-null.
 
 ---
 
@@ -169,10 +190,11 @@ Within Clinic
 
 1. WHEN a Lead is assigned to a Clinic (at creation or by Organization_Admin), THE Platform SHALL automatically assign the Lead to an active Staff member with lead access in that Clinic using Round_Robin rotation.
 2. THE Round_Robin rotation SHALL cycle through all active Staff members with lead access in the Clinic in a consistent order, distributing leads evenly.
-3. WHEN an Organization_Admin assigns a Clinic to an Unassigned_Lead, THE Platform SHALL trigger Round_Robin distribution within that Clinic.
-4. THE Platform SHALL allow a Clinic_Admin to manually reassign a Lead to another active Staff member within the same Clinic, provided the Lead's status is `NEW` or `LOST`.
-5. THE Platform SHALL NOT allow reassignment of Leads in `CONTACTED`, `QUALIFIED`, `CONVERTED`, or `LOST` status by Clinic-level Staff (only Clinic_Admin can reassign `LOST`).
-6. WHEN a Lead is reassigned, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
+3. IF no active Staff member with lead access exists in the Clinic, THE Platform SHALL reject the lead creation or clinic assignment and return a `NO_ELIGIBLE_STAFF` error. A clinic-scoped lead without a staff assignment is not permitted.
+4. WHEN an Organization_Admin assigns a Clinic to an Unassigned_Lead, THE Platform SHALL trigger Round_Robin distribution within that Clinic.
+5. THE Platform SHALL allow a Clinic_Admin or Staff member with reassign permission to manually reassign a Lead to another active Staff member within the same Clinic, provided the Lead's status is `NEW` or `LOST`.
+6. THE Platform SHALL NOT allow reassignment of Leads in `CONTACTED`, `QUALIFIED`, or `CONVERTED` status.
+7. WHEN a Lead is reassigned, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
 
 #### Failure Cases
 
