@@ -10,7 +10,7 @@
 
 - **Invoice**: A PDF billing document auto-generated per completed Session, itemizing services, products, and miscellaneous charges.
 - **Misc_Charge**: An additional charge added by Staff to an Invoice that is not associated with a predefined Service or Product.
-- **Invoice_Status**: `DRAFT` | `FINALIZED` — see `shared/enums.md`.
+- **Invoice_Status**: `DRAFT` | `FINALIZED` - see `shared/enums.md`.
 - **Subtotal**: The sum of all itemized charges on an Invoice before tax.
 - **Tax**: A configurable tax rate (percentage) applied to the Subtotal.
 - **Total**: The final amount on an Invoice = `Subtotal × (1 + Tax)`.
@@ -129,7 +129,7 @@
 1. THE Platform SHALL allow Staff to download any Invoice as a PDF.
 2. THE PDF Invoice SHALL include all sections defined in BIL-4.
 3. THE Platform SHALL generate the Invoice PDF on the server and return a download link.
-4. THE Platform SHALL NOT process payments within the platform — the Invoice amount is tracked for analytics purposes only.
+4. THE Platform SHALL NOT process payments within the platform - the Invoice amount is tracked for analytics purposes only.
 
 #### Failure Cases
 
@@ -154,7 +154,7 @@
 
 1. THE Platform SHALL track Invoice totals per Clinic for analytics purposes.
 2. THE Platform SHALL allow Clinic_Admins to view aggregated billing totals filtered by date range.
-3. THE Platform SHALL NOT process, collect, or reconcile actual payments — analytics are based on Invoice totals only.
+3. THE Platform SHALL NOT process, collect, or reconcile actual payments - analytics are based on Invoice totals only.
 4. WHEN an `InvoiceFinalized` event is received, THE Platform SHALL include its Total in the Clinic's billing analytics.
 
 #### Failure Cases

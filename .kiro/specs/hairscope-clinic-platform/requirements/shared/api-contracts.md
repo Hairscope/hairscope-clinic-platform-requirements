@@ -73,9 +73,9 @@ All GraphQL errors use this structure:
 }
 ```
 
-- `code` — always present; see `shared/error-codes.md`
-- `field` — present only for field-level validation errors
-- `traceId` — always present; used for server-side log correlation
+- `code` - always present; see `shared/error-codes.md`
+- `field` - present only for field-level validation errors
+- `traceId` - always present; used for server-side log correlation
 
 Multiple validation errors on the same mutation are returned together in the `errors` array.
 
@@ -222,8 +222,8 @@ Rate limit exceeded responses return HTTP 429 with error code `RATE_LIMITED`.
 
 For long-running operations (AI analysis, PDF generation), the platform uses a combination of:
 
-1. **Subscriptions** — preferred; client subscribes to completion events.
-2. **Polling query** — fallback; client queries `asyncOperationStatus(operationId: uuid)`.
+1. **Subscriptions** - preferred; client subscribes to completion events.
+2. **Polling query** - fallback; client queries `asyncOperationStatus(operationId: uuid)`.
 
 ```graphql
 type AsyncOperation {

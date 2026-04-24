@@ -19,9 +19,9 @@
 }
 ```
 
-- `code` — always present
-- `field` — present only for validation errors targeting a specific field
-- `traceId` — always present for server errors; optional for client errors
+- `code` - always present
+- `field` - present only for validation errors targeting a specific field
+- `traceId` - always present for server errors; optional for client errors
 
 ---
 

@@ -76,7 +76,7 @@ LeadPriority
   URGENT
 
 LeadAssignmentMode
-  AUTO_ASSIGN    # Default — leads auto-assigned to clinic from source
+  AUTO_ASSIGN    # Default - leads auto-assigned to clinic from source
   MANUAL_ASSIGN  # Org Admin reviews and confirms clinic assignment
 ```
 
@@ -135,7 +135,7 @@ ProductType
 GlobalImagePosition
   # From HEAD_IMAGES_OBJ in frontend constants
   ANTERIOR
-  FRONTAL          # Mandatory — at least one required per session
+  FRONTAL          # Mandatory - at least one required per session
   RIGHT_LATERAL
   LEFT_LATERAL
   POSTERIOR
@@ -146,7 +146,7 @@ GlobalImagePosition
   VERTEX
 
 HeadRegion
-  # From REGION_IMAGES_OBJ — used for trichoscopy position marking
+  # From REGION_IMAGES_OBJ - used for trichoscopy position marking
   TOP
   BACK
   RIGHT

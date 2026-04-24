@@ -1,14 +1,25 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Master Requirements — Hairscope Clinic Platform</title>
+  <title>Master Requirements - Hairscope Clinic Platform</title>
+  <script src="theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <nav><a href="index.html">← Back to Index</a></nav>
+  <nav>
+    <a href="index.html">← Back to Index</a>
+    <div class="theme-toggle" onclick="document.getElementById('theme-checkbox').click()">
+      <span class="theme-toggle-label">Dark mode</span>
+      <label class="toggle-switch" onclick="event.stopPropagation()">
+        <input type="checkbox" id="theme-checkbox">
+        <span class="toggle-track"></span>
+      </label>
+      <span class="toggle-icon" id="theme-icon">🌙</span>
+    </div>
+  </nav>
   <main id="content"><p>Loading...</p></main>
   <script>
     const RAW = "https://raw.githubusercontent.com/Hairscope/hairscope-clinic-platform-requirements/main/.kiro/specs/hairscope-clinic-platform/requirements/requirements.md";

@@ -4,20 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hairscope Clinic Platform — Requirements</title>
+  <script src="theme.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f6f8fa;
-      color: #24292f;
+      background: var(--bg, #f6f8fa);
+      color: var(--text, #24292f);
       min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
     }
+    [data-theme="dark"] { --bg: #0d1117; --text: #e6edf3; --border: #30363d; --surface: #161b22; --muted: #8b949e; }
+    [data-theme="dark"] .card { background: #161b22; border-color: #30363d; color: #e6edf3; }
+    [data-theme="dark"] .card-desc { color: #8b949e; }
+    [data-theme="dark"] h2 { color: #e6edf3; border-color: #30363d; }
+    [data-theme="dark"] footer { color: #8b949e; border-color: #30363d; }
+    [data-theme="dark"] footer a { color: #58a6ff; }
+    @media (max-width: 480px) { .header-toggle-label { display: none; } }
     header {
       background: #0d1117;
       color: #fff;
-      padding: 40px 24px;
+      padding: 40px 24px 28px;
       text-align: center;
+      position: relative;
     }
+    .header-toggle {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .header-toggle-label {
+      color: #8b949e;
+      font-size: 0.78rem;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #30363d;
+      border-radius: 24px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: #388bfd; }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+    .toggle-icon { font-size: 1rem; line-height: 1; }
     header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
     header p { color: #8b949e; font-size: 1rem; }
     .badges {
@@ -110,8 +162,16 @@
 <body>
 
 <header>
+  <div class="header-toggle" onclick="document.getElementById('idx-theme-checkbox').click()">
+    <span class="header-toggle-label">Dark mode</span>
+    <label class="toggle-switch" onclick="event.stopPropagation()">
+      <input type="checkbox" id="idx-theme-checkbox" onchange="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('hairscope-theme',t);document.getElementById('idx-theme-icon').textContent=t==='dark'?'☀️':'🌙';this.checked=t==='dark';}).call(this)">
+      <span class="toggle-track"></span>
+    </label>
+    <span class="toggle-icon" id="idx-theme-icon">🌙</span>
+  </div>
   <h1>🔬 Hairscope Clinic Platform</h1>
-  <p>Requirements Documentation — Enterprise SaaS for Hair Treatment Clinics</p>
+  <p>Requirements Documentation - Enterprise SaaS for Hair Treatment Clinics</p>
   <div class="badges">
     <span class="badge">✅ GDPR Compliant</span>
     <span class="badge">✅ HIPAA Compliant</span>

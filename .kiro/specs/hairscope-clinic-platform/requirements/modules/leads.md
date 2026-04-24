@@ -9,9 +9,9 @@
 ## Glossary
 
 - **Lead**: A prospective patient who has not yet been converted to a Patient record.
-- **Lead_Source**: `MANUAL` | `WEBHOOK` | `SELFIE_ANALYSIS` — see `shared/enums.md`.
-- **Lead_Status**: `NEW` | `CONTACTED` | `QUALIFIED` | `CONVERTED` | `LOST` — see `shared/enums.md`.
-- **Lead_Priority**: `LOW` | `MEDIUM` | `HIGH` | `URGENT` — see `shared/enums.md`.
+- **Lead_Source**: `MANUAL` | `WEBHOOK` | `SELFIE_ANALYSIS` - see `shared/enums.md`.
+- **Lead_Status**: `NEW` | `CONTACTED` | `QUALIFIED` | `CONVERTED` | `LOST` - see `shared/enums.md`.
+- **Lead_Priority**: `LOW` | `MEDIUM` | `HIGH` | `URGENT` - see `shared/enums.md`.
 - **Lead_Tag**: A free-text label attached to a Lead for categorization and filtering.
 - **Lead_Action**: A logged interaction with a Lead including action type, optional status change, and content text.
 - **Webhook_Source**: An external campaign system configured to push Lead data to the platform via HTTP POST. Configured by Organization_Admin only.
@@ -106,7 +106,7 @@ Lead created
 3. THE Platform SHALL allow Organization_Admins to change `leadAssignmentMode` at any time.
 4. WHEN `leadAssignmentMode` is changed, THE Platform SHALL apply the new mode to all future leads only. Existing leads are not affected.
 5. `leadAssignmentMode` applies to leads from: webhook sources, selfie analysis, and manual entries by Organization_Admin.
-6. `leadAssignmentMode` does NOT apply to manual leads created by Clinic-level Staff — those are always assigned to the Staff member's current Clinic.
+6. `leadAssignmentMode` does NOT apply to manual leads created by Clinic-level Staff - those are always assigned to the Staff member's current Clinic.
 7. WHEN `leadAssignmentMode` is changed, THE Platform SHALL record the change in the Audit_Log.
 
 #### Correctness Properties
@@ -123,9 +123,9 @@ Lead created
 #### Acceptance Criteria
 
 1. THE Platform SHALL store the following fields for each Lead: `name`, `age`, `gender`, `email`, `phone`, `createdAt`, `status`, `priority`, `tags[]`, `leadSource`, `sourceDetail` (page URL or campaign ID), `clinicId` (nullable for unassigned leads), `assignedStaffId` (nullable).
-2. THE Platform SHALL allow duplicate Leads — the same email or phone MAY exist across multiple Lead records.
+2. THE Platform SHALL allow duplicate Leads - the same email or phone MAY exist across multiple Lead records.
 3. THE Platform SHALL allow Staff to update `status`, `priority`, and `tags` at any time.
-4. WHEN a Lead is created via the Selfie_Analysis web component, THE Platform SHALL attach the selfie analysis questions, answers, and `Selfie_Analysis_Report` to the Lead profile. `Selfie_Analysis_Report` may be null if image capture failed or questions were incomplete — the Lead is still created and assigned.
+4. WHEN a Lead is created via the Selfie_Analysis web component, THE Platform SHALL attach the selfie analysis questions, answers, and `Selfie_Analysis_Report` to the Lead profile. `Selfie_Analysis_Report` may be null if image capture failed or questions were incomplete - the Lead is still created and assigned.
 5. WHEN a Lead is created, THE Platform SHALL set the initial `status` to `NEW`.
 6. WHEN a Lead is created, THE Platform SHALL emit a `LeadCreated` event.
 7. WHEN a Lead is created, THE Platform SHALL record the action in the Audit_Log.
@@ -222,10 +222,10 @@ Lead created
 
 1. THE Platform SHALL provide a Selfie_Analysis web component built with Stencil, embeddable on any Organization's website or app.
 2. THE Selfie_Analysis web component is authenticated using the Organization's API key. There are no clinic-level API keys.
-3. WHEN a visitor starts the Selfie_Analysis flow and the Organization has more than one active Clinic, THE Platform SHALL display a list of active Clinics for the visitor to select their preferred Clinic. Clinic selection is mandatory — the visitor cannot complete the flow without selecting a Clinic.
+3. WHEN a visitor starts the Selfie_Analysis flow and the Organization has more than one active Clinic, THE Platform SHALL display a list of active Clinics for the visitor to select their preferred Clinic. Clinic selection is mandatory - the visitor cannot complete the flow without selecting a Clinic.
 4. WHEN the Organization has exactly one active Clinic, THE Platform SHALL skip the clinic selection screen and auto-assign the lead to that Clinic.
 5. WHEN a visitor completes the Selfie_Analysis flow, THE Platform SHALL capture: `name`, `age`, `gender`, `email`, `phone`.
-6. THE Platform SHALL generate a `Selfie_Analysis_Report` and attach it to the Lead. The report may be null if image capture failed or questions were incomplete — the Lead is still created and assigned regardless.
+6. THE Platform SHALL generate a `Selfie_Analysis_Report` and attach it to the Lead. The report may be null if image capture failed or questions were incomplete - the Lead is still created and assigned regardless.
 7. In `AUTO_ASSIGN` mode: the Lead is immediately assigned to the visitor-selected (or auto-assigned) Clinic and distributed via Lead_Distribution_Algorithm assigns Staff.
 8. In `MANUAL_ASSIGN` mode: the visitor-selected Clinic is stored as a suggestion. The Lead is created as an Unassigned_Lead pending Org Admin confirmation.
 9. WHEN the `Selfie_Analysis_Report` is generated, THE Platform SHALL offer the visitor the option to book an appointment via the Appointment Booking web component.
@@ -317,7 +317,7 @@ Lead created
 3. WHEN a Lead_Action is added, THE Platform SHALL record: `actionType`, `content`, `timestamp` (UTC), and the Staff member who added it.
 4. THE Platform SHALL display all Lead_Actions for a Lead in reverse chronological order (newest first).
 5. THE Platform SHALL preserve all Lead_Actions on the Lead record permanently. They are not deleted upon conversion.
-6. WHEN a Lead is converted to a Patient, THE Platform SHALL link the Patient record to the originating Lead record so that Lead_Actions remain accessible via the Patient's history. Lead_Actions are referenced, not copied — no data is duplicated.
+6. WHEN a Lead is converted to a Patient, THE Platform SHALL link the Patient record to the originating Lead record so that Lead_Actions remain accessible via the Patient's history. Lead_Actions are referenced, not copied - no data is duplicated.
 7. WHEN a Lead_Action is added, THE Platform SHALL record the action in the Audit_Log.
 
 #### Failure Cases
@@ -472,11 +472,11 @@ The current implementation distributes leads evenly across eligible Staff member
 3. THE Platform SHALL allow a Clinic_Admin or Staff member with reassign permission to manually override the assigned Staff member on any Lead in `NEW` or `LOST` status.
 4. WHEN the assigned Staff member is manually overridden, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
 5. THE Lead_Distribution_Algorithm logic SHALL be implemented as a separate, independently deployable service so that distribution rules can be updated without modifying the lead capture flow.
-6. THE Platform SHALL NEVER reject lead creation from API sources (webhook, selfie analysis) due to staff availability — the Clinic_Admin is always the fallback assignee.
+6. THE Platform SHALL NEVER reject lead creation from API sources (webhook, selfie analysis) due to staff availability - the Clinic_Admin is always the fallback assignee.
 
 #### Correctness Properties
 
 - For any Lead L assigned to Clinic C, `L.assignedStaffId` SHALL reference an active Staff member in Clinic C with lead access.
 - The Lead_Distribution_Algorithm SHALL distribute leads evenly across eligible Staff members over time. The current implementation is Round_Robin.
 - After manual reassignment, `L.assignedStaffId` SHALL reference the new assignee and the Audit_Log SHALL record the previous assignee.
-- `assignedStaffId` is always set when `clinicId` is set — a clinic-scoped lead without a staff assignment is not permitted.
+- `assignedStaffId` is always set when `clinicId` is set - a clinic-scoped lead without a staff assignment is not permitted.

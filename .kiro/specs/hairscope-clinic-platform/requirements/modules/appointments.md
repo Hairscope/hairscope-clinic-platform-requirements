@@ -11,7 +11,7 @@
 - **Service**: A treatment offering configured per Clinic with name, description, image, price, currency, duration, and a list of Qualified_Staff.
 - **Qualified_Staff**: The set of Staff members configured as able to provide a specific Service. Used by the Smart_Scheduling engine for assignment.
 - **Appointment_Slot**: A specific date/time window available for booking, derived from Clinic_Working_Hours and existing appointments. Slot availability is patient-facing and does not expose staff details.
-- **Appointment_Status**: `SCHEDULED` | `CONFIRMED` | `COMPLETED` | `CANCELLED` | `NO_SHOW` — see `shared/enums.md`.
+- **Appointment_Status**: `SCHEDULED` | `CONFIRMED` | `COMPLETED` | `CANCELLED` | `NO_SHOW` - see `shared/enums.md`.
 - **Calendar_View**: The main appointments page displaying all appointments for a Clinic in a calendar layout.
 - **Appointment_Web_Component**: The Stencil-based embeddable widget for leads/patients to book and manage appointments on a clinic website.
 - **Clinic_Working_Hours**: Per-day operating schedule for a Clinic. Drives patient-facing slot availability.
@@ -24,7 +24,7 @@
 
 ### APT-1: Service Configuration
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to configure the services my clinic offers — including which staff can provide them — so that the scheduling engine can assign the right person to each appointment.
+**User Story:** As a Clinic_Admin or Organization_Admin, I want to configure the services my clinic offers - including which staff can provide them - so that the scheduling engine can assign the right person to each appointment.
 
 #### Acceptance Criteria
 
@@ -33,7 +33,7 @@
 3. WHEN a Service is created, `name`, `price`, `currency`, and `duration` are required. `qualifiedStaff` is optional at creation but required before the service can be booked.
 4. THE Platform SHALL allow Clinic_Admins to add or remove Staff members from a Service's `qualifiedStaff` list at any time.
 5. THE Platform SHALL display the list of configured Services when a Staff member initiates an appointment booking.
-6. THE `qualifiedStaff` list SHALL NOT be exposed to patients or leads — it is used exclusively by the Smart_Scheduling engine.
+6. THE `qualifiedStaff` list SHALL NOT be exposed to patients or leads - it is used exclusively by the Smart_Scheduling engine.
 7. WHEN a Service is deleted, THE Platform SHALL retain the Service name and details on all existing appointments that reference that Service (soft reference preservation).
 8. WHEN a Service is created, edited, or deleted, THE Platform SHALL record the action in the Audit_Log.
 
@@ -66,7 +66,7 @@
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
 3. WHEN Clinic_Working_Hours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
 4. THE Platform SHALL derive available Appointment_Slots from Clinic_Working_Hours and the duration of the selected Service, excluding already-occupied slots.
-5. Appointment_Slot availability shown to patients is based on Clinic_Working_Hours only — Staff_Availability is not factored into patient-facing slot display.
+5. Appointment_Slot availability shown to patients is based on Clinic_Working_Hours only - Staff_Availability is not factored into patient-facing slot display.
 6. WHEN a Staff member or patient attempts to book a slot outside Clinic_Working_Hours, THE Platform SHALL reject the booking.
 7. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
 
@@ -281,5 +281,5 @@ The Smart_Scheduling engine SHALL apply the following rules in order, moving to 
 
 - For any appointment A with `assignedStaffId` set, the assigned Staff member SHALL be in the `qualifiedStaff` list of `A.service`.
 - `assignedStaffId` is never returned in any patient-facing or web-component-facing GraphQL query.
-- Rule priority is deterministic — for any given appointment, the same input state SHALL always produce the same assignment result.
-- An appointment with `assignedStaff = null` SHALL be bookable — the slot is reserved even without an assignment.
+- Rule priority is deterministic - for any given appointment, the same input state SHALL always produce the same assignment result.
+- An appointment with `assignedStaff = null` SHALL be bookable - the slot is reserved even without an assignment.

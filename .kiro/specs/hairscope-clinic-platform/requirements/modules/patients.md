@@ -5,7 +5,7 @@
 > Events emitted: none (patient module emits no domain events directly)
 > Events consumed: `LeadConverted`
 
-> **Out of scope:** Patient-facing features — including patient login, viewing reports, prescriptions, treatment history, and the Hairscope Care App — are NOT in scope for this document. These will be elaborated in a separate specification for the **Hairscope Care App**. The `globalPatientId` defined here is the linking key that will enable the Hairscope Care App to aggregate a patient's full cross-clinic treatment journey.
+> **Out of scope:** Patient-facing features - including patient login, viewing reports, prescriptions, treatment history, and the Hairscope Care App - are NOT in scope for this document. These will be elaborated in a separate specification for the **Hairscope Care App**. The `globalPatientId` defined here is the linking key that will enable the Hairscope Care App to aggregate a patient's full cross-clinic treatment journey.
 
 ---
 
@@ -13,7 +13,7 @@
 
 - **Patient**: A person receiving or having received treatment at a Clinic. Scoped to the Clinic where the record was created.
 - **Patient_Page**: The dedicated view for a single Patient showing profile, analysis history, medical documents, and treatment progress graph.
-- **Treatment_Progress_Graph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute — `DRAFT` and `SAVED` Sessions are excluded.
+- **Treatment_Progress_Graph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute - `DRAFT` and `SAVED` Sessions are excluded.
 - **globalPatientId**: A platform-wide UUID assigned to each unique physical person at Patient creation time, determined by email or phone lookup. Enables the **Hairscope Care App** to aggregate a patient's full cross-clinic treatment history. Never used for cross-clinic data access by Staff.
 - **Medical_Document**: An image or PDF file uploaded to a Patient's profile with a title and optional description.
 - **GDPR_Erasure**: The process of anonymizing a Patient's personal identifiers in response to a verified right-to-erasure request. Does not delete clinical data.
@@ -29,7 +29,7 @@ Sessions are a sub-resource of Patients. A permission on the `patients` module i
 | `patients.view` | View patient profiles, medical documents, treatment progress graph, and all sessions for that patient |
 | `patients.create` | Create new patient records |
 | `patients.edit` | Edit patient profile fields |
-| `patients.delete` | Not applicable — patients cannot be deleted (GDPR erasure only) |
+| `patients.delete` | Not applicable - patients cannot be deleted (GDPR erasure only) |
 
 Organization_Admins do NOT have access to the `patients` module in any Clinic (GI-8).
 
@@ -72,7 +72,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 - For any Patient P where `dateOfBirth` is provided: stored `age` = `floor((current_date − dateOfBirth) / 365.25)` at time of creation or update, overriding any manually entered value.
 - For any Patient P where `dateOfBirth` is not provided: `age` reflects the manually entered value, or null if not entered.
 - For any two distinct Patients P1 and P2 in the same Clinic: `P1.email ≠ P2.email` and `P1.phone ≠ P2.phone`.
-- Two Patients in different Clinics MAY share the same email or phone — this is permitted and expected.
+- Two Patients in different Clinics MAY share the same email or phone - this is permitted and expected.
 - For any Patient P created at time T, P SHALL remain retrievable at all times T' > T unless a GDPR erasure is processed.
 
 ---
@@ -102,7 +102,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 - For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
 - For any two Patient records P1 and P2 where `P1.phone = P2.phone` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
 - For any Staff member S in Clinic C, no GraphQL query SHALL return Patient records from Clinic C' (C ≠ C') regardless of shared `globalPatientId`.
-- The `globalPatientId` lookup at creation time SHALL be atomic — concurrent Patient creations with the same email SHALL result in both records sharing the same `globalPatientId`, not two different ones.
+- The `globalPatientId` lookup at creation time SHALL be atomic - concurrent Patient creations with the same email SHALL result in both records sharing the same `globalPatientId`, not two different ones.
 
 ---
 
@@ -162,7 +162,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 1. THE Platform SHALL allow a Clinic_Admin or Organization_Admin to trigger GDPR erasure for a specific Patient record within their Clinic or Organization.
 2. WHEN erasure is triggered, THE Platform SHALL anonymize the following personal identifiers: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `age`, replacing them with anonymized placeholders.
-3. Erasure SHALL NOT delete Session clinical data (images, AI analysis results, reports) — only personal identifiers are anonymized.
+3. Erasure SHALL NOT delete Session clinical data (images, AI analysis results, reports) - only personal identifiers are anonymized.
 4. Erasure SHALL NOT affect Patient records in other Clinics that share the same `globalPatientId`. Each Clinic handles its own erasure independently.
 5. THE Platform SHALL require explicit confirmation (`confirmed: true`) before proceeding with erasure.
 6. Erasure is irreversible. THE Platform SHALL NOT provide an undo mechanism.

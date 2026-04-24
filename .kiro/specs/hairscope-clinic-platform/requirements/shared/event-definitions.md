@@ -21,10 +21,10 @@ Every event has this structure:
 }
 ```
 
-- `eventId` — unique per event emission
-- `version` — event schema version; consumers must handle version mismatches gracefully
-- `clinicId` — null for organization-level events
-- `actorId` — null for system-generated events (e.g., async completions)
+- `eventId` - unique per event emission
+- `version` - event schema version; consumers must handle version mismatches gracefully
+- `clinicId` - null for organization-level events
+- `actorId` - null for system-generated events (e.g., async completions)
 
 ---
 

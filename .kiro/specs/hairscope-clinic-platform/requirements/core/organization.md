@@ -187,7 +187,7 @@
 3. WHEN a Clinic is deactivated, THE Platform SHALL NOT delete any data belonging to that Clinic.
 4. THE Platform SHALL allow an Organization_Admin to reactivate a deactivated Clinic, restoring full access for its Staff members.
 5. WHEN a Clinic is deactivated or reactivated, THE Platform SHALL record the action in the Audit_Log including the actor and timestamp.
-6. THE Platform SHALL NOT allow deactivation of the last active Clinic in an Organization — an Organization must have at least one active Clinic at all times.
+6. THE Platform SHALL NOT allow deactivation of the last active Clinic in an Organization - an Organization must have at least one active Clinic at all times.
 
 #### Failure Cases
 
@@ -212,12 +212,12 @@
 #### Acceptance Criteria
 
 1. THE Platform SHALL allow Clinic_Admins to configure a weekly availability schedule per Staff member, with `startTime`, `endTime`, and `available` (boolean) per day of the week.
-2. Staff_Availability is independent of Clinic_Working_Hours — a staff member may be available on days the clinic is open, or unavailable on days the clinic is open.
+2. Staff_Availability is independent of Clinic_Working_Hours - a staff member may be available on days the clinic is open, or unavailable on days the clinic is open.
 3. THE Platform SHALL allow Staff_Availability to be updated at any time by a Clinic_Admin or by the Staff member themselves.
-4. Staff_Availability SHALL NOT be exposed to patients or leads at any point — it is used exclusively by the Smart_Scheduling engine.
+4. Staff_Availability SHALL NOT be exposed to patients or leads at any point - it is used exclusively by the Smart_Scheduling engine.
 5. WHEN Staff_Availability is updated, THE Platform SHALL apply the new schedule to all future appointment assignments.
 6. WHEN Staff_Availability is updated, THE Platform SHALL record the change in the Audit_Log.
-7. THE Platform SHALL allow a Staff member to have no availability configured — in this case, they are excluded from Smart_Scheduling assignment.
+7. THE Platform SHALL allow a Staff member to have no availability configured - in this case, they are excluded from Smart_Scheduling assignment.
 
 #### Failure Cases
 

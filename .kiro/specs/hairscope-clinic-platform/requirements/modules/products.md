@@ -8,7 +8,7 @@
 
 ## Glossary
 
-- **Product_Type**: `COSMETIC` (no prescription required) | `MEDICAL` (prescription required) — see `shared/enums.md`.
+- **Product_Type**: `COSMETIC` (no prescription required) | `MEDICAL` (prescription required) - see `shared/enums.md`.
 - **Product_Catalog**: The complete set of Products configured for a specific Clinic.
 - **Purchase_Link**: An external URL pointing to where the recommended Product can be purchased.
 - **Routine**: A recommended usage schedule (frequency, dosage, application method) associated with a Product recommendation in a Session.
@@ -85,7 +85,7 @@
 
 1. THE Platform SHALL include the `purchaseLink` for each recommended Product in the generated Report.
 2. THE Platform SHALL display `image`, `name`, `description`, and `price` alongside the `purchaseLink` in the Report.
-3. THE Platform SHALL NOT process any product purchases within the platform — the `purchaseLink` directs the patient to an external site.
+3. THE Platform SHALL NOT process any product purchases within the platform - the `purchaseLink` directs the patient to an external site.
 4. IF a Product does not have a `purchaseLink` configured, THE Platform SHALL omit the purchase link from the Report for that Product without error.
 
 #### Correctness Properties

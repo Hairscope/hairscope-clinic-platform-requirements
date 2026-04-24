@@ -11,7 +11,7 @@
 
 - **Session**: A clinical treatment session for a Patient. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
 - **Session_Type**: The type of treatment session. Determines the image capture requirements, questionnaire categories, AI analysis models, and report structure. Currently: `HAIR_ANALYSIS`. Future types may include `SKIN_TREATMENT`, `HAIR_REMOVAL`, etc.
-- **Session_Status**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` — see `shared/enums.md`.
+- **Session_Status**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` - see `shared/enums.md`.
 - **Global_Image**: A standard photograph taken from a predefined position. Used for overall assessment (e.g., hair loss stage).
 - **Trichoscopy_Image**: A high-magnification scalp image captured with a trichoscope device. Used for detailed per-image analysis.
 - **Head_Diagram**: One of four predefined scalp diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) used to mark the capture position of a Trichoscopy_Image.
@@ -157,7 +157,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 | Condition | Error Code |
 |-----------|------------|
-| Report generation service unavailable | `SERVICE_UNAVAILABLE` (async — retried) |
+| Report generation service unavailable | `SERVICE_UNAVAILABLE` (async - retried) |
 | Report generation fails after max retries | `ASYNC_OPERATION_FAILED` |
 | Comparing images from different positions | `VALIDATION_ERROR` |
 | Session not found | `SESSION_NOT_FOUND` |
@@ -192,8 +192,8 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 | Condition | Error Code |
 |-----------|------------|
-| AI analysis service unavailable | `SERVICE_UNAVAILABLE` (async — notified via event) |
-| AI analysis fails after max retries | `ASYNC_OPERATION_FAILED` (async — notified via event) |
+| AI analysis service unavailable | `SERVICE_UNAVAILABLE` (async - notified via event) |
+| AI analysis fails after max retries | `ASYNC_OPERATION_FAILED` (async - notified via event) |
 
 #### Correctness Properties
 
@@ -214,7 +214,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL support the following `GlobalImagePosition` values for Hair Analysis sessions: `ANTERIOR`, `FRONTAL`, `RIGHT_LATERAL`, `LEFT_LATERAL`, `POSTERIOR`, `LEFT_TEMPORAL`, `RIGHT_TEMPORAL`, `SUPERIOR`, `TOP_OF_THE_HEAD`, `VERTEX` — see `shared/enums.md`.
+1. THE Platform SHALL support the following `GlobalImagePosition` values for Hair Analysis sessions: `ANTERIOR`, `FRONTAL`, `RIGHT_LATERAL`, `LEFT_LATERAL`, `POSTERIOR`, `LEFT_TEMPORAL`, `RIGHT_TEMPORAL`, `SUPERIOR`, `TOP_OF_THE_HEAD`, `VERTEX` - see `shared/enums.md`.
 2. THE Platform SHALL require at least one `FRONTAL` Global_Image before a Hair Analysis Session can be saved (GI-16).
 3. THE Platform SHALL allow exactly one Global_Image per position per Session. If a position already has an image, the new image replaces the existing one.
 4. WHEN Global_Images are submitted for AI analysis, THE AI analysis SHALL produce a single overall hair loss stage classification based on all Global_Images combined, using the `HAIRFALL_STAGE_MODEL`.
@@ -241,12 +241,12 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 #### Acceptance Criteria
 
 1. THE Platform SHALL require a minimum of 6 Trichoscopy_Images per Hair Analysis Session before the Session can be saved, one from each of the following mandatory positions (GI-15):
-   - **P1 — Frontal**
-   - **P2 — Left Temporal**
-   - **P3 — Right Temporal**
-   - **P4 — Top of the Head**
-   - **P5 — Crown**
-   - **P6 — Occipital**
+   - **P1 - Frontal**
+   - **P2 - Left Temporal**
+   - **P3 - Right Temporal**
+   - **P4 - Top of the Head**
+   - **P5 - Crown**
+   - **P6 - Occipital**
 2. THE Platform SHALL allow Doctors to capture additional Trichoscopy_Images beyond the 6 mandatory positions at their discretion.
 3. WHEN capturing a Trichoscopy_Image, THE Platform SHALL present one of 4 predefined Head_Diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) and allow the user to place a single positional point on the diagram.
 4. THE Platform SHALL store the `(x, y)` positional point coordinates for each Trichoscopy_Image.
@@ -279,7 +279,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 1. THE Platform SHALL provide an edit page per Trichoscopy_Image accessible after AI analysis is complete.
 2. THE Platform SHALL provide a **Follicle tool**: click to place a circle (Follicle) at the clicked position.
-3. THE Platform SHALL provide a **Strand tool**: 3-point rectangle — point 1 (root), point 2 (direction), point 3 (thickness). Strand is rendered at root position only.
+3. THE Platform SHALL provide a **Strand tool**: 3-point rectangle - point 1 (root), point 2 (direction), point 3 (thickness). Strand is rendered at root position only.
 4. THE Platform SHALL provide a **Delete mode**: when active, clicking any Follicle or Strand (AI-generated or human-drawn) removes it.
 5. THE Platform SHALL allow brightness and contrast adjustment per Trichoscopy_Image and SHALL persist those settings per image.
 6. THE Platform SHALL support zoom and pan on the edit page.
@@ -310,7 +310,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL present questions organized into 5 `Questionnaire_Category` values for Hair Analysis: `DAILY_HABITS`, `MEDICAL_CONDITIONS`, `PHYSICAL_OR_EMOTIONAL_SHOCK`, `HAIRSTYLING_AND_TREATMENTS`, `GENETICS` — see `shared/enums.md`.
+1. THE Platform SHALL present questions organized into 5 `Questionnaire_Category` values for Hair Analysis: `DAILY_HABITS`, `MEDICAL_CONDITIONS`, `PHYSICAL_OR_EMOTIONAL_SHOCK`, `HAIRSTYLING_AND_TREATMENTS`, `GENETICS` - see `shared/enums.md`.
 2. THE Platform SHALL maintain exactly 5 active questions per category per Clinic at all times (GI-18).
 3. THE Platform SHALL present a separate `STRESS_TEST` questionnaire of ~10 questions per Hair Analysis Session.
 4. WHEN all questionnaire answers are submitted, THE Platform SHALL automatically calculate `Root_Cause` using the defined formula.

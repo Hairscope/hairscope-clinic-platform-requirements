@@ -1,4 +1,4 @@
-# Hairscope Clinic Platform — Master Requirements
+# Hairscope Clinic Platform - Master Requirements
 
 > Version: 1.0.0 | Status: Draft | API: GraphQL
 
@@ -8,14 +8,14 @@
 
 These principles are non-negotiable and govern every design and implementation decision across the platform.
 
-1. **Security by default** — All data is private unless explicitly granted. Deny is the default for every permission check.
-2. **GDPR & HIPAA first** — Patient data handling must satisfy both regulations in every jurisdiction the platform operates in.
-3. **Tenant isolation** — No query, mutation, or subscription may return data outside the authenticated user's Organization boundary.
-4. **Event-driven extensibility** — Modules communicate via domain events, not direct calls. No module may import or directly invoke another module's internal logic.
-5. **Auditability** — Every state-changing operation on clinical or identity data produces an immutable audit log entry.
-6. **Idempotency** — All GraphQL mutations that create or update records must be safe to retry without producing duplicate side effects.
-7. **UTC everywhere** — All timestamps are stored and transmitted in UTC. Display conversion to clinic timezone is a presentation concern only.
-8. **Explicit over implicit** — Business rules are documented as formal invariants, not left to implementation convention.
+1. **Security by default** - All data is private unless explicitly granted. Deny is the default for every permission check.
+2. **GDPR & HIPAA first** - Patient data handling must satisfy both regulations in every jurisdiction the platform operates in.
+3. **Tenant isolation** - No query, mutation, or subscription may return data outside the authenticated user's Organization boundary.
+4. **Event-driven extensibility** - Modules communicate via domain events, not direct calls. No module may import or directly invoke another module's internal logic.
+5. **Auditability** - Every state-changing operation on clinical or identity data produces an immutable audit log entry.
+6. **Idempotency** - All GraphQL mutations that create or update records must be safe to retry without producing duplicate side effects.
+7. **UTC everywhere** - All timestamps are stored and transmitted in UTC. Display conversion to clinic timezone is a presentation concern only.
+8. **Explicit over implicit** - Business rules are documented as formal invariants, not left to implementation convention.
 
 ---
 
@@ -23,14 +23,14 @@ These principles are non-negotiable and govern every design and implementation d
 
 These invariants must hold at all times across the entire system. Any operation that would violate an invariant must be rejected before it is committed.
 
-| ID | Invariant |
-|----|-----------|
+| ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant |
+|:------------|-----------|
 | GI-1 | Every record belongs to exactly one Organization. Cross-organization data access is impossible. |
 | GI-2 | Every Clinic belongs to exactly one Organization. |
-| GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. Organization_Admins span all Clinics in their Organization. A Staff member may be transferred between Clinics within the same Organization by an Organization_Admin — only one Clinic assignment is active at any time. |
+| GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. Organization_Admins span all Clinics in their Organization. A Staff member may be transferred between Clinics within the same Organization by an Organization_Admin - only one Clinic assignment is active at any time. |
 | GI-4 | Every Organization has at least one active Organization_Admin at all times. |
 | GI-5 | Every Clinic has at least one active Clinic_Admin at all times. |
-| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person — across any Clinic or Organization — share the same `globalPatientId`. This enables the **Hairscope Care App** to aggregate the patient's full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` — it is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
+| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person - across any Clinic or Organization - share the same `globalPatientId`. This enables the **Hairscope Care App** to aggregate the patient's full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
 | GI-7 | A Patient may have at most one active Session per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
 | GI-8 | A Session in Saved or Completed status cannot be deleted. |
 | GI-9 | Audit log entries are immutable and are never reassigned, transferred, or deleted. |
@@ -61,12 +61,12 @@ Organization
 
 ### 3.2 Default Roles
 
-Default roles are provided by the platform. Some are **system roles** — they cannot be deleted and have fixed or restricted permissions. Custom roles created by a Clinic_Admin are always deletable (subject to the last-admin guard).
+Default roles are provided by the platform. Some are **system roles** - they cannot be deleted and have fixed or restricted permissions. Custom roles created by a Clinic_Admin are always deletable (subject to the last-admin guard).
 
 | Role | Scope | Permissions Editable | Deletable | Notes |
 |------|-------|---------------------|-----------|-------|
-| Organization_Admin | `org` | No — fixed | No — system role | Permissions are platform-defined and cannot be changed |
-| Clinic_Admin | `clinic` | Yes | No — system role | Cannot be deleted; ensures last-admin guard is always enforceable |
+| Organization_Admin | `org` | No - fixed | No - system role | Permissions are platform-defined and cannot be changed |
+| Clinic_Admin | `clinic` | Yes | No - system role | Cannot be deleted; ensures last-admin guard is always enforceable |
 | Doctor | `clinic` | Yes | Yes | Subject to last-admin guard |
 | Receptionist | `clinic` | Yes | Yes | Subject to last-admin guard |
 | Nurse | `clinic` | Yes | Yes | Subject to last-admin guard |
@@ -87,11 +87,11 @@ Default roles are provided by the platform. Some are **system roles** — they c
 
 ### 4.1 Core Rules
 
-1. **Deny by default** — If no role assigned to a Staff member explicitly grants a permission, the action is denied.
-2. **Union of roles** — A Staff member holding multiple roles has the union of all permissions granted by those roles.
-3. **Immediate propagation** — When a role's permissions are updated, the change takes effect on the next request by any Staff member holding that role.
-4. **Org scope hard limit** — The Organization_Admin role cannot be granted permissions to Patients, Appointments, Leads, Billing, or Products modules under any configuration.
-5. **Plan gate** — Even if a role grants a permission, if the Organization's active plan does not include the feature, the action is denied.
+1. **Deny by default** - If no role assigned to a Staff member explicitly grants a permission, the action is denied.
+2. **Union of roles** - A Staff member holding multiple roles has the union of all permissions granted by those roles.
+3. **Immediate propagation** - When a role's permissions are updated, the change takes effect on the next request by any Staff member holding that role.
+4. **Org scope hard limit** - The Organization_Admin role cannot be granted permissions to Patients, Appointments, Leads, Billing, or Products modules under any configuration.
+5. **Plan gate** - Even if a role grants a permission, if the Organization's active plan does not include the feature, the action is denied.
 
 ### 4.2 Permission Matrix
 
@@ -110,7 +110,7 @@ Modules and their logical grouping:
 | `organization` | Org Management | Includes staff, clinic_settings, and roles as sub-resources |
 | `audit_log` | Org Management | |
 
-> **Note on sub-resources:** Sessions are a sub-resource of Patients — a permission on `patients` implicitly covers session access within that patient's record. Similarly, `staff`, `clinic_settings`, and `roles` are sub-resources of the `organization` module and do not require separate top-level permission entries.
+> **Note on sub-resources:** Sessions are a sub-resource of Patients - a permission on `patients` implicitly covers session access within that patient's record. Similarly, `staff`, `clinic_settings`, and `roles` are sub-resources of the `organization` module and do not require separate top-level permission entries.
 
 ### 4.3 Failure Behaviour
 
@@ -131,7 +131,7 @@ Modules and their logical grouping:
 3. All GraphQL inputs that include a date or time must be in ISO 8601 UTC format.
 4. Display conversion to the Clinic's configured timezone is performed client-side only.
 5. Appointment slot availability is calculated in the Clinic's configured timezone, then stored as UTC.
-6. The Clinic timezone is a required field that must be configured before the Appointments module can be used. Attempting to book or display appointment slots without a configured timezone SHALL return a `CLINIC_TIMEZONE_NOT_SET` error. UTC is not used as a fallback for appointments — timezone must be explicitly set.
+6. The Clinic timezone is a required field that must be configured before the Appointments module can be used. Attempting to book or display appointment slots without a configured timezone SHALL return a `CLINIC_TIMEZONE_NOT_SET` error. UTC is not used as a fallback for appointments - timezone must be explicitly set.
 
 ---
 
@@ -222,7 +222,7 @@ Each audit log entry must contain:
 | `clinicId` | Clinic scope (null for org-level actions) |
 | `actorId` | Staff UUID at time of action |
 | `actorName` | Staff full name at time of action (snapshot, never updated) |
-| `action` | Enum — see `shared/enums.md` |
+| `action` | Enum - see `shared/enums.md` |
 | `resourceType` | Entity type affected |
 | `resourceId` | UUID of affected entity |
 | `before` | JSON snapshot of state before change (null for creates) |
@@ -300,7 +300,7 @@ Each audit log entry must contain:
 
 - On a verified GDPR right-to-erasure request, a Clinic_Admin may trigger erasure for a Patient.
 - Erasure anonymizes all personal identifiers (name, email, phone, date of birth) and replaces them with a placeholder.
-- Erasure does not delete Session clinical data (images, AI analysis, reports) — only personal identifiers.
+- Erasure does not delete Session clinical data (images, AI analysis, reports) - only personal identifiers.
 - Erasure is recorded in the audit log with the actor and timestamp.
 - Erasure cannot be undone.
 
@@ -310,8 +310,8 @@ Each audit log entry must contain:
 
 THE Platform SHALL distinguish between:
 
-- **Attribution** (who created or performed an action) — immutable, never modified
-- **Responsibility** (who is currently assigned to a record) — reassignable
+- **Attribution** (who created or performed an action) - immutable, never modified
+- **Responsibility** (who is currently assigned to a record) - reassignable
 
 THE Platform SHALL NOT modify historical attribution under any circumstance.
 
@@ -322,12 +322,12 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 #### Deletion Execution Rules
 
 - THE Platform SHALL require completion of reassignment before allowing Staff deletion.
-- THE Platform SHALL support multi-recipient reassignment — different record categories may be reassigned to different Staff members.
+- THE Platform SHALL support multi-recipient reassignment - different record categories may be reassigned to different Staff members.
 - THE Platform SHALL validate that all recipients:
   - belong to the same Clinic (or valid target Clinic in case of inter-clinic transfer)
   - are Active
 - THE Platform SHALL mark the Staff record as `INACTIVE` and revoke all access tokens immediately.
-- THE Platform SHALL NOT physically delete the underlying Staff record — it is retained for audit log attribution.
+- THE Platform SHALL NOT physically delete the underlying Staff record - it is retained for audit log attribution.
 
 #### Constraints
 
@@ -343,8 +343,8 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 |------------|-------------|
 | GraphQL query response (p95) | ≤ 500ms for non-AI operations |
 | GraphQL mutation response (p95) | ≤ 800ms for non-AI operations |
-| AI analysis submission | Async — response within 30 seconds of session save |
-| PDF report generation | Async — response within 60 seconds of trigger |
+| AI analysis submission | Async - response within 30 seconds of session save |
+| PDF report generation | Async - response within 60 seconds of trigger |
 | File upload (≤ 10MB) | ≤ 10 seconds |
 | Appointment slot availability query | ≤ 300ms |
 | Audit log query (paginated) | ≤ 1 second |
@@ -357,9 +357,9 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 1. A Staff member may be authenticated on multiple devices simultaneously.
 2. Each device session has its own JWT with an independent expiry.
 3. When a Staff member is deactivated, all active sessions across all devices must be invalidated immediately.
-4. When a Staff member's role permissions are updated, the change takes effect on the next API request — active sessions are not forcibly terminated.
+4. When a Staff member's role permissions are updated, the change takes effect on the next API request - active sessions are not forcibly terminated.
 5. Web component sessions (external users) are stateless and authenticated per-request via API key.
-6. Session tokens must not be stored in localStorage on web clients — use httpOnly cookies or secure in-memory storage.
+6. Session tokens must not be stored in localStorage on web clients - use httpOnly cookies or secure in-memory storage.
 
 ---
 
@@ -376,11 +376,11 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 
 ## 14. Extensibility Strategy
 
-1. **No direct module dependencies** — Modules must not import or call each other's internal resolvers, services, or repositories.
-2. **Event bus** — All cross-module communication uses a domain event bus. See `shared/event-definitions.md` for the full event registry.
-3. **Plugin-ready resolvers** — Each module exposes a defined GraphQL schema boundary. New modules can be added by registering new schema types and event handlers without modifying existing modules.
-4. **Feature flags** — Plan-gated features are controlled via feature flags evaluated at the permission layer, not hardcoded in module logic.
-5. **Webhook extensibility** — External systems can push data into the platform via the webhook ingestion endpoint with configurable field mappings, without requiring platform code changes.
+1. **No direct module dependencies** - Modules must not import or call each other's internal resolvers, services, or repositories.
+2. **Event bus** - All cross-module communication uses a domain event bus. See `shared/event-definitions.md` for the full event registry.
+3. **Plugin-ready resolvers** - Each module exposes a defined GraphQL schema boundary. New modules can be added by registering new schema types and event handlers without modifying existing modules.
+4. **Feature flags** - Plan-gated features are controlled via feature flags evaluated at the permission layer, not hardcoded in module logic.
+5. **Webhook extensibility** - External systems can push data into the platform via the webhook ingestion endpoint with configurable field mappings, without requiring platform code changes.
 
 ---
 
@@ -390,7 +390,7 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 2. Client applications (web, mobile, web components) may implement UX-level validation for responsiveness, but server-side validation is always authoritative.
 3. Calculated fields (e.g., patient age, invoice total, stress-o-meter score, root cause) are computed server-side and returned in GraphQL responses. Clients must not recompute these.
 4. Display formatting (timezone conversion, currency formatting, date display) is a client responsibility.
-5. Business rules must not be documented only in frontend code — every rule must have a corresponding server-side requirement in this document.
+5. Business rules must not be documented only in frontend code - every rule must have a corresponding server-side requirement in this document.
 
 ---
 

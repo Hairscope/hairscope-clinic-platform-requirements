@@ -1,117 +1,226 @@
+/* ===== Reset ===== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f6f8fa;
-  color: #24292f;
-  line-height: 1.6;
+/* ===== CSS Variables — Light Mode ===== */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --border: #d0d7de;
+  --text: #24292f;
+  --text-muted: #57606a;
+  --text-heading: #0969da;
+  --nav-bg: #0d1117;
+  --nav-text: #58a6ff;
+  --code-bg: #f6f8fa;
+  --code-border: #d0d7de;
+  --table-alt: #f6f8fa;
+  --blockquote-border: #0969da;
+  --blockquote-bg: #f6f8fa;
+  --blockquote-text: #57606a;
+  --toggle-bg: #e1e4e8;
+  --toggle-knob: #ffffff;
+  --toggle-icon: "🌙";
 }
 
+/* ===== CSS Variables — Dark Mode ===== */
+[data-theme="dark"] {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --text-heading: #58a6ff;
+  --nav-bg: #010409;
+  --nav-text: #58a6ff;
+  --code-bg: #161b22;
+  --code-border: #30363d;
+  --table-alt: #161b22;
+  --blockquote-border: #388bfd;
+  --blockquote-bg: #161b22;
+  --blockquote-text: #8b949e;
+  --toggle-bg: #388bfd;
+  --toggle-knob: #ffffff;
+  --toggle-icon: "☀️";
+}
+
+/* ===== Base ===== */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ===== Nav ===== */
 nav {
-  background: #0d1117;
-  padding: 12px 24px;
+  background: var(--nav-bg);
+  padding: 12px 20px;
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 nav a {
-  color: #58a6ff;
+  color: var(--nav-text);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 nav a:hover { text-decoration: underline; }
 
-main {
-  max-width: 860px;
-  margin: 40px auto;
-  padding: 0 24px 60px;
-  background: #fff;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
+/* ===== Dark Mode Toggle ===== */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
 }
 
+.theme-toggle-label {
+  color: #8b949e;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--toggle-bg);
+  border-radius: 24px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--toggle-knob);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-track::after {
+  transform: translateX(20px);
+}
+
+.toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ===== Main Content ===== */
+main {
+  max-width: 860px;
+  margin: 32px auto;
+  padding: 0 20px 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+/* ===== Typography ===== */
 main h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  padding: 32px 32px 16px;
-  border-bottom: 1px solid #d0d7de;
-  margin-bottom: 24px;
+  padding: 28px 28px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  color: var(--text);
 }
 
 main h2 {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin: 32px 32px 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #d0d7de;
-  color: #0969da;
+  margin: 28px 28px 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-heading);
 }
 
 main h3 {
   font-size: 1.05rem;
   font-weight: 600;
-  margin: 24px 32px 8px;
-  color: #24292f;
+  margin: 20px 28px 8px;
+  color: var(--text);
 }
 
 main h4 {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  margin: 16px 32px 8px;
-  color: #57606a;
+  margin: 14px 28px 6px;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 0.8rem;
 }
 
-main p {
-  margin: 8px 32px;
-  color: #24292f;
-}
+main p { margin: 8px 28px; color: var(--text); }
 
-main ul, main ol {
-  margin: 8px 32px 8px 56px;
-}
+main ul, main ol { margin: 8px 28px 8px 52px; }
 
-main li {
-  margin-bottom: 4px;
-}
+main li { margin-bottom: 4px; color: var(--text); }
 
 main strong { font-weight: 600; }
 
 main hr {
   border: none;
-  border-top: 1px solid #d0d7de;
-  margin: 32px;
+  border-top: 1px solid var(--border);
+  margin: 28px;
 }
 
 main blockquote {
-  border-left: 4px solid #0969da;
-  margin: 12px 32px;
-  padding: 8px 16px;
-  background: #f6f8fa;
-  color: #57606a;
+  border-left: 4px solid var(--blockquote-border);
+  margin: 10px 28px;
+  padding: 8px 14px;
+  background: var(--blockquote-bg);
+  color: var(--blockquote-text);
   border-radius: 0 4px 4px 0;
 }
 
+/* ===== Code ===== */
 main code {
-  background: #f6f8fa;
-  border: 1px solid #d0d7de;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 4px;
   padding: 2px 6px;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 0.85em;
+  color: var(--text);
 }
 
 main pre {
-  background: #f6f8fa;
-  border: 1px solid #d0d7de;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 6px;
-  padding: 16px 32px;
-  margin: 12px 32px;
+  padding: 14px 28px;
+  margin: 10px 28px;
   overflow-x: auto;
 }
 
@@ -119,32 +228,52 @@ main pre code {
   background: none;
   border: none;
   padding: 0;
+  font-size: 0.88em;
 }
 
+/* ===== Tables ===== */
 main table {
-  width: calc(100% - 64px);
-  margin: 12px 32px;
+  width: calc(100% - 56px);
+  margin: 10px 28px;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 main th {
-  background: #f6f8fa;
-  border: 1px solid #d0d7de;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
   padding: 8px 12px;
   text-align: left;
   font-weight: 600;
+  color: var(--text);
 }
 
 main td {
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
   padding: 8px 12px;
+  color: var(--text);
 }
 
-main tr:nth-child(even) td { background: #f6f8fa; }
+main tr:nth-child(even) td { background: var(--table-alt); }
 
+/* ===== Responsive ===== */
 @media (max-width: 640px) {
-  main { margin: 0; border-radius: 0; border-left: none; border-right: none; }
-  main h1, main h2, main h3, main h4, main p, main ul, main ol,
-  main hr, main blockquote, main pre, main table { margin-left: 16px; margin-right: 16px; }
+  main {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  main h1, main h2, main h3, main h4,
+  main p, main ul, main ol, main hr,
+  main blockquote, main pre, main table {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  main table { width: calc(100% - 28px); }
+  main pre { padding: 12px 14px; }
+
+  .theme-toggle-label { display: none; }
 }

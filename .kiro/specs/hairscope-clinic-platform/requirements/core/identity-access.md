@@ -28,13 +28,13 @@
 
 The invite flow has two distinct phases with different actors:
 
-**Phase 1 — Admin sends invite:**
+**Phase 1 - Admin sends invite:**
 1. Admin enters the invitee's email address and assigns one or more roles.
 2. THE Platform validates the email is not already registered or already invited.
 3. THE Platform creates a Staff record with status `PENDING_REGISTRATION` and the assigned roles.
 4. THE Platform generates a unique single-use token and sends the invite link to the invitee's email.
 
-**Phase 2 — Invitee accepts invite:**
+**Phase 2 - Invitee accepts invite:**
 1. Invitee follows the link and sets a password.
 2. THE Platform transitions the Staff record from `PENDING_REGISTRATION` → `ACTIVE`.
 3. THE Platform issues a JWT and the invitee is logged in.
@@ -53,7 +53,7 @@ The invite flow has two distinct phases with different actors:
 9. THE Platform SHALL allow an Admin to cancel a pending invite, which deletes the `PENDING_REGISTRATION` Staff record.
 10. THE Platform SHALL record invite sent, invite used, invite expired, and invite cancelled events in the Audit_Log.
 
-#### Failure Cases — Admin-facing (at invite send time)
+#### Failure Cases - Admin-facing (at invite send time)
 
 | Condition | Error Code | Behaviour |
 |-----------|------------|-----------|
@@ -61,7 +61,7 @@ The invite flow has two distinct phases with different actors:
 | Email already has a `PENDING_REGISTRATION` record in this Clinic | `EMAIL_ALREADY_INVITED` | Shown to Admin; Admin can resend instead |
 | No role assigned | `VALIDATION_ERROR` (field: `roles`) | Shown to Admin; no record created |
 
-#### Failure Cases — Invitee-facing (at link follow time)
+#### Failure Cases - Invitee-facing (at link follow time)
 
 | Condition | Error Code | Behaviour |
 |-----------|------------|-----------|
@@ -160,8 +160,8 @@ The invite flow has two distinct phases with different actors:
 2. THE Platform SHALL require selection of one or more recipient Staff members before deletion proceeds. Different record categories may be reassigned to different recipients (multi-recipient reassignment).
 3. THE Platform SHALL validate that all recipients belong to the same Clinic (or valid target Clinic in case of inter-clinic transfer) and are Active.
 4. WHEN confirmed, THE Platform SHALL atomically reassign all responsibility-based fields to the designated recipients and mark the Staff member as `INACTIVE`.
-5. THE Platform SHALL NOT physically delete the Staff record — it is retained for audit log attribution.
-6. THE Platform SHALL NOT reassign Audit_Log entries — they remain attributed to the original Staff member's name permanently.
+5. THE Platform SHALL NOT physically delete the Staff record - it is retained for audit log attribution.
+6. THE Platform SHALL NOT reassign Audit_Log entries - they remain attributed to the original Staff member's name permanently.
 7. THE Platform SHALL NOT allow deletion of the last remaining active Clinic_Admin or Organization_Admin.
 8. WHEN deleted, THE Platform SHALL record the deletion, the recipient identities, and the list of reassigned record types in the Audit_Log.
 
@@ -191,9 +191,9 @@ The invite flow has two distinct phases with different actors:
 
 | Category | Roles | Permissions Editable | Deletable |
 |----------|-------|---------------------|-----------|
-| System roles | `Organization_Admin`, `Clinic_Admin` | `Organization_Admin`: No. `Clinic_Admin`: Yes | No — cannot be deleted under any circumstance |
-| Default clinic roles | `Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk` | Yes | Yes — subject to last-admin guard |
-| Custom roles | Any role created by a Clinic_Admin | Yes | Yes — subject to last-admin guard |
+| System roles | `Organization_Admin`, `Clinic_Admin` | `Organization_Admin`: No. `Clinic_Admin`: Yes | No - cannot be deleted under any circumstance |
+| Default clinic roles | `Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk` | Yes | Yes - subject to last-admin guard |
+| Custom roles | Any role created by a Clinic_Admin | Yes | Yes - subject to last-admin guard |
 
 #### Acceptance Criteria
 
@@ -201,7 +201,7 @@ The invite flow has two distinct phases with different actors:
 2. THE Platform SHALL allow a Clinic_Admin to create custom roles with a name and a set of `(module, action)` permissions.
 3. THE Platform SHALL allow a Clinic_Admin to edit the name and permissions of any non-system role (`Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk`, and custom roles).
 4. THE Platform SHALL allow a Clinic_Admin to edit the permissions of the `Clinic_Admin` role, but SHALL NOT allow editing of the `Organization_Admin` role's permissions.
-5. THE Platform SHALL NOT allow deletion of `Organization_Admin` or `Clinic_Admin` roles under any circumstance — they are system roles.
+5. THE Platform SHALL NOT allow deletion of `Organization_Admin` or `Clinic_Admin` roles under any circumstance - they are system roles.
 6. THE Platform SHALL allow a Clinic_Admin to delete any non-system role, provided doing so would not leave the Clinic with no active Clinic_Admin.
 7. WHEN a role's permissions are updated, THE Platform SHALL apply the change to all Staff members holding that role within one request cycle.
 8. WHEN a Staff member holds multiple roles, THE Platform SHALL apply the union of all permissions as the effective permissions.
@@ -233,6 +233,6 @@ The invite flow has two distinct phases with different actors:
 
 1. THE Platform SHALL allow a Staff member to be authenticated on multiple devices simultaneously, each with an independent JWT.
 2. WHEN a Staff member is deactivated, THE Platform SHALL invalidate all active JWTs across all devices immediately.
-3. WHEN a Staff member's role permissions are updated, the change SHALL take effect on the next API request — active JWTs are not forcibly terminated.
-4. THE Platform SHALL NOT allow JWT storage in `localStorage` on web clients — tokens must use `httpOnly` cookies or secure in-memory storage.
+3. WHEN a Staff member's role permissions are updated, the change SHALL take effect on the next API request - active JWTs are not forcibly terminated.
+4. THE Platform SHALL NOT allow JWT storage in `localStorage` on web clients - tokens must use `httpOnly` cookies or secure in-memory storage.
 5. Web component sessions are stateless and authenticated per-request via clinic API key.
