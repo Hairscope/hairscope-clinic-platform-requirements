@@ -118,7 +118,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 2. THE Platform SHALL allow Staff to associate a Routine (usage schedule) with each recommended Product.
 3. WHEN a Medical Product is included in a Session, THE Platform SHALL include a Prescription in the generated Report.
 4. WHEN only Cosmetic Products are included, THE Platform SHALL NOT include a Prescription.
-5. THE Platform SHALL provide a rich text editor for the Doctor to add a doctor's note to the Session.
+5. THE Platform SHALL provide a plain text editor for the Doctor to add a doctor's note to the Session.
 6. THE Platform SHALL include the doctor's note in the generated Report.
 7. WHEN a Session is in `COMPLETED` status, THE Platform SHALL allow editing of product recommendations and the doctor's note.
 8. WHEN product recommendations or the doctor's note are edited after completion, THE Platform SHALL emit `AnnotationEditSaved` (with trigger `PRODUCT_EDIT` or `DOCTOR_NOTE_EDIT`) to trigger Report regeneration.
@@ -128,7 +128,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 | Condition | Error Code |
 |-----------|------------|
 | Product not found in Clinic catalog | `NOT_FOUND` |
-| Editing products/notes on non-COMPLETED Session | `FORBIDDEN` |
+| Editing products/notes on a DELETED Session | `SESSION_NOT_FOUND` |
 
 #### Correctness Properties
 
@@ -216,8 +216,8 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 1. THE Platform SHALL support the following `GlobalImagePosition` values for Hair Analysis sessions: `ANTERIOR`, `FRONTAL`, `RIGHT_LATERAL`, `LEFT_LATERAL`, `POSTERIOR`, `LEFT_TEMPORAL`, `RIGHT_TEMPORAL`, `SUPERIOR`, `TOP_OF_THE_HEAD`, `VERTEX` — see `shared/enums.md`.
 2. THE Platform SHALL require at least one `FRONTAL` Global_Image before a Hair Analysis Session can be saved (GI-16).
-3. THE Platform SHALL allow multiple Global_Images per position per Session.
-4. WHEN Global_Images are submitted for AI analysis, THE AI analysis SHALL produce a hair loss stage classification per image using the `HAIRFALL_STAGE_MODEL`.
+3. THE Platform SHALL allow exactly one Global_Image per position per Session. If a position already has an image, the new image replaces the existing one.
+4. WHEN Global_Images are submitted for AI analysis, THE AI analysis SHALL produce a single overall hair loss stage classification based on all Global_Images combined, using the `HAIRFALL_STAGE_MODEL`.
 5. THE Platform SHALL display each Global_Image with its associated position label.
 
 #### Failure Cases
@@ -225,11 +225,11 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 | Condition | Error Code |
 |-----------|------------|
 | Save attempted without FRONTAL image | `FRONTAL_IMAGE_REQUIRED` |
-| Invalid position value | `VALIDATION_ERROR` (field: `position`) |
 
 #### Correctness Properties
 
-- For any saved Hair Analysis Session S: `count(S.globalImages where position = FRONTAL) ≥ 1`.
+- For any saved Hair Analysis Session S: `count(S.globalImages where position = FRONTAL) = 1` (exactly one Frontal image required).
+- For any saved Hair Analysis Session S: each position SHALL have at most one Global_Image.
 - For any Global_Image G with position label L, L SHALL equal the position selected at capture time.
 
 ---
