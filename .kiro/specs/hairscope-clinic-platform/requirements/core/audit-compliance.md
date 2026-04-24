@@ -7,9 +7,9 @@
 ## Glossary
 
 - **Audit_Log**: An immutable, append-only record of all significant platform actions.
-- **GDPR**: General Data Protection Regulation — EU data privacy law.
-- **HIPAA**: Health Insurance Portability and Accountability Act — US healthcare data privacy law.
-- **Right_to_Erasure**: GDPR Article 17 — the right of a data subject to have their personal data deleted or anonymized.
+- **GDPR**: General Data Protection Regulation - EU data privacy law.
+- **HIPAA**: Health Insurance Portability and Accountability Act - US healthcare data privacy law.
+- **Right_to_Erasure**: GDPR Article 17 - the right of a data subject to have their personal data deleted or anonymized.
 - **Data_Export**: A machine-readable export of all personal data held for a specific patient.
 - **Consent**: A recorded agreement by a patient to specific data processing activities.
 - **Encryption_At_Rest**: AES-256 encryption of all stored patient personal data.
@@ -28,7 +28,7 @@
 3. THE Platform SHALL retain Audit_Log entries for a minimum of 7 years (HIPAA requirement).
 4. THE Platform SHALL allow authorized Staff to query Audit_Log entries filtered by: date range, actor, action type, resource type, and resource ID.
 5. Audit_Log queries SHALL be paginated using cursor-based pagination (Relay spec).
-6. THE Platform SHALL expose Audit_Log queries via GraphQL only — no bulk export endpoint is required in this version.
+6. THE Platform SHALL expose Audit_Log queries via GraphQL only - no bulk export endpoint is required in this version.
 
 #### Correctness Properties
 
@@ -40,7 +40,7 @@
 
 ### AUD-2: Audit Log Coverage
 
-Every state-changing operation on the following entities MUST produce an Audit_Log entry. This list is exhaustive — any operation not listed here does not require an audit entry.
+Every state-changing operation on the following entities MUST produce an Audit_Log entry. This list is exhaustive - any operation not listed here does not require an audit entry.
 
 | Entity | Audited Actions |
 |--------|----------------|
@@ -73,7 +73,7 @@ Every state-changing operation on the following entities MUST produce an Audit_L
 2. THE Platform SHALL transmit all data over TLS 1.2 or higher.
 3. THE Platform SHALL enforce role-based access controls on all patient data endpoints.
 4. WHEN a verified GDPR right-to-erasure request is processed by a Clinic_Admin, THE Platform SHALL anonymize all personal identifiers for that Patient: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth` are replaced with anonymized placeholders.
-5. Erasure SHALL NOT delete Session clinical data (images, AI analysis, reports) — only personal identifiers are anonymized.
+5. Erasure SHALL NOT delete Session clinical data (images, AI analysis, reports) - only personal identifiers are anonymized.
 6. Erasure is irreversible. THE Platform SHALL require explicit confirmation before proceeding.
 7. WHEN erasure is completed, THE Platform SHALL record the action in the Audit_Log with actor and timestamp.
 8. WHEN a patient requests a data export, THE Platform SHALL allow a Clinic_Admin to generate a machine-readable export (JSON) of all personal data held for that patient across all modules.
@@ -99,7 +99,7 @@ Every state-changing operation on the following entities MUST produce an Audit_L
 
 1. THE Platform SHALL maintain an audit trail of all access and modification events on Protected Health Information (PHI).
 2. PHI includes: patient name, contact details, date of birth, session data, medical documents, AI analysis results, and reports.
-3. THE Platform SHALL enforce minimum necessary access — Staff members only access PHI required for their role.
+3. THE Platform SHALL enforce minimum necessary access - Staff members only access PHI required for their role.
 4. THE Platform SHALL support configurable data retention policies per Organization, with a minimum of 7 years for PHI.
 5. THE Platform SHALL provide a mechanism for Clinic_Admins to respond to HIPAA audit requests by exporting audit log entries for a specified date range and resource.
 
@@ -123,6 +123,6 @@ Every state-changing operation on the following entities MUST produce an Audit_L
 
 1. THE Platform SHALL restrict access to modules and features based on the Organization's active Plan.
 2. WHEN a Staff member attempts to access a feature not included in the Plan, THE Platform SHALL return a `PLAN_LIMIT_EXCEEDED` error.
-3. THE Platform SHALL NOT manage subscription billing internally — Plan status is provided by an external system via a secure API.
+3. THE Platform SHALL NOT manage subscription billing internally - Plan status is provided by an external system via a secure API.
 4. WHEN the external system updates an Organization's Plan, THE Platform SHALL reflect the updated feature access within one processing cycle.
 5. Plan changes SHALL be recorded in the Audit_Log.

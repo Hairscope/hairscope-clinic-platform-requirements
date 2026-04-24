@@ -36,50 +36,53 @@
       color: #58a6ff;
     }
     main {
-      max-width: 900px;
+      max-width: 960px;
       margin: 40px auto;
       padding: 0 24px;
     }
     h2 {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      margin-bottom: 16px;
+      margin: 32px 0 12px;
       color: #24292f;
       border-bottom: 1px solid #d0d7de;
       padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.8rem;
     }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
-      margin-bottom: 40px;
+      gap: 12px;
+      margin-bottom: 8px;
     }
     .card {
       background: #fff;
       border: 1px solid #d0d7de;
       border-radius: 8px;
-      padding: 20px;
+      padding: 18px;
       text-decoration: none;
       color: inherit;
       transition: border-color 0.15s, box-shadow 0.15s;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .card:hover {
       border-color: #0969da;
-      box-shadow: 0 2px 8px rgba(9,105,218,0.15);
+      box-shadow: 0 2px 8px rgba(9,105,218,0.12);
     }
-    .card-icon { font-size: 1.5rem; }
-    .card-title { font-weight: 600; font-size: 1rem; }
-    .card-desc { font-size: 0.85rem; color: #57606a; line-height: 1.5; }
+    .card-icon { font-size: 1.3rem; }
+    .card-title { font-weight: 600; font-size: 0.95rem; }
+    .card-desc { font-size: 0.82rem; color: #57606a; line-height: 1.5; }
     .card-tag {
       display: inline-block;
       background: #ddf4ff;
       color: #0550ae;
       border-radius: 20px;
       padding: 2px 10px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 500;
       margin-top: auto;
       width: fit-content;
@@ -112,65 +115,143 @@
   <div class="badges">
     <span class="badge">✅ GDPR Compliant</span>
     <span class="badge">✅ HIPAA Compliant</span>
-    <span class="badge">✅ Audit Logging</span>
+    <span class="badge">✅ GraphQL API</span>
+    <span class="badge">✅ Event-Driven</span>
     <span class="badge">✅ Multi-Tenant</span>
   </div>
 </header>
 
 <main>
-  <h2>Requirements Documents</h2>
-  <div class="grid">
 
+  <div class="grid">
     <a class="card master-card" href="requirements.html">
       <div class="card-icon">📋</div>
       <div class="card-title">Master Requirements</div>
-      <div class="card-desc">Platform overview, multi-tenancy, GDPR/HIPAA compliance, authentication, roles &amp; permissions, audit logging, notifications, and subscription plan gating.</div>
-      <span class="card-tag">Cross-cutting · CC-1 to CC-9</span>
+      <div class="card-desc">System principles, global invariants, identity model, permission engine, time handling, ID strategy, GraphQL API standard, audit requirements, error handling, data lifecycle, performance, versioning, and extensibility.</div>
+      <span class="card-tag">Cross-cutting · GI-1 to GI-13</span>
+    </a>
+  </div>
+
+  <h2>Core</h2>
+  <div class="grid">
+
+    <a class="card" href="core/identity-access.html">
+      <div class="card-icon">🔐</div>
+      <div class="card-title">Identity & Access</div>
+      <div class="card-desc">Staff lifecycle, invite flow, authentication, roles, permissions, deactivation, deletion, multi-device sessions.</div>
+      <span class="card-tag">IAM-1 to IAM-7</span>
     </a>
 
-    <a class="card" href="requirements-patients.html">
+    <a class="card" href="core/organization.html">
+      <div class="card-icon">🏢</div>
+      <div class="card-title">Organization Management</div>
+      <div class="card-desc">Org/clinic hierarchy, self-registration, clinic profile, inter-clinic transfers, dashboards, clinic deactivation, staff availability.</div>
+      <span class="card-tag">ORG-1 to ORG-7</span>
+    </a>
+
+    <a class="card" href="core/audit-compliance.html">
+      <div class="card-icon">📜</div>
+      <div class="card-title">Audit & Compliance</div>
+      <div class="card-desc">Audit log integrity and coverage, GDPR compliance, HIPAA compliance, consent management, subscription plan compliance.</div>
+      <span class="card-tag">AUD-1 to AUD-6</span>
+    </a>
+
+    <a class="card" href="core/data-ownership.html">
+      <div class="card-icon">🗂️</div>
+      <div class="card-title">Data Ownership</div>
+      <div class="card-desc">Record ownership model (attribution vs responsibility), ownership table, reassignable records on staff deletion, patient and session data permanence.</div>
+      <span class="card-tag">OWN-1 to OWN-4</span>
+    </a>
+
+    <a class="card" href="core/system-invariants.html">
+      <div class="card-icon">⚖️</div>
+      <div class="card-title">System Invariants</div>
+      <div class="card-desc">Non-negotiable rules enforced across the entire platform — identity, patient/session, data integrity, audit, and API/architecture invariants.</div>
+      <span class="card-tag">GI-1 to GI-33</span>
+    </a>
+
+  </div>
+
+  <h2>Modules</h2>
+  <div class="grid">
+
+    <a class="card" href="modules/patients.html">
       <div class="card-icon">🧑‍⚕️</div>
-      <div class="card-title">Patients Management</div>
-      <div class="card-desc">Patient profiles, analysis sessions, global &amp; trichoscopy image capture, AI analysis, annotation editing, questionnaires, and PDF report generation.</div>
-      <span class="card-tag">PAT-1 to PAT-11</span>
+      <div class="card-title">Patients</div>
+      <div class="card-desc">Patient profiles, global patient identity (Hairscope Care App), treatment progress graph, medical documents, GDPR erasure.</div>
+      <span class="card-tag">PAT-1 to PAT-5</span>
     </a>
 
-    <a class="card" href="requirements-staff.html">
-      <div class="card-icon">👥</div>
-      <div class="card-title">Staff Management</div>
-      <div class="card-desc">Organization/clinic hierarchy, self-registration onboarding, email invite flow, role management, permissions, deactivation, and data transfer on deletion.</div>
-      <span class="card-tag">STF-1 to STF-9</span>
+    <a class="card" href="modules/sessions.html">
+      <div class="card-icon">🔬</div>
+      <div class="card-title">Sessions</div>
+      <div class="card-desc">Session lifecycle, products & doctor's note, report generation, AI analysis. Hair Analysis type: global images, trichoscopy (min 6 mandatory positions), annotation editing, questionnaire.</div>
+      <span class="card-tag">SES-1 to SES-HA-4</span>
     </a>
 
-    <a class="card" href="requirements-leads.html">
+    <a class="card" href="modules/leads.html">
       <div class="card-icon">📊</div>
-      <div class="card-title">Leads Management CRM</div>
-      <div class="card-desc">Lead capture via manual entry, webhooks, and selfie analysis web component. CRM actions, status pipeline, and conversion to patient records.</div>
-      <span class="card-tag">LM-1 to LM-8</span>
+      <div class="card-title">Leads</div>
+      <div class="card-desc">Lead assignment mode (AUTO/MANUAL), manual entry, webhook ingestion, selfie analysis capture, staff distribution algorithm, unassigned lead management, CRM actions, conversion.</div>
+      <span class="card-tag">LM-1 to LM-13</span>
     </a>
 
-    <a class="card" href="requirements-appointments.html">
+    <a class="card" href="modules/appointments.html">
       <div class="card-icon">📅</div>
       <div class="card-title">Appointments</div>
-      <div class="card-desc">Service configuration, working hours, staff and patient booking flows, calendar view, status lifecycle, rescheduling, and embeddable booking widget.</div>
-      <span class="card-tag">APT-1 to APT-8</span>
+      <div class="card-desc">Service configuration with qualified staff, working hours, staff and web component booking, calendar view, status lifecycle, rescheduling, cancellation, smart scheduling engine.</div>
+      <span class="card-tag">APT-1 to APT-9</span>
     </a>
 
-    <a class="card" href="requirements-products.html">
+    <a class="card" href="modules/products.html">
       <div class="card-icon">💊</div>
       <div class="card-title">Products</div>
-      <div class="card-desc">Per-clinic product catalog, cosmetic and medical product types, session recommendations with routines, purchase links, and prescription generation.</div>
+      <div class="card-desc">Per-clinic product catalog, cosmetic and medical types, session recommendations with routines, purchase links, prescription generation.</div>
       <span class="card-tag">PRD-1 to PRD-4</span>
     </a>
 
-    <a class="card" href="requirements-billing.html">
+    <a class="card" href="modules/billing.html">
       <div class="card-icon">🧾</div>
       <div class="card-title">Billing</div>
-      <div class="card-desc">Automatic invoice generation per session, miscellaneous charges, tax configuration, invoice finalization, PDF export, and billing analytics.</div>
+      <div class="card-desc">Automatic invoice generation per session, miscellaneous charges, tax configuration, invoice finalization, PDF export, billing analytics.</div>
       <span class="card-tag">BIL-1 to BIL-6</span>
     </a>
 
   </div>
+
+  <h2>Shared</h2>
+  <div class="grid">
+
+    <a class="card" href="shared/enums.html">
+      <div class="card-icon">📑</div>
+      <div class="card-title">Enums</div>
+      <div class="card-desc">Canonical enum definitions for all modules — staff status, session types, lead status/source/priority, appointment status, product types, image positions, questionnaire categories, audit actions.</div>
+      <span class="card-tag">Canonical values</span>
+    </a>
+
+    <a class="card" href="shared/error-codes.html">
+      <div class="card-icon">🚨</div>
+      <div class="card-title">Error Codes</div>
+      <div class="card-desc">Full error code registry for all GraphQL responses — auth, invite, validation, staff, patient, session, lead, appointment, invoice, webhook, and system errors.</div>
+      <span class="card-tag">Error registry</span>
+    </a>
+
+    <a class="card" href="shared/api-contracts.html">
+      <div class="card-icon">🔌</div>
+      <div class="card-title">API Contracts</div>
+      <div class="card-desc">GraphQL conventions, pagination (Relay spec), subscriptions, file upload contract, webhook ingestion contract, rate limiting, async operation polling.</div>
+      <span class="card-tag">API standards</span>
+    </a>
+
+    <a class="card" href="shared/event-definitions.html">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Event Definitions</div>
+      <div class="card-desc">Domain event registry for cross-module communication — session, AI analysis, report, lead, appointment, staff, and invoice events with full payloads and consumers.</div>
+      <span class="card-tag">Event bus</span>
+    </a>
+
+  </div>
+
 </main>
 
 <footer>
