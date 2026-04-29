@@ -1,6 +1,6 @@
 # Hairscope Clinic Platform - Master Requirements
 
-> Version: 1.0.0 | Status: Draft | API: GraphQL
+> Version: 1.0.0 | Status: **Final** | API: GraphQL | Last Updated: 2025-04-29
 
 ---
 
