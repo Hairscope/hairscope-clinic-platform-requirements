@@ -16,7 +16,8 @@
 - **Staff_Availability**: Per-day working schedule for an individual Staff member. Used internally by the smart scheduling engine to determine which qualified staff can be assigned to a given slot. Never exposed to patients.
 - **Qualified_Staff**: Staff members who are configured as able to provide a specific Service.
 - **Smart_Scheduling**: The internal engine that assigns the least busy qualified Staff member to a booked appointment, based on Staff_Availability and existing appointment load.
-- **Report_Header**: Clinic branding (logo, name, address) printed at the top of generated Reports.
+- **Report_Header**: Clinic branding (logo, name, address) printed at the top of generated Reports. Customizable per Clinic.
+- **Report_Template**: The layout and structure of a generated report (Selfie Analysis Report or Trichoscopy/Hair Analysis Report). Set at Organization level and applies to all Clinics within the Organization.
 - **Dashboard**: Role-specific landing page showing business KPIs. Org-scoped for Organization_Admins; clinic-scoped for all other roles.
 
 ---
@@ -231,3 +232,39 @@
 - Staff_Availability is never returned in any patient-facing or web-component-facing GraphQL query.
 - For any Staff member S with no availability configured, S SHALL NOT be assigned to any appointment by the Smart_Scheduling engine.
 - Staff_Availability is scoped to the Clinic the Staff member is currently assigned to. After an inter-clinic transfer, the previous Clinic's availability configuration is no longer active.
+
+---
+
+### ORG-8: Report Template Management
+
+**User Story:** As an Organization_Admin, I want to configure the report templates for my organization so that all clinics generate reports with a consistent structure and branding.
+
+#### Report Template Types
+
+| Template | Used For | Configurable By |
+|----------|----------|----------------|
+| `SELFIE_ANALYSIS_REPORT` | Reports generated from the Selfie Analysis web component | Organization_Admin |
+| `HAIR_ANALYSIS_REPORT` | Reports generated from completed Hair Analysis sessions (trichoscopy) | Organization_Admin |
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL maintain one active Report_Template per template type per Organization.
+2. THE Platform SHALL allow Organization_Admins to configure the Report_Template for each template type, including: layout, sections to include/exclude, section order, and branding elements.
+3. THE configured Report_Template SHALL apply to all Clinics within the Organization. Individual Clinics cannot override the template structure.
+4. EACH Clinic SHALL be able to customize the `Report_Header` (logo, clinic name, address, contact details) within the template — this is the only clinic-level customization allowed.
+5. WHEN a Report_Template is updated, THE Platform SHALL apply the new template to all future report generations. Existing generated reports are not affected.
+6. THE Platform SHALL provide a default Report_Template for each type that is used until the Organization_Admin configures a custom one.
+7. WHEN a Report_Template is updated, THE Platform SHALL record the change in the Audit_Log including the actor and before/after configuration.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Clinic-level Staff attempting to modify Report_Template | `FORBIDDEN` |
+| Invalid template configuration | `VALIDATION_ERROR` |
+
+#### Correctness Properties
+
+- For any two Clinics C1 and C2 within the same Organization, reports generated at the same time SHALL use the same Report_Template structure.
+- The Report_Header (clinic branding) within the template SHALL reflect each Clinic's own configured header, not a shared one.
+- After a Report_Template update, all reports generated after the update SHALL use the new template. Reports generated before the update SHALL retain their original structure.

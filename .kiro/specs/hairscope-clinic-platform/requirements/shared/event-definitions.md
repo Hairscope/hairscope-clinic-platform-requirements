@@ -412,6 +412,28 @@ Emitted when an Invoice is finalized.
 
 ---
 
+### `InvoiceRefunded`
+Emitted when a full or partial refund is recorded against a Finalized Invoice.
+
+**Payload:**
+```json
+{
+  "invoiceId": "uuid",
+  "clinicId": "uuid",
+  "refundAmount": "number",
+  "refundType": "FULL | PARTIAL",
+  "reason": "string",
+  "refundDate": "ISO8601 UTC",
+  "newStatus": "REFUNDED | PARTIALLY_REFUNDED",
+  "totalRefundedToDate": "number"
+}
+```
+
+**Consumers:**
+- Analytics Service → deducts refunded amount from billing KPIs
+
+---
+
 ## Event Versioning
 
 - Event schemas are versioned using `version` field in the envelope.

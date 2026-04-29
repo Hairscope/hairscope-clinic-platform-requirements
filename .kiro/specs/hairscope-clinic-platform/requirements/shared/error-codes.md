@@ -142,6 +142,8 @@
 | `INVOICE_NOT_FOUND` | Invoice does not exist or is outside scope |
 | `INVOICE_ALREADY_FINALIZED` | Invoice is Finalized and cannot be edited |
 | `INVOICE_CHARGE_VALIDATION` | Misc charge is missing description or amount |
+| `INVOICE_NOT_REFUNDABLE` | Invoice must be in FINALIZED status to record a refund |
+| `REFUND_EXCEEDS_TOTAL` | Refund amount exceeds the Invoice total or cumulative refunds exceed total |
 
 ---
 

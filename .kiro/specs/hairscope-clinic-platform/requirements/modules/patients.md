@@ -43,7 +43,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `phone`.
+1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `phone`, `genderAssignedAtBirth`.
 2. THE Platform SHALL accept the following optional fields: `dateOfBirth`, `age`, `genderAssignedAtBirth`, `externalPatientId` (alphanumeric, for mapping to external clinic systems).
 3. WHEN `dateOfBirth` is provided, THE Platform SHALL auto-calculate and store `age` from `dateOfBirth`, overriding any manually entered `age` value.
 4. WHEN `dateOfBirth` is not provided, THE Platform SHALL accept a manually entered `age` value.

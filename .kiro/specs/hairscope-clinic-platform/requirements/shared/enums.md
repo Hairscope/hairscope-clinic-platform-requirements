@@ -112,10 +112,15 @@ Valid status transitions:
 InvoiceStatus
   DRAFT
   FINALIZED
+  REFUNDED
+  PARTIALLY_REFUNDED
 ```
 
 Valid status transitions:
 - `DRAFT → FINALIZED`
+- `FINALIZED → REFUNDED`
+- `FINALIZED → PARTIALLY_REFUNDED`
+- `PARTIALLY_REFUNDED → REFUNDED`
 
 ---
 

@@ -1,20 +1,25 @@
 # Billing
 
-> Covers: Invoice generation, miscellaneous charges, invoice finalization, PDF export, and billing analytics.
-> Events emitted: `InvoiceGenerated`, `InvoiceFinalized`
+> Covers: Invoice generation, miscellaneous charges, discounts, refunds, invoice finalization, PDF export, and billing analytics.
+> Events emitted: `InvoiceGenerated`, `InvoiceFinalized`, `InvoiceRefunded`
 > Events consumed: `AppointmentCompleted` (triggers invoice generation)
 
 ---
 
 ## Glossary
 
-- **Invoice**: A PDF billing document auto-generated per completed Session, itemizing services, products, and miscellaneous charges.
+- **Invoice**: A PDF billing document auto-generated per completed Session, itemizing services, products, miscellaneous charges, and discounts.
 - **Misc_Charge**: An additional charge added by Staff to an Invoice that is not associated with a predefined Service or Product.
-- **Invoice_Status**: `DRAFT` | `FINALIZED` - see `shared/enums.md`.
-- **Subtotal**: The sum of all itemized charges on an Invoice before tax.
-- **Tax**: A configurable tax rate (percentage) applied to the Subtotal.
-- **Total**: The final amount on an Invoice = `Subtotal × (1 + Tax)`.
-- **Invoice_Line_Item**: A single row on an Invoice representing a Service, Product, or Misc_Charge with its associated amount.
+- **Discount**: A reduction applied to an Invoice, either as a fixed amount or a percentage of the Subtotal.
+- **Refund**: A full or partial reversal of a Finalized Invoice amount. Tracked for analytics; no payment processing occurs within the platform.
+- **Invoice_Status**: `DRAFT` | `FINALIZED` | `REFUNDED` | `PARTIALLY_REFUNDED` - see `shared/enums.md`.
+- **Subtotal**: The sum of all itemized charges on an Invoice before discount and tax.
+- **Discount_Amount**: The total discount applied to the Invoice, calculated from all Discount entries.
+- **Taxable_Amount**: `Subtotal - Discount_Amount`.
+- **Tax**: A configurable tax rate (percentage) applied to the Taxable_Amount.
+- **Total**: The final amount on an Invoice = `(Subtotal - Discount_Amount) × (1 + Tax)`.
+- **Refund_Amount**: The amount refunded on a Finalized Invoice. May be partial or full.
+- **Invoice_Line_Item**: A single row on an Invoice representing a Service, Product, Misc_Charge, or Discount with its associated amount.
 
 ---
 
@@ -47,33 +52,40 @@
 
 ---
 
-### BIL-2: Invoice Review and Miscellaneous Charges
+### BIL-2: Invoice Review, Miscellaneous Charges, and Discounts
 
-**User Story:** As a Staff member with billing edit permission, I want to review and add miscellaneous charges to an invoice before finalizing it so that all costs are accurately captured.
+**User Story:** As a Staff member with billing edit permission, I want to review, add miscellaneous charges, and apply discounts to an invoice before finalizing it so that all costs and adjustments are accurately captured.
 
 #### Acceptance Criteria
 
 1. THE Platform SHALL allow Staff with billing edit permission to add Misc_Charges to a `DRAFT` Invoice.
 2. WHEN a Misc_Charge is added, `description` and `amount` are required.
 3. THE Platform SHALL allow Staff to edit or remove Misc_Charges from a `DRAFT` Invoice.
-4. WHEN Misc_Charges are added, edited, or removed, THE Platform SHALL recalculate `subtotal`, `tax`, and `total`.
-5. THE Platform SHALL allow Staff to configure a tax rate per Clinic, applied to the Subtotal when calculating the Total.
-6. WHEN a Misc_Charge is added, edited, or removed, THE Platform SHALL record the change in the Audit_Log.
+4. THE Platform SHALL allow Staff with billing edit permission to add one or more Discounts to a `DRAFT` Invoice.
+5. WHEN a Discount is added, THE Platform SHALL require a `description` and either a `fixedAmount` or a `percentage` (not both).
+6. THE Platform SHALL allow Staff to edit or remove Discounts from a `DRAFT` Invoice.
+7. WHEN Misc_Charges or Discounts are added, edited, or removed, THE Platform SHALL recalculate `subtotal`, `discountAmount`, `taxableAmount`, `tax`, and `total`.
+8. THE Platform SHALL allow Staff to configure a tax rate per Clinic, applied to the Taxable_Amount when calculating the Total.
+9. WHEN a Misc_Charge or Discount is added, edited, or removed, THE Platform SHALL record the change in the Audit_Log.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Missing `description` | `VALIDATION_ERROR` (field: `description`) |
-| Missing `amount` | `VALIDATION_ERROR` (field: `amount`) |
+| Missing `description` on Misc_Charge or Discount | `VALIDATION_ERROR` (field: `description`) |
+| Missing `amount` on Misc_Charge | `VALIDATION_ERROR` (field: `amount`) |
+| Both `fixedAmount` and `percentage` provided on Discount | `VALIDATION_ERROR` |
+| Discount `percentage` > 100 | `VALIDATION_ERROR` (field: `percentage`) |
 | Editing a FINALIZED Invoice | `INVOICE_ALREADY_FINALIZED` |
 | Invoice not found | `INVOICE_NOT_FOUND` |
 
 #### Correctness Properties
 
-- For any Invoice I: `I.subtotal = sum(all line item amounts on I)`.
-- For any Invoice I with tax rate T: `I.total = I.subtotal × (1 + T)`.
-- For any Invoice I with Misc_Charge M added: `I.subtotal` SHALL include `M.amount`.
+- For any Invoice I: `I.subtotal = sum(all line item amounts on I excluding discounts)`.
+- For any Invoice I: `I.discountAmount = sum(all Discount amounts on I)`.
+- For any Invoice I: `I.taxableAmount = I.subtotal - I.discountAmount`.
+- For any Invoice I with tax rate T: `I.total = I.taxableAmount × (1 + T)`.
+- `I.total` SHALL NOT be negative - if discounts exceed the subtotal, total is clamped to 0.
 
 ---
 
@@ -108,10 +120,10 @@
 
 #### Acceptance Criteria
 
-1. THE Invoice SHALL include: patient details (name, contact), clinic details (name, address, contact), invoice date, itemized Services, itemized Products, itemized Misc_Charges, Subtotal, Tax (amount and rate), and Total.
+1. THE Invoice SHALL include: patient details (name, contact), clinic details (name, address, contact), invoice date, itemized Services, itemized Products, itemized Misc_Charges, itemized Discounts (description and amount), Subtotal, Discount Amount, Taxable Amount, Tax (amount and rate), and Total.
 2. THE Platform SHALL display the currency for all monetary amounts on the Invoice.
 3. THE Platform SHALL include a unique Invoice number on each Invoice.
-4. THE Platform SHALL generate Invoice numbers sequentially per Clinic (GI-19).
+4. THE Platform SHALL generate Invoice numbers sequentially per Clinic (GI-22).
 
 #### Correctness Properties
 
@@ -167,3 +179,40 @@
 
 - For any date range [D1, D2]: the aggregated billing total displayed SHALL equal the sum of Total values for all `FINALIZED` Invoices with `invoiceDate` in [D1, D2] for that Clinic.
 - The billing analytics SHALL NOT include any actual payment received data, only Invoice totals.
+
+---
+
+### BIL-7: Refunds
+
+**User Story:** As a Staff member with billing edit permission, I want to record refunds against finalized invoices so that the clinic's billing records accurately reflect money returned to patients.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL allow Staff with billing edit permission to record a Refund against a `FINALIZED` Invoice.
+2. A Refund may be full (entire Total) or partial (any amount up to the Total).
+3. WHEN a Refund is recorded, THE Platform SHALL require: `amount`, `reason`, and `refundDate`.
+4. WHEN a full Refund is recorded, THE Platform SHALL set the Invoice status to `REFUNDED`.
+5. WHEN a partial Refund is recorded, THE Platform SHALL set the Invoice status to `PARTIALLY_REFUNDED` and store the `refundedAmount` on the Invoice.
+6. THE Platform SHALL NOT process actual payment refunds - refunds are tracked for record-keeping and analytics only.
+7. Multiple partial refunds may be recorded against the same Invoice, provided the cumulative refunded amount does not exceed the Invoice Total.
+8. WHEN a Refund is recorded, THE Platform SHALL emit `InvoiceRefunded` and record the action in the Audit_Log including actor, amount, reason, and date.
+9. THE Platform SHALL allow Staff to view the full refund history for any Invoice.
+10. Refunded amounts SHALL be reflected in billing analytics (deducted from revenue totals).
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Refund amount exceeds Invoice Total | `REFUND_EXCEEDS_TOTAL` |
+| Cumulative refunds exceed Invoice Total | `REFUND_EXCEEDS_TOTAL` |
+| Refunding a non-FINALIZED Invoice | `INVOICE_NOT_REFUNDABLE` |
+| Missing `amount`, `reason`, or `refundDate` | `VALIDATION_ERROR` |
+| Invoice not found | `INVOICE_NOT_FOUND` |
+
+#### Correctness Properties
+
+- For any Invoice I: `sum(all Refund amounts on I) ≤ I.total`.
+- After a full refund: `I.status = REFUNDED` and `I.refundedAmount = I.total`.
+- After a partial refund: `I.status = PARTIALLY_REFUNDED` and `I.refundedAmount = sum(all partial refund amounts)`.
+- Refunded amounts SHALL be subtracted from the Clinic's billing analytics totals for the relevant date range.
+- The platform SHALL NOT store any payment transaction records, card details, or bank account information related to refunds.
