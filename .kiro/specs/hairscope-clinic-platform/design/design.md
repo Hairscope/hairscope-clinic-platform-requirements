@@ -1,321 +1,271 @@
 ﻿# Hairscope Clinic Platform - Design System
 
-> **Version:** 1.0.0
-> **Status:** Draft
-> **Branch:** designs
-> **Source:** Extracted from `hairscope` frontend (Next.js 14 + SCSS)
-
-This document defines the design system for the Hairscope Clinic Platform - the colors, typography, spacing, components, and UI patterns used across the web app, and to be aligned with the mobile apps.
+> **Version:** 1.0.0 | **Status:** Draft | **Branch:** designs
 
 ---
 
-## 1. Color Palette
+## Overview
 
-All colors are defined as CSS custom properties in `:root` and referenced via SCSS variables.
+Hairscope Clinic Platform is a **clinical-grade SaaS** for hair treatment clinics. The visual language is built on a **deep teal-forest canvas** (--primary-dark #064348) with warm skin and hair tone accents.
 
-### Primary Brand Colors
+The base atmosphere is a **dark teal background** with semi-transparent white card surfaces layered over it, creating depth through translucency rather than shadows. Brand voltage comes from the **teal primary** (--primary-light #19878e) used on interactive elements, paired with warm skin-tone gradients for hero and report surfaces.
 
-| Token | CSS Variable | Hex | Usage |
-|-------|-------------|-----|-------|
-| `$primary-light` | `--primary-light` | `#19878e` | Hover states, active links, scrollbar thumb |
-| `$primary` | `--primary` | `#184f54` | Primary buttons, key UI elements |
-| `$primary-dark` | `--primary-dark` | `#064348` | Page background, dark surfaces |
-| `$secondary` | `--secondary` | `#0b2327` | Deepest dark, sidebar, overlays |
+Type runs **Open Sans** throughout. Single font family, weight variation handles hierarchy (400 body, 600 headings).
 
-### Neutral Colors
+**Key Characteristics:**
+- Dark teal canvas (--primary-dark #064348) with semi-transparent white cards (gba(255,255,255,0.2))
+- Teal primary action (--primary-light #19878e) on buttons, links, interactive elements
+- Warm skin/hair tone gradients for clinical report surfaces
+- Hair score color coding: green -> yellow -> orange -> red (healthy -> critical)
+- Open Sans 400/600 - single family, no display/body split
+- 15px border radius (--border-radius) - rounded, approachable
+- 100px sidebar (--sidebar-width) - compact icon-only navigation
 
-| Token | CSS Variable | Hex | Usage |
-|-------|-------------|-----|-------|
-| `$black` | `--black` | `#222222` | Text on light backgrounds |
-| `$white` | `--white` | `#fafafa` | Text on dark backgrounds, card surfaces |
-| `$pure-black` | `--pure-black` | `#000000` | Absolute black |
 
-### Skin & Hair Tones (Clinical UI)
+---
 
-| Token | CSS Variable | Hex | Usage |
-|-------|-------------|-----|-------|
-| `$light-skin-1` | `--light-skin-1` | `#f7e6df` | Background gradients, warm tones |
-| `$light-skin-2` | `--light-skin-2` | `#f7d8c4` | Gradient start, warm accents |
-| `$dark-skin` | `--dark-skin` | `#dfac98` | Mid-tone skin reference |
-| `$light-hair` | `--light-hair` | `#957c65` | Hair color reference |
-| `$light-hair-2` | `--light-hair-2` | `#9c754e` | Secondary hair tone |
-| `$dark-hair` | `--dark-hair` | `#3a2c24` | Dark hair reference |
+## Colors
 
-### Text Colors
+All colors are CSS custom properties from globals.scss.
+
+### Primary Brand
 
 | Token | CSS Variable | Hex | Usage |
 |-------|-------------|-----|-------|
-| `$text-primary` | `--text-primary` | `#696969` | Body text, labels |
-| `$text-secondary` | `--text-secondary` | `#d5bfb6` | Placeholder text, muted labels |
+| Primary Light | `--primary-light` | `#19878e` | Buttons, links, scrollbar thumb, active states, focus rings |
+| Primary | `--primary` | `#184f54` | Primary surfaces, card headers |
+| Primary Dark | `--primary-dark` | `#064348` | Page background, deepest surfaces |
+| Secondary | `--secondary` | `#0b2327` | Sidebar, overlays, deepest dark |
 
-### Status / Alert Colors
+### Neutral
 
 | Token | CSS Variable | Hex | Usage |
 |-------|-------------|-----|-------|
-| `$green` | `--green` | `#87ff5b` | Success, healthy hair score |
-| `$yellow` | `--yellow` | `#ffcf20` | Warning, moderate hair score |
-| `$orange` | `--orange` | `#ff9320` | Caution, elevated concern |
-| `$red` | `--red` | `#ea3700` | Error, critical hair score |
+| Black | `--black` | `#222222` | Text on light surfaces |
+| White | `--white` | `#fafafa` | Text on dark surfaces, card content |
 
-### Hair Score Color Coding
+### Skin & Hair Tones (Clinical Reference)
 
-Used in `HairAnalysisCard` and `ColorCodes` components:
+| Token | CSS Variable | Hex | Usage |
+|-------|-------------|-----|-------|
+| Light Skin 1 | `--light-skin-1` | `#f7e6df` | Warm background accents |
+| Light Skin 2 | `--light-skin-2` | `#f7d8c4` | Gradient start, report headers |
+| Dark Skin | `--dark-skin` | `#dfac98` | Mid-tone clinical reference |
+| Light Hair | `--light-hair` | `#957c65` | Hair color reference |
+| Light Hair 2 | `--light-hair-2` | `#9c754e` | Secondary hair tone |
+| Dark Hair | `--dark-hair` | `#3a2c24` | Dark hair reference |
 
-```
-#87ff5b  Green  - Healthy / Good density
-#ffcf20  Yellow - Moderate / Thinning
-#ff9320  Orange - Concerning / Significant loss
-#ea3700  Red    - Critical / Severe loss
-```
+### Text
+
+| Token | CSS Variable | Hex | Usage |
+|-------|-------------|-----|-------|
+| Text Primary | `--text-primary` | `#696969` | Body text, labels |
+| Text Secondary | `--text-secondary` | `#d5bfb6` | Placeholder, muted labels |
+
+### Hair Score Status Colors
+
+Used in HairAnalysisCard, ColorCodes, HairGraph, and all clinical metric displays:
+
+| Token | CSS Variable | Hex | Score | Meaning |
+|-------|-------------|-----|-------|---------|
+| Green | `--green` | `#87ff5b` | 75-100% | Healthy / Good density |
+| Yellow | `--yellow` | `#ffcf20` | 50-74% | Moderate / Early thinning |
+| Orange | `--orange` | `#ff9320` | 25-49% | Concerning / Significant loss |
+| Red | `--red` | `#ea3700` | 0-24% | Critical / Severe loss |
 
 ### Gradients
 
 | Token | CSS Variable | Value | Usage |
 |-------|-------------|-------|-------|
-| `$gradient-1` | `--gradient-1` | `linear-gradient(180deg, #f7d8c4 0%, #67b5d6 100%)` | Hero sections |
-| `$boxbg` | `--boxbg` | `linear-gradient(180deg, rgba(3,146,150,0.2) 0%, rgba(255,255,255,0.2) 100%)` | Card backgrounds |
-| `$bggrad` | `--bggrad` | `linear-gradient(180deg, #f7d8c4 0%, #67b5d6 100%)` | Page background gradient |
+| Gradient 1 | `--gradient-1` | `linear-gradient(180deg, #f7d8c4 0%, #67b5d6 100%)` | Hero sections, report headers |
+| Box BG | `--boxbg` | `linear-gradient(180deg, rgba(3,146,150,0.2) 0%, rgba(255,255,255,0.2) 100%)` | Card backgrounds |
+| BG Grad | `--bggrad` | `linear-gradient(180deg, #f7d8c4 0%, #67b5d6 100%)` | Page background overlay |
+
+### Card Surface
+
+The primary card surface is semi-transparent white over the dark teal background:
+
+`css
+background: rgba(255, 255, 255, 0.2);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 15px;
+`
 
 ---
 
-## 2. Typography
+## Typography
 
-### Font Family
+Font: **Open Sans** (single family throughout)
 
-```css
-font-family: 'Open Sans', sans-serif;
-```
+| Role | Size (desktop) | Size (mobile) | Weight | Usage |
+|------|---------------|--------------|--------|-------|
+| h1 | 48px | 44px | 400 | Page titles, hero headlines |
+| h2 | 36px | 32px | 400 | Section headings |
+| h3 | 24px | 20px | 400 | Card titles, sub-section heads |
+| h4 | 20px | 16px | 400 | Feature labels, panel titles |
+| h5 | 16px | 14px | 600 | List labels, emphasized UI text |
+| h6 | 12px | 10px | 400 | Micro-labels, captions |
+| Body | 18px | 16px | 400 | Running text, descriptions |
+| Small | 14px | 13px | 400 | Meta text, dates, secondary info |
+| Caption | 12px | 11px | 500 | Badges, tags, status labels |
 
-### Type Scale
-
-| Element | Size (desktop) | Size (mobile ≤640px) | Weight |
-|---------|---------------|---------------------|--------|
-| `h1` | 48px | 44px | Default |
-| `h2` | 36px | 32px | Default |
-| `h3` | 24px | 20px | Default |
-| `h4` | 20px | 16px | Default |
-| `h5` | 16px | 14px | 600 |
-| `h6` | 12px | 10px | 400 |
-| `p` | 18px | 16px | 400, line-height: 1.5em |
+Line height: 1.5em for body. No negative letter-spacing.
 
 ---
 
-## 3. Spacing & Layout
+## Spacing & Layout
 
 ### Layout Constants
 
 | Token | CSS Variable | Value | Usage |
 |-------|-------------|-------|-------|
-| `$header-height` | `--header-height` | `60px` | Top navigation bar height |
-| `$border-radius` | `--border-radius` | `15px` | Default card/button border radius |
-| `$sidebarWidth` | `--sidebar-width` | `100px` | Left sidebar width |
+| Header Height | `--header-height` | `60px` | Top navigation bar |
+| Border Radius | `--border-radius` | `15px` | Default card/button radius |
+| Sidebar Width | `--sidebar-width` | `100px` | Left icon-only navigation |
+
+### Spacing Scale (4px base)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| xxs | 4px | Micro gaps, icon padding |
+| xs | 8px | Tight component spacing |
+| sm | 12px | Form field gaps |
+| md | 16px | Default component padding |
+| lg | 24px | Card internal padding |
+| xl | 32px | Section internal padding |
+| xxl | 48px | Between major components |
+| section | 80px | Between page sections |
 
 ### Breakpoints
 
-| Name | Variable | Value | Usage |
-|------|----------|-------|-------|
-| `xs` | `$xs` | `400px` | Extra small devices |
-| `sm` | `$sm` | `640px` | Small / mobile |
-| `md` | `$md` | `768px` | Tablet |
-| `lg` | `$lg` | `1024px` | Desktop |
-| `xl` | `$xl` | `1280px` | Large desktop |
-
-### SCSS Breakpoint Mixins
-
-```scss
-@include xs { /* max-width: 400px */ }
-@include sm { /* max-width: 640px */ }
-@include md { /* max-width: 768px */ }
-@include lg { /* max-width: 1024px */ }
-@include xl { /* max-width: 1280px */ }
-```
+| Name | Value | Key Changes |
+|------|-------|-------------|
+| xs | 400px | Extra small mobile |
+| sm | 640px | Mobile - single column, reduced type |
+| md | 768px | Tablet - 2-column layouts |
+| lg | 1024px | Desktop - full sidebar + content |
+| xl | 1280px | Large desktop |
 
 ---
 
-## 4. Component Library
+## Elevation & Depth
 
-Components are located in `src/common/` and `src/lib/`. Below is the inventory with usage notes.
+Depth comes from translucency and surface contrast, not shadows.
 
-### 4.1 Layout Components
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| `Sidebar` | `common/Sidebar` | Left navigation sidebar (100px wide) |
-| `LeftBoxLayout` | `common/LeftBoxLayout` | Two-column layout with left panel |
-| `SideBySideBoxes` | `common/SideBySideBoxes` | Side-by-side comparison layout |
-| `Containers` | `common/Containers` | Generic container wrappers |
-| `TabContainer` | `common/TabContainer` | Tabbed content container |
-
-### 4.2 Form Components
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| `FormComponents` | `common/FormComponents` | Input, Select, Textarea wrappers |
-| `Button` | `common/Button` | Primary, secondary, ghost button variants |
-| `Checkbox` | `common/Checkbox` | Styled checkbox |
-| `SearchBar` | `common/SearchBar` | Search input with icon |
-| `CategoryToggle` | `common/CategoryToggle` | Toggle between categories |
-| `ReminderInputGroup` | `common/ReminderInputGroup` | Reminder time/type input group |
-
-### 4.3 Data Display
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| `Table` | `common/Table` | Data table with sorting |
-| `HairTable` | `common/HairTable` | Hair analysis data table |
-| `HairGraph` | `common/HairGraph` | Treatment progress graph (Recharts) |
-| `HairAnalysisCard` | `common/HairAnalysisCard` | Session analysis summary card |
-| `ColorCodes` | `common/ColorCodes` | Hair score color legend |
-| `IconText` | `common/IconText` | Icon + text combination |
-| `Title` | `common/Title` | Section title component |
-
-### 4.4 Clinical / Image Components
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| `TrichoscopyImage` | `common/TrichoscopyImage` | Trichoscopy image viewer with annotations |
-| `EditAnalysisImage` | `common/EditAnalysisImage` | Annotation editing canvas (follicles + strands) |
-| `HairRoot` | `common/HairRoot` | Follicle (root point) rendering |
-| `HairStrand` | `common/HairStrand` | Hair strand (3-point rectangle) rendering |
-| `HeadImage` | `common/HeadImage` | Head diagram for position marking |
-| `GalleryImage` | `common/GalleryImage` | Image gallery viewer |
-| `ImagePreview` | `common/ImagePreview` | Single image preview |
-| `ImageScale` | `common/ImageScale` | Image scale/measurement overlay |
-| `BarControler` | `common/BarControler` | Brightness/contrast slider controls |
-| `CameraCapture` | `common/CameraCapture` | Camera capture interface |
-| `AddToReportBtn` | `common/AddToReportBtn` | Add image/section to report button |
-
-### 4.5 Utility / Overlay Components
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| `Loading` | `common/Loading` | Loading spinner |
-| `Skeleton` | `common/Skeleton` | Skeleton loading placeholder |
-| `NotesContainer` | `common/NotesContainer` | Notes/comments container |
-| `PatientNameHeader` | `common/PatientNameHeader` | Patient name + info header bar |
-| `PlanExpired` | `common/PlanExpired` | Plan expired overlay/banner |
-| `ClinicDetailsMissing` | `common/ClinicDetailsMissing` | Clinic setup incomplete warning |
-| `OtpVerificationModal` | `common/OtpVerificationModal` | OTP verification modal |
-| `QuestionsForm` | `common/QuestionsForm` | Session questionnaire form |
-
-### 4.6 Library Components (Third-party wrappers)
-
-| Component | Path | Library | Description |
-|-----------|------|---------|-------------|
-| `ZoomWrapper` | `lib/ZoomWrapper` | `react-zoom-pan-pinch` | Zoom/pan wrapper for images |
-| `RoiBox` | `lib/RoiBox` | Custom | Region of interest selection box |
-| `ImageCropper` | `lib/ImageCropper` | `react-advanced-cropper` | Image crop interface |
-| `ImageUploadWithCropper` | `lib/ImageUploadWithCropper` | Combined | Upload + crop flow |
-| `PopUpModal` | `lib/PopUpModal` | `reactjs-popup` | Modal dialog |
-| `DatePickerWrapper` | `lib/DatePickerWrapper` | `react-datepicker` | Date picker |
-| `FileViewer` | `lib/FileViewer` | `@cyntler/react-doc-viewer` | PDF/image document viewer |
-| `RichText` | `lib/RichText` | `@tiptap` | Rich text editor (Tiptap) |
-| `Lightbox` | `lib/Lightbox.js` | `yet-another-react-lightbox` | Full-screen image lightbox |
-| `Toast` | `lib/Toast.js` | `sonner` | Toast notifications |
-| `PageProgressBar` | `lib/PageProgressBar.js` | `next-nprogress-bar` | Page load progress bar |
+| Level | Treatment | Usage |
+|-------|-----------|-------|
+| Background | `--primary-dark` (#064348) solid | Page floor |
+| Card surface | `rgba(255,255,255,0.2)` + backdrop-filter blur | All cards, panels |
+| Elevated card | `rgba(255,255,255,0.3)` + stronger blur | Modals, dropdowns |
+| Dark overlay | `rgba(0,0,0,0.5)` | Modal backdrops |
+| Hairline | `rgba(255,255,255,0.1)` | Card borders, dividers |
 
 ---
 
-## 5. Key Third-Party Libraries
+## Shapes
 
-| Library | Version | Usage |
-|---------|---------|-------|
-| `next` | ^14.2.31 | Framework (App Router) |
-| `@apollo/client` | ^3.10.3 | GraphQL client |
-| `zustand` | ^4.4.5 | State management |
-| `recharts` | ^2.12.7 | Charts (treatment progress graph) |
-| `react-big-calendar` | ^1.19.4 | Appointments calendar view |
-| `@tiptap/*` | ^3.x | Rich text editor (doctor notes) |
-| `react-zoom-pan-pinch` | ^3.4.4 | Trichoscopy image zoom/pan |
-| `react-advanced-cropper` | 0.20.0 | Image cropping |
-| `react-phone-number-input` | ^3.3.7 | Phone number input with country code |
-| `react-select` | ^5.8.0 | Searchable dropdowns |
-| `react-datepicker` | ^8.7.0 | Date/time picker |
-| `sonner` | ^1.4.41 | Toast notifications |
-| `next-intl` | ^3.14.1 | i18n (8 languages) |
-| `zod` | ^3.23.8 | Schema validation |
-| `sass` | ^1.89.2 | SCSS compilation |
+| Token | Value | Usage |
+|-------|-------|-------|
+| xs | 4px | Small badges, micro elements |
+| sm | 8px | Buttons, inputs, small cards |
+| md | 12px | Feature cards, panels |
+| lg | 15px | Default (`--border-radius`) - most cards |
+| xl | 20px | Hero containers, large modals |
+| pill | 9999px | Status badges, tags |
+| full | 50% | Avatars, circular icon buttons |
 
 ---
 
-## 6. State Management (Zustand Stores)
+## Components
 
-| Store | File | Manages |
-|-------|------|---------|
-| `user` | `stores/user.js` | Authenticated staff member |
-| `session` | `stores/session.js` | Current analysis session |
-| `analysis` | `stores/analysis.js` | AI analysis data |
-| `clinicData` | `stores/clinicData.js` | Clinic profile |
-| `compare` | `stores/compare.js` | Session comparison state |
-| `globalImagesAnalysis` | `stores/globalImagesAnalysis.js` | Global image AI results |
-| `hairCoverage` | `stores/hairCoverage.js` | Hair coverage metrics |
-| `reportData` | `stores/reportData.js` | Report generation state |
-| `patientDocs` | `stores/patientDocs.js` | Patient medical documents |
-| `appoinment` | `stores/appoinment.js` | Appointment state |
-| `accessToken` | `stores/accessToken.js` | Auth token management |
-| `featureFlag` | `stores/featureFlag.js` | Feature flags / plan gates |
-| `liveView` | `stores/liveView.js` | Live camera view state |
-| `zoomData` | `stores/zoomData.js` | Image zoom/pan state |
-| `customTreatmentData` | `stores/customTreatmentData.js` | Custom treatment data |
+### Navigation
 
----
+**sidebar** - 100px wide icon-only left nav. Background `--secondary` (#0b2327). Active state: `--primary-light` (#19878e) accent. Collapses to bottom tab bar on mobile.
 
-## 7. Internationalization
+**top-nav** - 60px tall header. Background `--primary` (#184f54). Logo left, patient name center (on patient pages), avatar + notifications right.
 
-The platform supports 8 languages via `next-intl`:
+### Buttons
 
-| Code | Language |
-|------|----------|
-| `en` | English (default) |
-| `es` | Spanish |
-| `it` | Italian |
-| `nl` | Dutch |
-| `fr` | French |
-| `ru` | Russian |
-| `ar` | Arabic (RTL supported) |
-| `de` | German |
+**button-primary** - Background `--primary-light` (#19878e), text `--white`, 15px radius, 12px x 24px padding, 40px height, Open Sans 14px/600. Active: darkens to `--primary` (#184f54).
 
-RTL support is implemented via `[dir="rtl"]` CSS selector with logical properties.
+**button-secondary** - `rgba(255,255,255,0.15)` surface, `--white` text, 1px `rgba(255,255,255,0.3)` border.
 
----
+**button-ghost** - No background, `--white` text. Tertiary actions, inline links.
 
-## 8. CSS Architecture
+**button-icon-circular** - 36px circular. `rgba(255,255,255,0.15)` background, `--white` icon. Camera, zoom, annotation tools.
 
-```
-src/styles/
-  globals.scss          - CSS custom properties (:root), base styles, typography
-  variables.scss        - SCSS variables referencing CSS custom properties + mixins + breakpoints
-  variables.module.scss - CSS module exports for use in JS/TS
-  _keyframe-animations.scss - Animation keyframes
-  _variables-tiptap.scss    - Tiptap editor theme variables
-```
+**button-danger** - Background `--red` (#ea3700), `--white` text. Delete, remove, critical actions.
 
-### SCSS Utility Mixins
+### Cards
 
-```scss
-@mixin flexCenter()   // display:flex; justify-content:center; align-items:center
-@mixin flexAround()   // display:flex; justify-content:space-around; align-items:center
-@mixin leftToRightUnderlineOnHover($color) // animated underline on hover
-```
+**patient-card** - `rgba(255,255,255,0.2)` surface, 15px radius, 24px padding. Patient avatar, name, last session date, quick actions.
 
-### Utility Classes
+**session-card** - Analysis session summary. Same surface. Session date, status badge, hair score indicator, frontal image thumbnail.
 
-```scss
-.w-{1-100}  // width: 1% to 100%
-.h-{1-100}  // height: 1% to 100%
-.disabled   // opacity: 0.7; cursor: not-allowed
-```
+**hair-analysis-card** - Trichoscopy result card. Dark surface (`--primary` #184f54), 15px radius. Trichoscopy image, hair count, density, thickness, hair score color indicator.
+
+**stat-card** - Dashboard KPI card. Semi-transparent white, 15px radius, 24px padding. Metric value in h3, label in h6, trend indicator.
+
+### Clinical Components
+
+**trichoscopy-image** - Core clinical image viewer. Zoom/pan (react-zoom-pan-pinch), annotation overlay (follicles as circles, strands as 3-point rectangles), brightness/contrast controls, position marker.
+
+**edit-analysis-image** - Annotation editing canvas. Three modes: Follicle (click to place circle), Strand (3-point rectangle), Delete (click to remove). No undo/redo.
+
+**hair-root** - Individual follicle. Circle at (x, y). Color: `--primary-light` for AI-generated, `--white` for human-drawn (backend tracks source, UI does not differentiate).
+
+**hair-strand** - Individual strand. 3-point rectangle: P1 (root), P2 (direction), P3 (thickness). Rendered at root position only.
+
+**head-image** - Head diagram for trichoscopy position marking. 4 views: Front, Left, Right, Back. Single position marker per image.
+
+**hair-graph** - Treatment progress graph (Recharts). Plots hairCount, thickness, coverage over COMPLETED sessions. Color-coded lines using hair score palette.
+
+**bar-controler** - Brightness/contrast sliders. Range 0-100, default 50. Persisted per trichoscopy image.
+
+**questions-form** - Session questionnaire. 5 categories x 5 questions + Stress questionnaire (~10 questions). Shows stress-o-meter score after submission.
+
+### Status Badges
+
+**status-badge** - Pill-shaped. Color by status:
+- ACTIVE / NEW -> `--primary-light` (#19878e)
+- COMPLETED -> `--green` (#87ff5b) with dark text
+- PROGRESS / CONTACTED -> `--yellow` (#ffcf20) with dark text
+- CANCEL / LOST -> `--red` (#ea3700)
+- PENDING / QUALIFIED -> `--orange` (#ff9320) with dark text
+
+**session-status-badge** - Session lifecycle:
+- DRAFT -> `--text-secondary` (#d5bfb6)
+- SAVED -> `--yellow` (#ffcf20) with dark text
+- COMPLETED -> `--green` (#87ff5b) with dark text
 
 ---
 
-## 9. Background & Visual Style
+## Do's and Don'ts
 
-The platform uses a **dark teal/forest green** color scheme with warm skin/hair tone accents:
+### Do
+- Use dark teal canvas as the page floor. Never use pure white or cool gray as background.
+- Use `--primary-light` (#19878e) for all primary interactive elements.
+- Use semi-transparent white cards (`rgba(255,255,255,0.2)`) over the dark background.
+- Use the hair score color palette (green/yellow/orange/red) consistently for all clinical metrics.
+- Use 15px border radius as the default.
+- Show actual product chrome (trichoscopy images, annotation canvas, hair graphs) in onboarding surfaces.
 
-- **Page background**: `#064348` (primary-dark) with a background image (`/images/MainBG.png`)
-- **Cards/surfaces**: Semi-transparent white (`rgba(255,255,255,0.2)`) over the dark background
-- **Scrollbar**: Dark background (`#222222`) with teal thumb (`#19878e`)
-- **Border radius**: `15px` default (rounded, modern feel)
-- **Font**: Open Sans (clean, medical-grade readability)
+### Don't
+- Don't use pure white or light gray as the page background.
+- Don't use hair score colors for non-clinical status indicators - they carry specific clinical meaning.
+- Don't add heavy drop shadows. Depth comes from translucency.
+- Don't use skin/hair tone colors for UI elements - they are clinical reference tones.
+- Don't use gradients as generic backgrounds - reserve for report headers and hero sections.
 
-This creates a professional, clinical aesthetic that feels modern without being sterile.
+---
+
+## Visual Style Summary
+
+**Background:** `#064348` (primary-dark) with background image overlay
+**Cards:** `rgba(255,255,255,0.2)` semi-transparent white
+**Primary action:** `#19878e` (primary-light) teal
+**Font:** Open Sans, 400/600 weight
+**Radius:** 15px default
+**Depth:** Translucency, not shadows
+**Clinical palette:** Green (#87ff5b) / Yellow (#ffcf20) / Orange (#ff9320) / Red (#ea3700)
