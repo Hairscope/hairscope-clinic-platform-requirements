@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hairscope Design System</title><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet"><style>:root{--primary-light:#19878e;--primary:#184f54;--primary-dark:#064348;--secondary:#0b2327;--black:#222222;--white:#fafafa;--light-skin-1:#f7e6df;--light-skin-2:#f7d8c4;--dark-skin:#dfac98;--light-hair:#957c65;--light-hair-2:#9c754e;--dark-hair:#3a2c24;--text-primary:#696969;--text-secondary:#d5bfb6;--green:#87ff5b;--yellow:#ffcf20;--orange:#ff9320;--red:#ea3700;--border-radius:15px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Open Sans",sans-serif;background-color:var(--primary-dark);background-image:linear-gradient(180deg,rgba(6,67,72,0.95) 0%,rgba(4,50,55,0.98) 100%);color:var(--white);min-height:100vh}.page{max-width:1200px;margin:0 auto;padding:40px 24px}.section{margin-bottom:64px}.section-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--text-secondary);margin-bottom:24px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1)}.card{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:var(--border-radius);padding:24px}.grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}.grid-5{grid-template-columns:repeat(5,1fr)}@media(max-width:768px){.grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr}}</style></head><body><div class="page">
+<!-- HEADER -->
+<header style="margin-bottom:64px;padding:48px 0 32px;border-bottom:1px solid rgba(255,255,255,0.1)">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+    <div style="width:32px;height:32px;background:var(--primary-light);border-radius:50%"></div>
+    <span style="font-size:24px;font-weight:600;color:var(--white)">Hairscope</span>
+  </div>
+  <h1 style="font-size:36px;font-weight:400;color:var(--white);margin-bottom:8px">Design System</h1>
+  <p style="color:var(--text-secondary);font-size:16px">Visual components and design tokens for the Hairscope Clinic Platform</p>
+</header>
+
+<!-- COLORS -->
+<section class="section">
+  <div class="section-title">Colors</div>
+  <div style="margin-bottom:32px">
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px">Primary Brand</p>
+    <div class="grid grid-4">
+      <div><div style="height:80px;background:#19878e;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Primary Light</div><div style="font-size:12px;color:var(--text-secondary)">#19878e</div></div>
+      <div><div style="height:80px;background:#184f54;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Primary</div><div style="font-size:12px;color:var(--text-secondary)">#184f54</div></div>
+      <div><div style="height:80px;background:#064348;border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.2)"></div><div style="font-size:13px;font-weight:600">Primary Dark</div><div style="font-size:12px;color:var(--text-secondary)">#064348</div></div>
+      <div><div style="height:80px;background:#0b2327;border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.2)"></div><div style="font-size:13px;font-weight:600">Secondary</div><div style="font-size:12px;color:var(--text-secondary)">#0b2327</div></div>
+    </div>
+  </div>
+  <div style="margin-bottom:32px">
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px">Hair Score Status</p>
+    <div class="grid grid-4">
+      <div><div style="height:80px;background:#87ff5b;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Healthy</div><div style="font-size:12px;color:var(--text-secondary)">#87ff5b &bull; 75-100%</div></div>
+      <div><div style="height:80px;background:#ffcf20;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Moderate</div><div style="font-size:12px;color:var(--text-secondary)">#ffcf20 &bull; 50-74%</div></div>
+      <div><div style="height:80px;background:#ff9320;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Concerning</div><div style="font-size:12px;color:var(--text-secondary)">#ff9320 &bull; 25-49%</div></div>
+      <div><div style="height:80px;background:#ea3700;border-radius:12px;margin-bottom:8px"></div><div style="font-size:13px;font-weight:600">Critical</div><div style="font-size:12px;color:var(--text-secondary)">#ea3700 &bull; 0-24%</div></div>
+    </div>
+  </div>
+  <div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px">Skin &amp; Hair Tones (Clinical)</p>
+    <div class="grid grid-5">
+      <div><div style="height:60px;background:#f7e6df;border-radius:10px;margin-bottom:8px"></div><div style="font-size:12px;color:var(--text-secondary)">#f7e6df</div></div>
+      <div><div style="height:60px;background:#f7d8c4;border-radius:10px;margin-bottom:8px"></div><div style="font-size:12px;color:var(--text-secondary)">#f7d8c4</div></div>
+      <div><div style="height:60px;background:#dfac98;border-radius:10px;margin-bottom:8px"></div><div style="font-size:12px;color:var(--text-secondary)">#dfac98</div></div>
+      <div><div style="height:60px;background:#957c65;border-radius:10px;margin-bottom:8px"></div><div style="font-size:12px;color:var(--text-secondary)">#957c65</div></div>
+      <div><div style="height:60px;background:#3a2c24;border-radius:10px;margin-bottom:8px"></div><div style="font-size:12px;color:var(--text-secondary)">#3a2c24</div></div>
+    </div>
+  </div>
+</section>
+<!-- TYPOGRAPHY -->
+<section class="section">
+  <div class="section-title">Typography &mdash; Open Sans</div>
+  <div class="card">
+    <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.1)"><span style="font-size:48px;font-weight:400;line-height:1.2">Heading 1 &mdash; 48px / 400</span></div>
+    <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:36px;font-weight:400">Heading 2 &mdash; 36px / 400</span></div>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:24px;font-weight:400">Heading 3 &mdash; 24px / 400</span></div>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:20px;font-weight:400">Heading 4 &mdash; 20px / 400</span></div>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:16px;font-weight:600">Heading 5 &mdash; 16px / 600</span></div>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:18px;font-weight:400;color:var(--text-primary)">Body text &mdash; 18px / 400. The platform uses Open Sans throughout for clinical-grade readability. Line height 1.5em ensures comfortable reading across all screen sizes.</span></div>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:14px;font-weight:400;color:var(--text-secondary)">Small / Meta &mdash; 14px / 400. Used for dates, secondary info, and metadata.</span></div>
+    <div><span style="font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px">Caption / Badge &mdash; 12px / 500 uppercase</span></div>
+  </div>
+</section>
+
+<!-- BUTTONS -->
+<section class="section">
+  <div class="section-title">Buttons</div>
+  <div class="card">
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+      <button style="background:var(--primary-light);color:var(--white);border:none;border-radius:15px;padding:12px 24px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Primary Button</button>
+      <button style="background:rgba(255,255,255,0.15);color:var(--white);border:1px solid rgba(255,255,255,0.3);border-radius:15px;padding:12px 24px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Secondary Button</button>
+      <button style="background:transparent;color:var(--white);border:none;border-radius:15px;padding:12px 24px;font-family:inherit;font-size:14px;font-weight:400;cursor:pointer;text-decoration:underline">Ghost Button</button>
+      <button style="background:var(--red);color:var(--white);border:none;border-radius:15px;padding:12px 24px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Danger Button</button>
+      <button style="background:rgba(255,255,255,0.15);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:40px;height:40px;font-family:inherit;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div>
+  </div>
+</section>
+<!-- CARDS -->
+<section class="section">
+  <div class="section-title">Cards</div>
+  <div class="grid grid-3">
+    <!-- Patient Card -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),var(--primary));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600">AK</div>
+        <div>
+          <div style="font-size:16px;font-weight:600">Ahmed Khan</div>
+          <div style="font-size:13px;color:var(--text-secondary)">Last session: 3 days ago</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <span style="background:rgba(25,135,142,0.2);color:var(--primary-light);border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:500">Active Patient</span>
+        <span style="background:rgba(135,255,91,0.15);color:var(--green);border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:500">Healthy</span>
+      </div>
+      <button style="width:100%;background:var(--primary-light);color:var(--white);border:none;border-radius:10px;padding:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">View Patient</button>
+    </div>
+    <!-- Session Card -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+        <div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">Hair Analysis Session</div>
+          <div style="font-size:12px;color:var(--text-secondary)">April 28, 2025</div>
+        </div>
+        <span style="background:rgba(135,255,91,0.15);color:var(--green);border-radius:9999px;padding:4px 10px;font-size:11px;font-weight:600">COMPLETED</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--text-secondary)">Hair Count</span>
+          <span style="font-size:12px;font-weight:600">142 / cm&sup2;</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--text-secondary)">Density</span>
+          <span style="font-size:12px;font-weight:600">78%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:var(--text-secondary)">Coverage</span>
+          <span style="font-size:12px;font-weight:600;color:var(--green)">82%</span>
+        </div>
+      </div>
+      <button style="width:100%;background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:10px;font-family:inherit;font-size:14px;cursor:pointer">View Report</button>
+    </div>
+    <!-- Stat Card -->
+    <div class="card">
+      <div style="font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Today's Overview</div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:36px;font-weight:400;color:var(--white);margin-bottom:4px">24</div>
+        <div style="font-size:14px;color:var(--text-secondary)">Appointments</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:24px;font-weight:600;color:var(--green)">18</div>
+          <div style="font-size:11px;color:var(--text-secondary)">Completed</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:24px;font-weight:600;color:var(--yellow)">6</div>
+          <div style="font-size:11px;color:var(--text-secondary)">Pending</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- STATUS BADGES -->
+<section class="section">
+  <div class="section-title">Status Badges</div>
+  <div class="card">
+    <div style="margin-bottom:20px">
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Lead Status</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="background:rgba(25,135,142,0.2);color:var(--primary-light);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">NEW</span>
+        <span style="background:rgba(255,207,32,0.2);color:var(--yellow);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">CONTACTED</span>
+        <span style="background:rgba(255,147,32,0.2);color:var(--orange);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">QUALIFIED</span>
+        <span style="background:rgba(135,255,91,0.2);color:var(--green);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">CONVERTED</span>
+        <span style="background:rgba(234,55,0,0.2);color:var(--red);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">LOST</span>
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Session Status</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="background:rgba(213,191,182,0.2);color:var(--text-secondary);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">DRAFT</span>
+        <span style="background:rgba(255,207,32,0.2);color:var(--yellow);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">SAVED</span>
+        <span style="background:rgba(135,255,91,0.2);color:var(--green);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">COMPLETED</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Appointment Status</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="background:rgba(25,135,142,0.2);color:var(--primary-light);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">ACTIVE</span>
+        <span style="background:rgba(255,207,32,0.2);color:var(--yellow);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">IN PROGRESS</span>
+        <span style="background:rgba(135,255,91,0.2);color:var(--green);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">COMPLETED</span>
+        <span style="background:rgba(234,55,0,0.2);color:var(--red);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600">CANCELLED</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM INPUTS -->
+<section class="section">
+  <div class="section-title">Form Inputs</div>
+  <div class="card">
+    <div class="grid grid-2" style="gap:20px">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Patient Name</label>
+        <input type="text" placeholder="Enter patient name" style="width:100%;background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 16px;font-family:inherit;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Email Address</label>
+        <input type="email" placeholder="patient@example.com" style="width:100%;background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 16px;font-family:inherit;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Search Patients</label>
+        <div style="position:relative">
+          <input type="text" placeholder="Search by name..." style="width:100%;background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9999px;padding:12px 16px 12px 44px;font-family:inherit;font-size:14px;outline:none">
+          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-secondary)">&#128269;</span>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Doctor&apos;s Note</label>
+        <textarea placeholder="Add clinical notes..." rows="3" style="width:100%;background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 16px;font-family:inherit;font-size:14px;outline:none;resize:vertical"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- HAIR SCORE INDICATOR -->
+<section class="section">
+  <div class="section-title">Hair Score Indicator</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px">Trichoscopy Analysis Results</div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;color:var(--text-secondary)">Hair Count</span>
+          <span style="font-size:13px;font-weight:600">142 / cm&sup2;</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:9999px;height:6px">
+          <div style="background:var(--green);border-radius:9999px;height:6px;width:82%"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;color:var(--text-secondary)">Density</span>
+          <span style="font-size:13px;font-weight:600">63%</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:9999px;height:6px">
+          <div style="background:var(--yellow);border-radius:9999px;height:6px;width:63%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;color:var(--text-secondary)">Coverage</span>
+          <span style="font-size:13px;font-weight:600">38%</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:9999px;height:6px">
+          <div style="background:var(--orange);border-radius:9999px;height:6px;width:38%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px">Hair Score Legend</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:16px;height:16px;border-radius:50%;background:var(--green);flex-shrink:0"></div><div><div style="font-size:13px;font-weight:600">Healthy (75-100%)</div><div style="font-size:12px;color:var(--text-secondary)">Good density, minimal hair loss</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:16px;height:16px;border-radius:50%;background:var(--yellow);flex-shrink:0"></div><div><div style="font-size:13px;font-weight:600">Moderate (50-74%)</div><div style="font-size:12px;color:var(--text-secondary)">Early thinning, monitor closely</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:16px;height:16px;border-radius:50%;background:var(--orange);flex-shrink:0"></div><div><div style="font-size:13px;font-weight:600">Concerning (25-49%)</div><div style="font-size:12px;color:var(--text-secondary)">Significant loss, treatment needed</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:16px;height:16px;border-radius:50%;background:var(--red);flex-shrink:0"></div><div><div style="font-size:13px;font-weight:600">Critical (0-24%)</div><div style="font-size:12px;color:var(--text-secondary)">Severe loss, urgent intervention</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GRADIENTS -->
+<section class="section">
+  <div class="section-title">Gradients &amp; Surfaces</div>
+  <div class="grid grid-3">
+    <div style="height:120px;border-radius:15px;background:linear-gradient(180deg,#f7d8c4 0%,#67b5d6 100%);display:flex;align-items:flex-end;padding:16px"><span style="font-size:12px;color:#184f54;font-weight:600">--gradient-1 / Report Header</span></div>
+    <div style="height:120px;border-radius:15px;background:linear-gradient(180deg,rgba(3,146,150,0.2) 0%,rgba(255,255,255,0.2) 100%);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:flex-end;padding:16px"><span style="font-size:12px;color:var(--white);font-weight:600">--boxbg / Card Background</span></div>
+    <div style="height:120px;border-radius:15px;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:flex-end;padding:16px"><span style="font-size:12px;color:var(--white);font-weight:600">rgba(255,255,255,0.1) / Glass Card</span></div>
+  </div>
+</section>
+
+<!-- NAVIGATION PREVIEW -->
+<section class="section">
+  <div class="section-title">Navigation</div>
+  <div style="display:flex;gap:16px">
+    <div style="width:100px;background:#0b2327;border-radius:15px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:24px;min-height:300px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">H</div>
+      <div style="display:flex;flex-direction:column;gap:16px;align-items:center">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(25,135,142,0.3);display:flex;align-items:center;justify-content:center;font-size:18px" title="Dashboard">&#128200;</div>
+        <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary)" title="Patients">&#128100;</div>
+        <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary)" title="Appointments">&#128197;</div>
+        <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary)" title="Leads">&#128202;</div>
+        <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary)" title="Products">&#128138;</div>
+      </div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:15px;padding:24px">
+      <div style="background:#184f54;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:16px;font-weight:600">Dashboard</span>
+        <div style="display:flex;gap:12px;align-items:center">
+          <span style="font-size:20px">&#128276;</span>
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">DR</div>
+        </div>
+      </div>
+      <div class="grid grid-3" style="gap:12px">
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center"><div style="font-size:28px;font-weight:400;color:var(--white)">48</div><div style="font-size:12px;color:var(--text-secondary)">Total Patients</div></div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center"><div style="font-size:28px;font-weight:400;color:var(--green)">12</div><div style="font-size:12px;color:var(--text-secondary)">Sessions Today</div></div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center"><div style="font-size:28px;font-weight:400;color:var(--yellow)">5</div><div style="font-size:12px;color:var(--text-secondary)">Pending Leads</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div></body></html>
