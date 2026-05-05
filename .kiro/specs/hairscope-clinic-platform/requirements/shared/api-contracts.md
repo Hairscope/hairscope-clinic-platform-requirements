@@ -92,7 +92,7 @@ Authorization: Bearer <jwt>
 Web component requests must include:
 
 ```
-X-API-Key: <clinic-api-key>
+X-API-Key: <organization-specific-api-key>
 ```
 
 ---

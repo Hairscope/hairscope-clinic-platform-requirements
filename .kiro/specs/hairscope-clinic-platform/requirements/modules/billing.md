@@ -2,7 +2,7 @@
 
 > Covers: Invoice generation, miscellaneous charges, discounts, refunds, invoice finalization, PDF export, and billing analytics.
 > Events emitted: `InvoiceGenerated`, `InvoiceFinalized`, `InvoiceRefunded`
-> Events consumed: `AppointmentCompleted` (triggers invoice generation)
+> Events consumed: `SessionCompleted` (triggers invoice generation)
 
 ---
 

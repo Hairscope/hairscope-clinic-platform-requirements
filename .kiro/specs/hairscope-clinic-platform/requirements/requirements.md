@@ -31,7 +31,7 @@ These invariants must hold at all times across the entire system. Any operation 
 | GI-4 | Every Organization has at least one active Organization_Admin at all times. |
 | GI-5 | Every Clinic has at least one active Clinic_Admin at all times. |
 | GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person - across any Clinic or Organization - share the same `globalPatientId`. This enables the **Hairscope Care App** to aggregate the patient's full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
-| GI-7 | A Patient may have at most one active Session per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
+| GI-7 | A Patient may have at most one active Session per `sessionType` per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
 | GI-8 | A Session in Saved or Completed status cannot be deleted. |
 | GI-9 | Audit log entries are immutable and are never reassigned, transferred, or deleted. |
 | GI-10 | All timestamps stored in the system are in UTC. |
@@ -77,8 +77,8 @@ Default roles are provided by the platform. Some are **system roles** - they can
 ### 3.3 Staff Authentication
 
 - Staff authenticate via email + password.
-- On successful authentication, the platform issues a signed JWT scoped to the Staff member's `organizationId`, `clinicId`, and effective permissions.
-- Web component users authenticate via a clinic-specific API key embedded at configuration time.
+- On successful authentication, the platform issues a signed JWT scoped to the Staff member's `organizationId` and `clinicId` and then query effective permissions.
+- Web component users authenticate via a organization-specific API key embedded at configuration time.
 - All tokens must be validated on every request. Expired or revoked tokens must be rejected.
 
 ---

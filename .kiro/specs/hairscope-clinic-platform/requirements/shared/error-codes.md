@@ -97,7 +97,7 @@
 | Code | Description |
 |------|-------------|
 | `SESSION_NOT_FOUND` | Session does not exist or is outside scope |
-| `ACTIVE_SESSION_EXISTS` | Patient already has an active (Draft or Saved) Session |
+| `ACTIVE_SESSION_EXISTS` | Patient already has an active (Draft) Session for the same `sessionType` |
 | `SESSION_NOT_DELETABLE` | Session is in Saved or Completed status and cannot be deleted |
 | `SESSION_SAVE_VALIDATION` | Session does not meet save requirements (missing images, etc.) |
 | `TRICHOSCOPY_COUNT_INVALID` | Session has fewer than 6 Trichoscopy_Images |

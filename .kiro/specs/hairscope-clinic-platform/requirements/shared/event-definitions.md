@@ -28,6 +28,205 @@ Every event has this structure:
 
 ---
 
+## Transactional Outbox Pattern
+
+> All domain events SHALL be emitted using the **Transactional Outbox Pattern**. No event may be published directly from application code outside a database transaction.
+
+### Principle
+
+Whenever a state-changing operation emits a domain event, the following writes MUST succeed atomically within a single database transaction:
+
+1. Domain state mutation  
+2. Audit_Log append  
+3. Outbox_Event insert  
+
+If any of the three operations fails, THE Platform SHALL rollback the entire transaction.
+
+No partial commit is permitted.
+
+---
+
+### Outbox_Event Schema
+
+Each pending event SHALL be stored in the `Outbox_Event` collection with the following structure:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID v4 | Unique outbox record ID |
+| `eventId` | UUID v4 | Unique domain event ID |
+| `eventType` | String | Event name (for example `SessionCompleted`) |
+| `version` | String | Event schema version (for example `1.0`) |
+| `aggregateType` | String | Aggregate that emitted the event (for example `SESSION`) |
+| `aggregateId` | UUID | Aggregate identifier |
+| `organizationId` | UUID | Tenant scope |
+| `clinicId` | UUID \| null | Clinic scope (null for org-level events) |
+| `payload` | JSON | Event payload |
+| `status` | Enum | `PENDING` \| `PROCESSING` \| `PUBLISHED` \| `FAILED` |
+| `attemptCount` | Integer | Number of publish attempts |
+| `nextRetryAt` | ISO8601 UTC \| null | Next scheduled retry time |
+| `publishedAt` | ISO8601 UTC \| null | Timestamp when published successfully |
+| `lastError` | String \| null | Last publish failure reason |
+| `createdAt` | ISO8601 UTC | Record creation time |
+
+---
+
+### Publish Flow
+
+Every event emission SHALL follow this flow:
+
+```text
+GraphQL Mutation
+    ↓
+DB Transaction
+    ├─ write domain state
+    ├─ write audit log
+    └─ write outbox row
+commit
+    ↓
+Outbox Dispatcher polls pending rows
+    ↓
+Publish to Event Bus
+    ↓
+Mark row as PUBLISHED
+```
+
+Application code SHALL NEVER publish directly to the event bus during request handling.
+
+The request transaction only writes to the Outbox.
+
+Publishing is performed asynchronously by the Outbox Dispatcher.
+
+---
+
+### Retry Policy
+
+If publishing fails:
+
+1. THE Platform SHALL increment `attemptCount`
+2. THE Platform SHALL schedule `nextRetryAt` using exponential backoff
+3. THE Platform SHALL retry until `attemptCount = 10`
+4. AFTER 10 failed attempts, THE Platform SHALL mark the row as `FAILED`
+5. THE Platform SHALL generate an operational alert for failed rows
+
+Retry schedule example:
+
+| Attempt | Delay |
+|--------|------|
+| 1 | 30 seconds |
+| 2 | 1 minute |
+| 3 | 2 minutes |
+| 4 | 4 minutes |
+| 5+ | capped at 15 minutes |
+
+---
+
+### Delivery Guarantee
+
+The Outbox provides:
+
+> **At least once delivery**
+
+Consumers MUST therefore be idempotent.
+
+Every consumer SHALL store processed `eventId` values and ignore duplicates.
+
+Duplicate event delivery MUST NOT produce duplicate side effects.
+
+---
+
+### Ordering Guarantee
+
+Event ordering SHALL be guaranteed **per aggregate**.
+
+For a single aggregate:
+
+```text
+SessionSaved
+SessionCompleted
+AnnotationEditSaved
+```
+
+THE Platform SHALL publish events in that order for the same `aggregateId`.
+
+Ordering across unrelated aggregates is NOT guaranteed.
+
+---
+
+### Dispatcher Rules
+
+The Outbox Dispatcher SHALL:
+
+- poll rows where `status = PENDING`
+- claim rows atomically by changing status to `PROCESSING`
+- publish to the Event Bus
+- mark successful rows as `PUBLISHED`
+- reschedule failed rows according to retry policy
+- avoid double-claiming rows in concurrent dispatcher workers
+
+Dispatcher workers MAY run on multiple nodes concurrently.
+
+Row claiming MUST be atomic.
+
+---
+
+### Forbidden
+
+Application code MUST NOT:
+
+```ts
+eventBus.publish(...)
+```
+
+inside:
+
+- GraphQL resolvers  
+- Domain services  
+- Repositories  
+- Mutation handlers  
+
+Direct publishing is forbidden.
+
+Only the Outbox Dispatcher may publish domain events.
+
+---
+
+### Retention
+
+Outbox rows with status `PUBLISHED` SHALL be retained for **90 days** for operational debugging and replay safety.
+
+After retention expiry:
+
+- rows MAY be archived, or
+- rows MAY be permanently deleted
+
+Rows in `FAILED` status SHALL be retained until operational resolution.
+
+---
+
+### Monitoring
+
+THE Platform SHALL monitor:
+
+- pending row count
+- failed row count
+- retry count distribution
+- oldest pending row age
+- dispatcher publish latency
+
+IF oldest pending row age exceeds **5 minutes**, THE Platform SHALL raise an operational alert.
+
+---
+
+### Correctness Properties
+
+- No domain event SHALL be lost after a successful transaction commit.
+- No event SHALL be published if the corresponding domain mutation failed.
+- Every emitted event SHALL have exactly one persisted Outbox_Event row.
+- Duplicate delivery SHALL be harmless due to consumer idempotency.
+- Domain state, audit log, and emitted event SHALL remain consistent.
+
+---
+
 ## Session Events
 
 ### `SessionSaved`
@@ -318,20 +517,22 @@ Emitted by the Smart_Scheduling Service when a Staff member is assigned to an ap
 
 ---
 
-### `AppointmentCompleted`
-Emitted when an Appointment status transitions to `COMPLETED`.
+### `SessionCompleted`
+Emitted when a session status transitions to `COMPLETED`.
 
 **Payload:**
 ```json
 {
-  "appointmentId": "uuid",
+  "sessionId": "uuid",
   "clinicId": "uuid",
-  "sessionId": "uuid | null"
+  "appointmentId": "uuid | null",
 }
 ```
 
 **Consumers:**
-- Billing Module → triggers Invoice generation if Session exists
+- Billing Module → triggers Invoice generation for this session if one does not exist already.
+- Medical Documentation Module → triggers Doctor's note generation if one does not exist already
+- etc.
 
 ---
 
@@ -351,7 +552,7 @@ Emitted when a Staff member is deleted after data transfer.
 ```
 
 **Consumers:**
-- All modules → update `createdBy`, `assignedTo`, `uploadedBy`, `authoredBy` fields
+- All modules → update `assignedTo`, `responsibleStaffId` fields
 
 ---
 

@@ -1,7 +1,7 @@
 # Appointments
 
 > Covers: Service configuration, working hours, appointment booking (staff and web component), calendar view, status lifecycle, rescheduling, and cancellation.
-> Events emitted: `AppointmentBooked`, `AppointmentRescheduled`, `AppointmentCancelled`, `AppointmentCompleted`
+> Events emitted: `AppointmentBooked`, `AppointmentRescheduled`, `AppointmentCancelled`, `SessionCompleted`
 > Events consumed: none
 
 ---
@@ -126,8 +126,8 @@
 2. WHEN a visitor completes the Selfie_Analysis flow, THE Platform SHALL offer the option to proceed to the Appointment_Web_Component.
 3. THE Appointment_Web_Component SHALL display available Services and Appointment_Slots based on the Clinic's configuration.
 4. WHEN a visitor books via the Appointment_Web_Component, THE Platform SHALL create an appointment record, emit `AppointmentBooked`, and send an email confirmation.
-5. THE Platform SHALL authenticate the Appointment_Web_Component using a clinic-specific API key.
-6. IF the clinic-specific API key is invalid or missing, THE Platform SHALL reject all booking requests.
+5. THE Platform SHALL authenticate the Appointment_Web_Component using a organization-specific API key.
+6. IF the organization-specific API key is invalid or missing, THE Platform SHALL reject all booking requests.
 
 #### Failure Cases
 
@@ -269,7 +269,7 @@ The Smart_Scheduling engine SHALL apply the following rules in order, moving to 
 4. WHEN no qualified Staff member is available (Rule 4), THE Platform SHALL notify the Clinic_Admin that the appointment requires manual staff assignment.
 5. THE Platform SHALL allow a Clinic_Admin to manually override the assigned Staff member on any appointment at any time.
 6. WHEN the assigned Staff member is manually overridden, THE Platform SHALL record the change in the Audit_Log including the previous and new assignee.
-7. THE Smart_Scheduling logic SHALL be implemented as a separate, independently deployable service so that assignment rules can be updated without modifying the booking flow.
+7. THE Smart_Scheduling logic SHALL be implemented as a separate, independent engine so that assignment rules can be updated without modifying the booking flow.
 
 #### Failure Cases
 
