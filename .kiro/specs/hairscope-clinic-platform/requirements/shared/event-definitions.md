@@ -37,8 +37,8 @@ Every event has this structure:
 Whenever a state-changing operation emits a domain event, the following writes MUST succeed atomically within a single database transaction:
 
 1. Domain state mutation  
-2. Audit_Log append  
-3. Outbox_Event insert  
+2. AuditLog append  
+3. OutboxEvent insert  
 
 If any of the three operations fails, THE Platform SHALL rollback the entire transaction.
 
@@ -46,9 +46,9 @@ No partial commit is permitted.
 
 ---
 
-### Outbox_Event Schema
+### OutboxEvent Schema
 
-Each pending event SHALL be stored in the `Outbox_Event` collection with the following structure:
+Each pending event SHALL be stored in the `OutboxEvent` collection with the following structure:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -221,7 +221,7 @@ IF oldest pending row age exceeds **5 minutes**, THE Platform SHALL raise an ope
 
 - No domain event SHALL be lost after a successful transaction commit.
 - No event SHALL be published if the corresponding domain mutation failed.
-- Every emitted event SHALL have exactly one persisted Outbox_Event row.
+- Every emitted event SHALL have exactly one persisted OutboxEvent row.
 - Duplicate delivery SHALL be harmless due to consumer idempotency.
 - Domain state, audit log, and emitted event SHALL remain consistent.
 
@@ -287,7 +287,7 @@ Emitted when a Draft Session is permanently deleted.
 ---
 
 ### `AnnotationEditSaved`
-Emitted when a Staff member saves edits to Trichoscopy_Image annotations.
+Emitted when a Staff member saves edits to TrichoscopyImage annotations.
 
 **Payload:**
 ```json
@@ -455,7 +455,7 @@ Emitted when a new Appointment is created.
 
 **Consumers:**
 - Notification Service → sends email confirmation to patient/lead
-- Smart_Scheduling Service → triggers staff assignment
+- SmartScheduling Service → triggers staff assignment
 
 ---
 
@@ -498,7 +498,7 @@ Emitted when an Appointment is cancelled.
 ---
 
 ### `StaffAssigned`
-Emitted by the Smart_Scheduling Service when a Staff member is assigned to an appointment.
+Emitted by the SmartScheduling Service when a Staff member is assigned to an appointment.
 
 **Payload:**
 ```json
@@ -513,7 +513,7 @@ Emitted by the Smart_Scheduling Service when a Staff member is assigned to an ap
 
 **Consumers:**
 - Appointment Module → updates `assignedStaffId` on the appointment record
-- Notification Service → notifies Clinic_Admin if `requiresManualAssignment = true`
+- Notification Service → notifies ClinicAdmin if `requiresManualAssignment = true`
 
 ---
 

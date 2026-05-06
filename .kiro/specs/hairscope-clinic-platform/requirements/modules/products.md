@@ -8,9 +8,9 @@
 
 ## Glossary
 
-- **Product_Type**: `COSMETIC` (no prescription required) | `MEDICAL` (prescription required) - see `shared/enums.md`.
-- **Product_Catalog**: The complete set of Products configured for a specific Clinic.
-- **Purchase_Link**: An external URL pointing to where the recommended Product can be purchased.
+- **ProductType**: `COSMETIC` (no prescription required) | `MEDICAL` (prescription required) - see `shared/enums.md`.
+- **ProductCatalog**: The complete set of Products configured for a specific Clinic.
+- **PurchaseLink**: An external URL pointing to where the recommended Product can be purchased.
 - **Routine**: A recommended usage schedule (frequency, dosage, application method) associated with a Product recommendation in a Session.
 - **Prescription**: A formal medication order included in the Report when Medical Products are recommended.
 
@@ -20,16 +20,16 @@
 
 ### PRD-1: Product Catalog Management
 
-**User Story:** As a Clinic_Admin, I want to manage a product catalog for my clinic so that doctors can recommend appropriate products to patients during analysis sessions.
+**User Story:** As a ClinicAdmin, I want to manage a product catalog for my clinic so that doctors can recommend appropriate products to patients during analysis sessions.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL maintain a separate Product_Catalog per Clinic.
-2. THE Platform SHALL allow Clinic_Admins to create, edit, and delete Products in the Clinic's Product_Catalog.
+1. THE Platform SHALL maintain a separate ProductCatalog per Clinic.
+2. THE Platform SHALL allow ClinicAdmins to create, edit, and delete Products in the Clinic's ProductCatalog.
 3. THE Platform SHALL store the following fields per Product: `name`, `description`, `image`, `price`, `currency`, `purchaseLink` (optional), `productType`.
 4. WHEN a Product is created, `name` and `productType` are required.
 5. THE Platform SHALL support two `productType` values: `COSMETIC` and `MEDICAL`.
-6. WHEN a Product is created, edited, or deleted, THE Platform SHALL record the action in the Audit_Log.
+6. WHEN a Product is created, edited, or deleted, THE Platform SHALL record the action in the AuditLog.
 7. THE Platform SHALL allow Staff to search and filter Products by `name` and `productType`.
 
 #### Failure Cases
@@ -43,7 +43,7 @@
 
 #### Correctness Properties
 
-- For any two Clinics C1 and C2: the Product_Catalog of C1 SHALL NOT contain Products belonging to C2.
+- For any two Clinics C1 and C2: the ProductCatalog of C1 SHALL NOT contain Products belonging to C2.
 - For any Product P: `P.productType ∈ {COSMETIC, MEDICAL}`.
 
 ---
@@ -54,13 +54,13 @@
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow Staff to link one or more Products from the Clinic's Product_Catalog to a Session as recommendations.
+1. THE Platform SHALL allow Staff to link one or more Products from the Clinic's ProductCatalog to a Session as recommendations.
 2. THE Platform SHALL allow Staff to associate a Routine with each recommended Product.
 3. WHEN a `MEDICAL` Product is recommended in a Session, THE Platform SHALL include a Prescription in the generated Report.
 4. WHEN only `COSMETIC` Products are recommended, THE Platform SHALL NOT include a Prescription in the generated Report.
 5. THE Platform SHALL include all recommended Products and their associated Routines in the generated Report.
 6. WHEN a Session is in `COMPLETED` status, THE Platform SHALL allow Staff to edit product recommendations and Routines; editing triggers Report regeneration via `AnnotationEditSaved` (trigger: `PRODUCT_EDIT`).
-7. WHEN the Stress_O_Meter score meets the defined threshold, THE Platform SHALL suggest stress-related Products from the Product_Catalog for inclusion in the Session.
+7. WHEN the StressOMeter score meets the defined threshold, THE Platform SHALL suggest stress-related Products from the ProductCatalog for inclusion in the Session.
 
 #### Failure Cases
 

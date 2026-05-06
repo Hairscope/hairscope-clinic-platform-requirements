@@ -12,10 +12,10 @@
 ## Glossary
 
 - **Patient**: A person receiving or having received treatment at a Clinic. Scoped to the Clinic where the record was created.
-- **Patient_Page**: The dedicated view for a single Patient showing profile, analysis history, medical documents, and treatment progress graph.
-- **Treatment_Progress_Graph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute - `DRAFT` and `SAVED` Sessions are excluded.
+- **PatientPage**: The dedicated view for a single Patient showing profile, analysis history, medical documents, and treatment progress graph.
+- **TreatmentProgressGraph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute - `DRAFT` and `SAVED` Sessions are excluded.
 - **globalPatientId**: A platform-wide UUID assigned to each unique physical person at Patient creation time, determined by email or phone lookup. Enables the **Hairscope Care App** to aggregate a patient's full cross-clinic treatment history. Never used for cross-clinic data access by Staff.
-- **Medical_Document**: An image or PDF file uploaded to a Patient's profile with a title and optional description.
+- **MedicalDocument**: An image or PDF file uploaded to a Patient's profile with a title and optional description.
 - **GDPR_Erasure**: The process of anonymizing a Patient's personal identifiers in response to a verified right-to-erasure request. Does not delete clinical data.
 
 ---
@@ -31,7 +31,7 @@ Sessions are a sub-resource of Patients. A permission on the `patients` module i
 | `patients.edit` | Edit patient profile fields |
 | `patients.delete` | Not applicable - patients cannot be deleted (GDPR erasure only) |
 
-Organization_Admins do NOT have access to the `patients` module in any Clinic (GI-8).
+OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI-8).
 
 ---
 
@@ -53,7 +53,7 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 8. THE Platform SHALL NOT expose a delete or archive mutation for Patient records. Removal is only possible via GDPR erasure.
 9. WHEN a `LeadConverted` event is received, THE Platform SHALL auto-populate the Patient profile fields from the Lead's data without requiring manual re-entry.
 10. THE Platform SHALL allow Staff to search Patients by name (first name, last name, or full name).
-11. WHEN a Patient profile is created or updated, THE Platform SHALL record the action in the Audit_Log.
+11. WHEN a Patient profile is created or updated, THE Platform SHALL record the action in the AuditLog.
 12. THE Platform SHALL allow the same physical person to have Patient records at multiple Clinics, including across different Organizations. There is no global uniqueness constraint on email or phone across Clinics.
 
 #### Failure Cases
@@ -112,15 +112,15 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 #### Acceptance Criteria
 
-1. THE Patient_Page SHALL display: the patient profile, analysis history list (all Sessions), medical documents, and Treatment_Progress_Graph.
-2. THE Treatment_Progress_Graph SHALL plot `hairCount`, `thickness`, and `coverage` metrics across all `COMPLETED` Sessions only, in chronological order. `DRAFT` and `SAVED` Sessions are excluded from the graph.
-3. WHEN a new Session reaches `COMPLETED` status, THE Treatment_Progress_Graph SHALL include its metrics on the next load.
-4. THE Platform SHALL allow Staff to navigate from the Patient_Page to any individual Session in the history.
-5. THE Platform SHALL display all Sessions for a Patient regardless of status (DRAFT, SAVED, COMPLETED) in the analysis history list, but only COMPLETED Sessions contribute to the Treatment_Progress_Graph.
+1. THE PatientPage SHALL display: the patient profile, analysis history list (all Sessions), medical documents, and TreatmentProgressGraph.
+2. THE TreatmentProgressGraph SHALL plot `hairCount`, `thickness`, and `coverage` metrics across all `COMPLETED` Sessions only, in chronological order. `DRAFT` and `SAVED` Sessions are excluded from the graph.
+3. WHEN a new Session reaches `COMPLETED` status, THE TreatmentProgressGraph SHALL include its metrics on the next load.
+4. THE Platform SHALL allow Staff to navigate from the PatientPage to any individual Session in the history.
+5. THE Platform SHALL display all Sessions for a Patient regardless of status (DRAFT, SAVED, COMPLETED) in the analysis history list, but only COMPLETED Sessions contribute to the TreatmentProgressGraph.
 
 #### Correctness Properties
 
-- Data points on the Treatment_Progress_Graph for metric M = count of `COMPLETED` Sessions for that Patient containing a value for M.
+- Data points on the TreatmentProgressGraph for metric M = count of `COMPLETED` Sessions for that Patient containing a value for M.
 - For any two Sessions S1 and S2 where `S1.date < S2.date`, S1 SHALL appear to the left of S2 on the time axis.
 
 ---
@@ -134,9 +134,9 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 1. THE Platform SHALL accept `image/jpeg`, `image/png`, and `application/pdf` files as medical document uploads via the file upload endpoint (see `shared/api-contracts.md` Section 8).
 2. IF a file upload exceeds 10 MB, THE Platform SHALL reject the upload.
 3. WHEN a document is uploaded, THE Platform SHALL require a `title` field and accept an optional `description` field.
-4. THE Platform SHALL store uploaded documents associated with the Patient's profile and display them on the Patient_Page.
+4. THE Platform SHALL store uploaded documents associated with the Patient's profile and display them on the PatientPage.
 5. THE Platform SHALL allow Staff with the appropriate permission to delete a medical document.
-6. WHEN a medical document is uploaded or deleted, THE Platform SHALL record the action in the Audit_Log.
+6. WHEN a medical document is uploaded or deleted, THE Platform SHALL record the action in the AuditLog.
 
 #### Failure Cases
 
@@ -156,17 +156,17 @@ Organization_Admins do NOT have access to the `patients` module in any Clinic (G
 
 ### PAT-5: GDPR Erasure
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to process a patient's right-to-erasure request so that the platform complies with GDPR obligations.
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to process a patient's right-to-erasure request so that the platform complies with GDPR obligations.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow a Clinic_Admin or Organization_Admin to trigger GDPR erasure for a specific Patient record within their Clinic or Organization.
+1. THE Platform SHALL allow a ClinicAdmin or OrganizationAdmin to trigger GDPR erasure for a specific Patient record within their Clinic or Organization.
 2. WHEN erasure is triggered, THE Platform SHALL anonymize the following personal identifiers: `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `age`, replacing them with anonymized placeholders.
 3. Erasure SHALL NOT delete Session clinical data (images, AI analysis results, reports) - only personal identifiers are anonymized.
 4. Erasure SHALL NOT affect Patient records in other Clinics that share the same `globalPatientId`. Each Clinic handles its own erasure independently.
 5. THE Platform SHALL require explicit confirmation (`confirmed: true`) before proceeding with erasure.
 6. Erasure is irreversible. THE Platform SHALL NOT provide an undo mechanism.
-7. WHEN erasure is completed, THE Platform SHALL record the action in the Audit_Log with actor and timestamp.
+7. WHEN erasure is completed, THE Platform SHALL record the action in the AuditLog with actor and timestamp.
 
 #### Failure Cases
 

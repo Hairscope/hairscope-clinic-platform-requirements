@@ -183,8 +183,8 @@ X-API-Key: <clinic-api-key>
 
 ### Behaviour
 
-1. The platform looks up the `Webhook_Source` by `sourceId` and validates the API key.
-2. The payload is parsed using the configured `Field_Mapping` for that source.
+1. The platform looks up the `WebhookSource` by `sourceId` and validates the API key.
+2. The payload is parsed using the configured `FieldMapping` for that source.
 3. A Lead record is created with `source = WEBHOOK` and `leadSource = campaignId` from the mapped field.
 4. A `LeadCreated` domain event is emitted.
 
@@ -211,7 +211,7 @@ X-API-Key: <clinic-api-key>
 |-------|-------|
 | Authenticated GraphQL requests | 1000 requests / minute per Staff member |
 | File uploads | 60 uploads / minute per Clinic |
-| Webhook ingestion | 500 requests / minute per Webhook_Source |
+| Webhook ingestion | 500 requests / minute per WebhookSource |
 | Web component API key requests | 200 requests / minute per API key |
 
 Rate limit exceeded responses return HTTP 429 with error code `RATE_LIMITED`.

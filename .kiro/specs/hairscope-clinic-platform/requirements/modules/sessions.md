@@ -10,27 +10,27 @@
 ## Glossary
 
 - **Session**: A clinical treatment session for a Patient. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
-- **Session_Type**: The type of treatment session. Determines the image capture requirements, questionnaire categories, AI analysis models, and report structure. Currently: `HAIR_ANALYSIS`. Future types may include `SKIN_TREATMENT`, `HAIR_REMOVAL`, etc.
-- **Session_Status**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` - see `shared/enums.md`.
-- **Global_Image**: A standard photograph taken from a predefined position. Used for overall assessment (e.g., hair loss stage).
-- **Trichoscopy_Image**: A high-magnification scalp image captured with a trichoscope device. Used for detailed per-image analysis.
-- **Head_Diagram**: One of four predefined scalp diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) used to mark the capture position of a Trichoscopy_Image.
-- **Annotation**: A Follicle or Strand marking placed on a Trichoscopy_Image, either by AI or by a Staff member.
-- **Follicle**: A hair follicle unit represented as a circle on a Trichoscopy_Image.
-- **Strand**: A hair strand drawn using a 3-point rectangle tool on a Trichoscopy_Image.
-- **Questionnaire_Category**: A structured group of questions asked during a session. Categories vary by Session_Type.
-- **Stress_Questionnaire**: A separate set of ~10 questions used to calculate the Stress_O_Meter score. Applicable to `HAIR_ANALYSIS` sessions.
-- **Root_Cause**: Automatically determined cause derived from questionnaire answers via a defined formula. Specific to `HAIR_ANALYSIS` sessions.
-- **Stress_O_Meter**: A calculated stress score derived from the Stress_Questionnaire. Specific to `HAIR_ANALYSIS` sessions.
+- **SessionType**: The type of treatment session. Determines the image capture requirements, questionnaire categories, AI analysis models, and report structure. Currently: `HAIR_ANALYSIS`. Future types may include `SKIN_TREATMENT`, `HAIR_REMOVAL`, etc.
+- **SessionStatus**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` - see `shared/enums.md`.
+- **GlobalImage**: A standard photograph taken from a predefined position. Used for overall assessment (e.g., hair loss stage).
+- **TrichoscopyImage**: A high-magnification scalp image captured with a trichoscope device. Used for detailed per-image analysis.
+- **HeadDiagram**: One of four predefined scalp diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) used to mark the capture position of a TrichoscopyImage.
+- **Annotation**: A Follicle or Strand marking placed on a TrichoscopyImage, either by AI or by a Staff member.
+- **Follicle**: A hair follicle unit represented as a circle on a TrichoscopyImage.
+- **Strand**: A hair strand drawn using a 3-point rectangle tool on a TrichoscopyImage.
+- **QuestionnaireCategory**: A structured group of questions asked during a session. Categories vary by SessionType.
+- **StressQuestionnaire**: A separate set of ~10 questions used to calculate the StressOMeter score. Applicable to `HAIR_ANALYSIS` sessions.
+- **RootCause**: Automatically determined cause derived from questionnaire answers via a defined formula. Specific to `HAIR_ANALYSIS` sessions.
+- **StressOMeter**: A calculated stress score derived from the StressQuestionnaire. Specific to `HAIR_ANALYSIS` sessions.
 - **Routine**: A recommended usage schedule for a Product included in a Session recommendation.
-- **Compare_View**: Side-by-side display of two Sessions of the same type for the same Patient, matching images by position.
+- **CompareView**: Side-by-side display of two Sessions of the same type for the same Patient, matching images by position.
 - **Prescription**: A formal medication order included in the Report when Medical Products are recommended.
 
 ---
 
 ## Session Type Architecture
 
-Sessions are designed to be extensible. Each `Session_Type` defines its own:
+Sessions are designed to be extensible. Each `sessionType` defines its own:
 - Image capture requirements (positions, counts, mandatory positions)
 - Questionnaire categories and question counts
 - AI analysis models and output fields
@@ -41,7 +41,7 @@ This document currently specifies the `HAIR_ANALYSIS` session type in full. Futu
 
 ```
 Session
-  └── Session_Type (HAIR_ANALYSIS | SKIN_TREATMENT | HAIR_REMOVAL | ...)
+  └── SessionType (HAIR_ANALYSIS | SKIN_TREATMENT | HAIR_REMOVAL | ...)
         └── Image Capture (type-specific positions and counts)
         └── Questionnaire (type-specific categories)
         └── AI Analysis (type-specific models)
@@ -61,7 +61,7 @@ Sessions are a sub-resource of Patients. The `patients` module permission covers
 | `patients.edit` | Edit session content (questionnaire, products, doctor's note) after completion |
 | `patients.delete` | Delete DRAFT sessions only |
 
-Sessions cannot be accessed independently of a Patient. Organization_Admins do NOT have access to sessions in any Clinic (GI-8).
+Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NOT have access to sessions in any Clinic (GI-8).
 
 ---
 
@@ -78,7 +78,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 3. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session of the same `sessionType` in the same Clinic, THE Platform SHALL reject the creation.
 4. THE Platform SHALL persist Session data across logins until the Session is explicitly saved or deleted.
 5. WHEN a Staff member saves a Session, THE Platform SHALL:
-   - Run all save validations defined for the Session_Type (see type-specific requirements below)
+   - Run all save validations defined for the SessionType (see type-specific requirements below)
    - Lock the Session images (no new images can be added after save)
    - Set status to `SAVED`
    - Emit a `SessionSaved` event
@@ -86,7 +86,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 7. WHEN a Session is in `COMPLETED` status, THE Platform SHALL allow editing of: questionnaire answers, product recommendations, and doctor's notes.
 8. WHEN a Staff member deletes a `DRAFT` Session, THE Platform SHALL permanently remove all Session data and emit `SessionDeleted`.
 9. IF a Staff member attempts to delete a `SAVED` or `COMPLETED` Session, THE Platform SHALL reject the deletion (GI-14).
-10. WHEN a Session is created, saved, completed, or deleted, THE Platform SHALL record the action in the Audit_Log.
+10. WHEN a Session is created, saved, completed, or deleted, THE Platform SHALL record the action in the AuditLog.
 
 #### Failure Cases
 
@@ -150,8 +150,8 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 5. THE Platform SHALL allow Staff to share the Report with the Patient via WhatsApp.
 6. THE Platform SHALL generate a shareable link to the Report accessible within the platform.
 7. WHEN `AnnotationEditSaved` is received, THE Report Module SHALL regenerate the Report to reflect the latest data.
-8. THE Platform SHALL allow Staff to compare any two Sessions of the same `sessionType` for the same Patient in a Compare_View.
-9. WHEN comparing images in the Compare_View, THE Platform SHALL only allow comparison of images from the same position.
+8. THE Platform SHALL allow Staff to compare any two Sessions of the same `sessionType` for the same Patient in a CompareView.
+9. WHEN comparing images in the CompareView, THE Platform SHALL only allow comparison of images from the same position.
 
 #### Failure Cases
 
@@ -169,7 +169,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 - For any Session comparison, every paired image comparison SHALL satisfy `image1.position = image2.position`.
 - After any permitted post-completion edit E to Session S, the regenerated Report SHALL reflect the updated values from E.
 - The shareable link for Report R SHALL resolve to the same content as the downloaded PDF for S.
-- Sessions of different `sessionType` values SHALL NOT be compared in a Compare_View.
+- Sessions of different `sessionType` values SHALL NOT be compared in a CompareView.
 
 ---
 
@@ -179,7 +179,7 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. WHEN a `SessionSaved` event is emitted, THE AI Analysis Service SHALL asynchronously process all Session images using the models appropriate for the Session_Type.
+1. WHEN a `SessionSaved` event is emitted, THE AI Analysis Service SHALL asynchronously process all Session images using the models appropriate for the SessionType.
 2. WHEN AI analysis is complete, THE Platform SHALL emit `AIAnalysisCompleted` and notify the relevant Staff member via:
    - In-app toaster notification (web)
    - Push notification (mobile)
@@ -215,10 +215,10 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 #### Acceptance Criteria
 
 1. THE Platform SHALL support the following `GlobalImagePosition` values for Hair Analysis sessions: `ANTERIOR`, `FRONTAL`, `RIGHT_LATERAL`, `LEFT_LATERAL`, `POSTERIOR`, `LEFT_TEMPORAL`, `RIGHT_TEMPORAL`, `SUPERIOR`, `TOP_OF_THE_HEAD`, `VERTEX` - see `shared/enums.md`.
-2. THE Platform SHALL require at least one `FRONTAL` Global_Image before a Hair Analysis Session can be saved (GI-16).
-3. THE Platform SHALL allow exactly one Global_Image per position per Session. If a position already has an image, the new image replaces the existing one.
-4. WHEN Global_Images are submitted for AI analysis, THE AI analysis SHALL produce a single overall hair loss stage classification based on all Global_Images combined, using the `HAIRFALL_STAGE_MODEL`.
-5. THE Platform SHALL display each Global_Image with its associated position label.
+2. THE Platform SHALL require at least one `FRONTAL` GlobalImage before a Hair Analysis Session can be saved (GI-16).
+3. THE Platform SHALL allow exactly one GlobalImage per position per Session. If a position already has an image, the new image replaces the existing one.
+4. WHEN GlobalImages are submitted for AI analysis, THE AI analysis SHALL produce a single overall hair loss stage classification based on all GlobalImages combined, using the `HAIRFALL_STAGE_MODEL`.
+5. THE Platform SHALL display each GlobalImage with its associated position label.
 
 #### Failure Cases
 
@@ -229,8 +229,8 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 #### Correctness Properties
 
 - For any saved Hair Analysis Session S: `count(S.globalImages where position = FRONTAL) = 1` (exactly one Frontal image required).
-- For any saved Hair Analysis Session S: each position SHALL have at most one Global_Image.
-- For any Global_Image G with position label L, L SHALL equal the position selected at capture time.
+- For any saved Hair Analysis Session S: each position SHALL have at most one GlobalImage.
+- For any GlobalImage G with position label L, L SHALL equal the position selected at capture time.
 
 ---
 
@@ -240,34 +240,34 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require a minimum of 6 Trichoscopy_Images per Hair Analysis Session before the Session can be saved, one from each of the following mandatory positions (GI-15):
+1. THE Platform SHALL require a minimum of 6 TrichoscopyImages per Hair Analysis Session before the Session can be saved, one from each of the following mandatory positions (GI-15):
    - **P1 - Frontal**
    - **P2 - Left Temporal**
    - **P3 - Right Temporal**
    - **P4 - Top of the Head**
    - **P5 - Crown**
    - **P6 - Occipital**
-2. THE Platform SHALL allow Doctors to capture additional Trichoscopy_Images beyond the 6 mandatory positions at their discretion.
-3. WHEN capturing a Trichoscopy_Image, THE Platform SHALL present one of 4 predefined Head_Diagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) and allow the user to place a single positional point on the diagram.
-4. THE Platform SHALL store the `(x, y)` positional point coordinates for each Trichoscopy_Image.
-5. WHEN the Report is generated, THE Platform SHALL include the positional point for each Trichoscopy_Image.
-6. WHEN Trichoscopy_Images are submitted for AI analysis, THE AI analysis SHALL produce `hairCount`, `density`, and `thickness` values per image using the `HAIR_ROOT_MODEL`, `HAIR_STRAND_MODEL`, and `TRICHO_COVERAGE_MODEL`.
+2. THE Platform SHALL allow Doctors to capture additional TrichoscopyImages beyond the 6 mandatory positions at their discretion.
+3. WHEN capturing a TrichoscopyImage, THE Platform SHALL present one of 4 predefined HeadDiagrams (`FRONT`, `LEFT`, `RIGHT`, `BACK`) and allow the user to place a single positional point on the diagram.
+4. THE Platform SHALL store the `(x, y)` positional point coordinates for each TrichoscopyImage.
+5. WHEN the Report is generated, THE Platform SHALL include the positional point for each TrichoscopyImage.
+6. WHEN TrichoscopyImages are submitted for AI analysis, THE AI analysis SHALL produce `hairCount`, `density`, and `thickness` values per image using the `HAIR_ROOT_MODEL`, `HAIR_STRAND_MODEL`, and `TRICHO_COVERAGE_MODEL`.
 7. All 6 mandatory position images are required to generate the hair score in the report. IF any mandatory position is missing, THE Platform SHALL reject the session save.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Save attempted with fewer than 6 Trichoscopy_Images | `TRICHOSCOPY_COUNT_INVALID` |
+| Save attempted with fewer than 6 TrichoscopyImages | `TRICHOSCOPY_COUNT_INVALID` |
 | One or more mandatory positions (P1–P6) missing | `TRICHOSCOPY_MANDATORY_POSITION_MISSING` |
-| Missing positional point on a Trichoscopy_Image | `VALIDATION_ERROR` (field: `position`) |
+| Missing positional point on a TrichoscopyImage | `VALIDATION_ERROR` (field: `position`) |
 
 #### Correctness Properties
 
 - For any saved Hair Analysis Session S: `count(S.trichoscopyImages) ≥ 6`.
-- For any saved Hair Analysis Session S: all 6 mandatory positions (P1–P6) SHALL each have at least one Trichoscopy_Image.
-- For every Trichoscopy_Image T in a saved Session: `T.positionCoordinates` is non-null.
-- For every Trichoscopy_Image T in a COMPLETED Session: `T.hairCount`, `T.density`, `T.thickness` are non-null.
+- For any saved Hair Analysis Session S: all 6 mandatory positions (P1–P6) SHALL each have at least one TrichoscopyImage.
+- For every TrichoscopyImage T in a saved Session: `T.positionCoordinates` is non-null.
+- For every TrichoscopyImage T in a COMPLETED Session: `T.hairCount`, `T.density`, `T.thickness` are non-null.
 
 ---
 
@@ -277,11 +277,11 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL provide an edit page per Trichoscopy_Image accessible after AI analysis is complete.
+1. THE Platform SHALL provide an edit page per TrichoscopyImage accessible after AI analysis is complete.
 2. THE Platform SHALL provide a **Follicle tool**: click to place a circle (Follicle) at the clicked position.
 3. THE Platform SHALL provide a **Strand tool**: 3-point rectangle - point 1 (root), point 2 (direction), point 3 (thickness). Strand is rendered at root position only.
 4. THE Platform SHALL provide a **Delete mode**: when active, clicking any Follicle or Strand (AI-generated or human-drawn) removes it.
-5. THE Platform SHALL allow brightness and contrast adjustment per Trichoscopy_Image and SHALL persist those settings per image.
+5. THE Platform SHALL allow brightness and contrast adjustment per TrichoscopyImage and SHALL persist those settings per image.
 6. THE Platform SHALL support zoom and pan on the edit page.
 7. THE Platform SHALL NOT provide undo or redo functionality.
 8. THE Platform SHALL NOT visually differentiate AI-generated Annotations from human-drawn Annotations on the edit page.
@@ -298,8 +298,8 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 #### Correctness Properties
 
 - For every Follicle F and Strand S: `F.source ∈ {AI, HUMAN}` and `S.source ∈ {AI, HUMAN}`.
-- After a Follicle or Strand is deleted, it SHALL NOT appear in subsequent renders of that Trichoscopy_Image.
-- For any Trichoscopy_Image T with saved brightness B and contrast C, loading T on any subsequent view SHALL display B and C as the active values.
+- After a Follicle or Strand is deleted, it SHALL NOT appear in subsequent renders of that TrichoscopyImage.
+- For any TrichoscopyImage T with saved brightness B and contrast C, loading T on any subsequent view SHALL display B and C as the active values.
 - For any Strand drawn with points P1, P2, P3: rendered at P1 (root), oriented toward P2, width proportional to distance defined by P3.
 
 ---
@@ -310,15 +310,15 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL present questions organized into 5 `Questionnaire_Category` values for Hair Analysis: `DAILY_HABITS`, `MEDICAL_CONDITIONS`, `PHYSICAL_OR_EMOTIONAL_SHOCK`, `HAIRSTYLING_AND_TREATMENTS`, `GENETICS` - see `shared/enums.md`.
+1. THE Platform SHALL present questions organized into 5 `QuestionnaireCategory` values for Hair Analysis: `DAILY_HABITS`, `MEDICAL_CONDITIONS`, `PHYSICAL_OR_EMOTIONAL_SHOCK`, `HAIRSTYLING_AND_TREATMENTS`, `GENETICS` - see `shared/enums.md`.
 2. THE Platform SHALL maintain exactly 5 active questions per category per Clinic at all times (GI-18).
 3. THE Platform SHALL present a separate `STRESS_TEST` questionnaire of ~10 questions per Hair Analysis Session.
-4. WHEN all questionnaire answers are submitted, THE Platform SHALL automatically calculate `Root_Cause` using the defined formula.
-5. WHEN all Stress_Questionnaire answers are submitted, THE Platform SHALL calculate and display the `Stress_O_Meter` score using the defined formula.
-6. THE Platform SHALL allow Clinic_Admins to add custom questions to any category.
-7. THE Platform SHALL allow Clinic_Admins to toggle platform-provided default questions on/off per category.
-8. WHEN a Clinic_Admin adds or removes questions, THE Platform SHALL enforce that the total active questions per category remains exactly 5.
-9. WHEN the Stress_O_Meter score meets the defined threshold, THE Platform SHALL trigger product suggestions relevant to stress-related hair loss.
+4. WHEN all questionnaire answers are submitted, THE Platform SHALL automatically calculate `RootCause` using the defined formula.
+5. WHEN all StressQuestionnaire answers are submitted, THE Platform SHALL calculate and display the `StressOMeter` score using the defined formula.
+6. THE Platform SHALL allow ClinicAdmins to add custom questions to any category.
+7. THE Platform SHALL allow ClinicAdmins to toggle platform-provided default questions on/off per category.
+8. WHEN a ClinicAdmin adds or removes questions, THE Platform SHALL enforce that the total active questions per category remains exactly 5.
+9. WHEN the StressOMeter score meets the defined threshold, THE Platform SHALL trigger product suggestions relevant to stress-related hair loss.
 
 #### Failure Cases
 
@@ -330,5 +330,5 @@ Sessions cannot be accessed independently of a Patient. Organization_Admins do N
 #### Correctness Properties
 
 - For any Clinic C and any Hair Analysis category K: `count(active questions for C in K) = 5` at all times.
-- For any two Sessions with identical questionnaire answers, the calculated `Root_Cause` SHALL be identical.
-- For any two Sessions with identical Stress_Questionnaire answers, the calculated `Stress_O_Meter` score SHALL be identical.
+- For any two Sessions with identical questionnaire answers, the calculated `RootCause` SHALL be identical.
+- For any two Sessions with identical StressQuestionnaire answers, the calculated `StressOMeter` score SHALL be identical.

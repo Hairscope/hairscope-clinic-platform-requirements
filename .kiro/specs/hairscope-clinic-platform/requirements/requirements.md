@@ -27,9 +27,9 @@ These invariants must hold at all times across the entire system. Any operation 
 |:------------|-----------|
 | GI-1 | Every record belongs to exactly one Organization. Cross-organization data access is impossible. |
 | GI-2 | Every Clinic belongs to exactly one Organization. |
-| GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. Organization_Admins span all Clinics in their Organization. A Staff member may be transferred between Clinics within the same Organization by an Organization_Admin - only one Clinic assignment is active at any time. |
-| GI-4 | Every Organization has at least one active Organization_Admin at all times. |
-| GI-5 | Every Clinic has at least one active Clinic_Admin at all times. |
+| GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. OrganizationAdmins span all Clinics in their Organization. A Staff member may be transferred between Clinics within the same Organization by an OrganizationAdmin - only one Clinic assignment is active at any time. |
+| GI-4 | Every Organization has at least one active OrganizationAdmin at all times. |
+| GI-5 | Every Clinic has at least one active ClinicAdmin at all times. |
 | GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person - across any Clinic or Organization - share the same `globalPatientId`. This enables the **Hairscope Care App** to aggregate the patient's full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
 | GI-7 | A Patient may have at most one active Session per `sessionType` per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
 | GI-8 | A Session in Saved or Completed status cannot be deleted. |
@@ -55,18 +55,18 @@ Organization
 
 | Scope | Who | Access |
 |-------|-----|--------|
-| `org` | Organization_Admin | Staff management + clinic details + org dashboard across all clinics. No access to clinical modules. |
-| `clinic` | Clinic_Admin, Doctor, Receptionist, Nurse, Sales, Marketing, Frontdesk | Full or partial access within their assigned Clinic only. |
+| `org` | OrganizationAdmin | Staff management + clinic details + org dashboard across all clinics. No access to clinical modules. |
+| `clinic` | ClinicAdmin, Doctor, Receptionist, Nurse, Sales, Marketing, Frontdesk | Full or partial access within their assigned Clinic only. |
 | `external` | Web component users (leads/patients) | Appointment booking and selfie analysis via API key-authenticated web components only. |
 
 ### 3.2 Default Roles
 
-Default roles are provided by the platform. Some are **system roles** - they cannot be deleted and have fixed or restricted permissions. Custom roles created by a Clinic_Admin are always deletable (subject to the last-admin guard).
+Default roles are provided by the platform. Some are **system roles** - they cannot be deleted and have fixed or restricted permissions. Custom roles created by a ClinicAdmin are always deletable (subject to the last-admin guard).
 
 | Role | Scope | Permissions Editable | Deletable | Notes |
 |------|-------|---------------------|-----------|-------|
-| Organization_Admin | `org` | No - fixed | No - system role | Permissions are platform-defined and cannot be changed |
-| Clinic_Admin | `clinic` | Yes | No - system role | Cannot be deleted; ensures last-admin guard is always enforceable |
+| OrganizationAdmin | `org` | No - fixed | No - system role | Permissions are platform-defined and cannot be changed |
+| ClinicAdmin | `clinic` | Yes | No - system role | Cannot be deleted; ensures last-admin guard is always enforceable |
 | Doctor | `clinic` | Yes | Yes | Subject to last-admin guard |
 | Receptionist | `clinic` | Yes | Yes | Subject to last-admin guard |
 | Nurse | `clinic` | Yes | Yes | Subject to last-admin guard |
@@ -90,7 +90,7 @@ Default roles are provided by the platform. Some are **system roles** - they can
 1. **Deny by default** - If no role assigned to a Staff member explicitly grants a permission, the action is denied.
 2. **Union of roles** - A Staff member holding multiple roles has the union of all permissions granted by those roles.
 3. **Immediate propagation** - When a role's permissions are updated, the change takes effect on the next request by any Staff member holding that role.
-4. **Org scope hard limit** - The Organization_Admin role cannot be granted permissions to Patients, Appointments, Leads, Billing, or Products modules under any configuration.
+4. **Org scope hard limit** - The OrganizationAdmin role cannot be granted permissions to Patients, Appointments, Leads, Billing, or Products modules under any configuration.
 5. **Plan gate** - Even if a role grants a permission, if the Organization's active plan does not include the feature, the action is denied.
 
 ### 4.2 Permission Matrix
@@ -233,7 +233,7 @@ Each audit log entry must contain:
 
 ### 8.3 What Cannot Be Modified
 
-- Audit log entries cannot be edited, deleted, or soft-deleted by any user including Organization_Admin.
+- Audit log entries cannot be edited, deleted, or soft-deleted by any user including OrganizationAdmin.
 - Audit log entries are never transferred when a Staff member is deleted.
 - Audit log entries must be retained for a minimum of 7 years (HIPAA requirement).
 - The audit log is append-only at the storage level.
@@ -292,13 +292,13 @@ Each audit log entry must contain:
 **Post-cancellation behaviour:**
 - WHEN an Organization's subscription is cancelled, THE Platform SHALL begin retention countdown for all data belonging to that Organization.
 - WHEN the retention period expires, THE Platform SHALL permanently delete or anonymize all data for that Organization in accordance with GDPR and HIPAA requirements.
-- THE Platform SHALL notify the Organization_Admin via email at 90 days, 30 days, and 7 days before data deletion.
+- THE Platform SHALL notify the OrganizationAdmin via email at 90 days, 30 days, and 7 days before data deletion.
 - THE Platform SHALL allow an Organization to export all their data at any point during the retention period.
 - IF an Organization reactivates their subscription before the retention period expires, THE Platform SHALL cancel the deletion countdown and restore full access to all retained data.
 
 ### 10.2 GDPR Erasure
 
-- On a verified GDPR right-to-erasure request, a Clinic_Admin may trigger erasure for a Patient.
+- On a verified GDPR right-to-erasure request, a ClinicAdmin may trigger erasure for a Patient.
 - Erasure anonymizes all personal identifiers (name, email, phone, date of birth) and replaces them with a placeholder.
 - Erasure does not delete Session clinical data (images, AI analysis, reports) - only personal identifiers.
 - Erasure is recorded in the audit log with the actor and timestamp.
@@ -331,8 +331,8 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 
 #### Constraints
 
-- THE Platform SHALL NOT allow deletion of the last active Clinic_Admin in a Clinic.
-- THE Platform SHALL NOT allow deletion of the last active Organization_Admin in an Organization.
+- THE Platform SHALL NOT allow deletion of the last active ClinicAdmin in a Clinic.
+- THE Platform SHALL NOT allow deletion of the last active OrganizationAdmin in an Organization.
 - THE Platform SHALL block deletion if any reassignable data remains unassigned.
 
 ---
@@ -370,7 +370,7 @@ WHEN a Staff member is deleted, ONLY responsibility-based fields SHALL be reassi
 3. Deprecated fields must be marked with `@deprecated(reason: "...")` and supported for a minimum of 2 release cycles before removal.
 4. The current schema version is included in every GraphQL response via a custom HTTP header: `X-Schema-Version`.
 5. Web components (Stencil) are versioned independently and must declare the minimum platform schema version they require.
-6. Webhook field mappings are versioned per Webhook_Source configuration to allow source-specific schema evolution.
+6. Webhook field mappings are versioned per WebhookSource configuration to allow source-specific schema evolution.
 
 ---
 

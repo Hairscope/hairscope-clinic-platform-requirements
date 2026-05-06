@@ -10,11 +10,11 @@
 - **Role**: A named set of `(module, action)` permissions assignable to one or more Staff members.
 - **Permission**: A single `(module, action)` grant where action ∈ `{view, create, edit, delete}`.
 - **Invite**: A single-use, time-limited email link sent to a prospective Staff member to complete registration.
-- **Pending_Registration**: The status of a Staff record that has been created by an Admin invite but whose password has not yet been set by the invitee.
+- **PendingRegistration**: The status of a Staff record that has been created by an Admin invite but whose password has not yet been set by the invitee.
 - **JWT**: JSON Web Token issued on successful authentication, scoped to the Staff member's organization, clinic, and effective permissions.
-- **Effective_Permissions**: The union of all permissions granted by all roles assigned to a Staff member.
+- **EffectivePermissions**: The union of all permissions granted by all roles assigned to a Staff member.
 - **Deactivation**: Setting a Staff member's status to `Inactive`, revoking authentication while preserving all associated data.
-- **System_Role**: A platform-defined role (`Organization_Admin` or `Clinic_Admin`) that cannot be deleted. These roles are always present in every Clinic and their existence is required for the platform's last-admin guards to function.
+- **SystemRole**: A platform-defined role (`OrganizationAdmin` or `ClinicAdmin`) that cannot be deleted. These roles are always present in every Clinic and their existence is required for the platform's last-admin guards to function.
 
 ---
 
@@ -22,7 +22,7 @@
 
 ### IAM-1: Staff Registration via Invite
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to invite staff via email so that new members can securely create their own accounts.
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to invite staff via email so that new members can securely create their own accounts.
 
 #### Invite Flow
 
@@ -51,7 +51,7 @@ The invite flow has two distinct phases with different actors:
 7. IF an invitee follows an already-used invite link (password already set), THE Platform SHALL return an `INVITE_ALREADY_USED` error. If the password was not yet set, the link SHALL work normally.
 8. THE Platform SHALL allow an Admin to resend an invite to a Staff member in `PENDING_REGISTRATION` status; resending invalidates the previous token and issues a new one with a fresh 7-day expiry.
 9. THE Platform SHALL allow an Admin to cancel a pending invite, which deletes the `PENDING_REGISTRATION` Staff record.
-10. THE Platform SHALL record invite sent, invite used, invite expired, and invite cancelled events in the Audit_Log.
+10. THE Platform SHALL record invite sent, invite used, invite expired, and invite cancelled events in the AuditLog.
 
 #### Failure Cases - Admin-facing (at invite send time)
 
@@ -89,7 +89,7 @@ The invite flow has two distinct phases with different actors:
 1. WHEN a Staff member submits valid credentials, THE Platform SHALL issue a signed JWT containing: `staffId`, `organizationId`, `clinicId`, `roles`, `effectivePermissions`, and `exp`.
 2. IF credentials are invalid, THE Platform SHALL return an `INVALID_CREDENTIALS` error and SHALL NOT issue a token.
 3. IF the Staff member's status is `Inactive`, THE Platform SHALL return an `ACCOUNT_DEACTIVATED` error and SHALL NOT issue a token.
-4. THE Platform SHALL record every successful and failed authentication attempt in the Audit_Log.
+4. THE Platform SHALL record every successful and failed authentication attempt in the AuditLog.
 5. THE Platform SHALL support token refresh without requiring re-entry of credentials, provided the refresh token is valid and the Staff member is still `Active`.
 6. WHEN a Staff member logs out, THE Platform SHALL invalidate the current JWT and refresh token.
 
@@ -111,37 +111,37 @@ The invite flow has two distinct phases with different actors:
 
 ### IAM-3: Staff Profile Management
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to manage staff profiles so that the roster always reflects accurate information.
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to manage staff profiles so that the roster always reflects accurate information.
 
 #### Acceptance Criteria
 
 1. THE Platform SHALL store the following fields per Staff member: `firstName`, `lastName`, `email` (immutable after invite), `phone`, `roles[]`, `specialization`, `experience`, `status`, `clinicId`, `organizationId`, `createdAt`, `updatedAt`.
 2. THE Platform SHALL allow an Admin to edit all profile fields except `email`.
 3. THE Platform SHALL allow a Staff member to edit their own `firstName`, `lastName`, `phone`, `specialization`, and `experience`.
-4. WHEN a Staff profile is updated, THE Platform SHALL record the change in the Audit_Log with before/after values.
-5. Organization_Admins SHALL be able to view and edit Staff profiles across all Clinics within their Organization.
+4. WHEN a Staff profile is updated, THE Platform SHALL record the change in the AuditLog with before/after values.
+5. OrganizationAdmins SHALL be able to view and edit Staff profiles across all Clinics within their Organization.
 
 ---
 
 ### IAM-4: Staff Deactivation and Reactivation
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to deactivate a staff member without losing their data so that I can remove access while preserving clinical records.
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to deactivate a staff member without losing their data so that I can remove access while preserving clinical records.
 
 #### Acceptance Criteria
 
 1. WHEN an Admin deactivates a Staff member, THE Platform SHALL set status to `Inactive` and immediately invalidate all active JWTs for that Staff member.
 2. WHEN a Staff member is deactivated, THE Platform SHALL preserve all records associated with that Staff member unchanged.
-3. THE Platform SHALL NOT allow deactivation of the last remaining active Clinic_Admin in a Clinic.
-4. THE Platform SHALL NOT allow deactivation of the last remaining active Organization_Admin in an Organization.
+3. THE Platform SHALL NOT allow deactivation of the last remaining active ClinicAdmin in a Clinic.
+4. THE Platform SHALL NOT allow deactivation of the last remaining active OrganizationAdmin in an Organization.
 5. THE Platform SHALL allow reactivation of a deactivated Staff member, restoring authentication access.
-6. WHEN deactivated or reactivated, THE Platform SHALL record the action in the Audit_Log.
+6. WHEN deactivated or reactivated, THE Platform SHALL record the action in the AuditLog.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Deactivating last active Clinic_Admin | `LAST_CLINIC_ADMIN` |
-| Deactivating last active Organization_Admin | `LAST_ORG_ADMIN` |
+| Deactivating last active ClinicAdmin | `LAST_CLINIC_ADMIN` |
+| Deactivating last active OrganizationAdmin | `LAST_ORG_ADMIN` |
 
 #### Correctness Properties
 
@@ -152,7 +152,7 @@ The invite flow has two distinct phases with different actors:
 
 ### IAM-5: Staff Deletion and Data Transfer
 
-**User Story:** As a Clinic_Admin or Organization_Admin, I want to delete a staff member only after transferring their records so that no clinical data is lost.
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to delete a staff member only after transferring their records so that no clinical data is lost.
 
 #### Acceptance Criteria
 
@@ -161,9 +161,9 @@ The invite flow has two distinct phases with different actors:
 3. THE Platform SHALL validate that all recipients belong to the same Clinic (or valid target Clinic in case of inter-clinic transfer) and are Active.
 4. WHEN confirmed, THE Platform SHALL atomically reassign all responsibility-based fields to the designated recipients and mark the Staff member as `INACTIVE`.
 5. THE Platform SHALL NOT physically delete the Staff record - it is retained for audit log attribution.
-6. THE Platform SHALL NOT reassign Audit_Log entries - they remain attributed to the original Staff member's name permanently.
-7. THE Platform SHALL NOT allow deletion of the last remaining active Clinic_Admin or Organization_Admin.
-8. WHEN deleted, THE Platform SHALL record the deletion, the recipient identities, and the list of reassigned record types in the Audit_Log.
+6. THE Platform SHALL NOT reassign AuditLog entries - they remain attributed to the original Staff member's name permanently.
+7. THE Platform SHALL NOT allow deletion of the last remaining active ClinicAdmin or OrganizationAdmin.
+8. WHEN deleted, THE Platform SHALL record the deletion, the recipient identities, and the list of reassigned record types in the AuditLog.
 
 #### Failure Cases
 
@@ -172,55 +172,55 @@ The invite flow has two distinct phases with different actors:
 | No recipient selected for a reassignable category | `RECIPIENT_REQUIRED` |
 | Recipient is inactive | `RECIPIENT_INACTIVE` |
 | Recipient belongs to a different Clinic | `FORBIDDEN` |
-| Deleting last active Clinic_Admin | `LAST_CLINIC_ADMIN` |
-| Deleting last active Organization_Admin | `LAST_ORG_ADMIN` |
+| Deleting last active ClinicAdmin | `LAST_CLINIC_ADMIN` |
+| Deleting last active OrganizationAdmin | `LAST_ORG_ADMIN` |
 
 #### Correctness Properties
 
 - After deletion, every transferable record previously owned by S SHALL be owned by recipient R.
-- Audit_Log entries attributed to S SHALL continue to reference S's original name, not R's name.
-- After any Staff deletion, count of active Clinic_Admins in the Clinic SHALL remain ≥ 1.
+- AuditLog entries attributed to S SHALL continue to reference S's original name, not R's name.
+- After any Staff deletion, count of active ClinicAdmins in the Clinic SHALL remain ≥ 1.
 
 ---
 
 ### IAM-6: Role Management
 
-**User Story:** As a Clinic_Admin, I want to create and manage roles with granular permissions so that I can precisely control what each staff member can do.
+**User Story:** As a ClinicAdmin, I want to create and manage roles with granular permissions so that I can precisely control what each staff member can do.
 
 #### Role Classification
 
 | Category | Roles | Permissions Editable | Deletable |
 |----------|-------|---------------------|-----------|
-| System roles | `Organization_Admin`, `Clinic_Admin` | `Organization_Admin`: No. `Clinic_Admin`: Yes | No - cannot be deleted under any circumstance |
+| System roles | `OrganizationAdmin`, `ClinicAdmin` | `OrganizationAdmin`: No. `ClinicAdmin`: Yes | No - cannot be deleted under any circumstance |
 | Default clinic roles | `Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk` | Yes | Yes - subject to last-admin guard |
-| Custom roles | Any role created by a Clinic_Admin | Yes | Yes - subject to last-admin guard |
+| Custom roles | Any role created by a ClinicAdmin | Yes | Yes - subject to last-admin guard |
 
 #### Acceptance Criteria
 
 1. THE Platform SHALL provide the system and default clinic roles defined in `requirements.md` Section 3.2.
-2. THE Platform SHALL allow a Clinic_Admin to create custom roles with a name and a set of `(module, action)` permissions.
-3. THE Platform SHALL allow a Clinic_Admin to edit the name and permissions of any non-system role (`Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk`, and custom roles).
-4. THE Platform SHALL allow a Clinic_Admin to edit the permissions of the `Clinic_Admin` role, but SHALL NOT allow editing of the `Organization_Admin` role's permissions.
-5. THE Platform SHALL NOT allow deletion of `Organization_Admin` or `Clinic_Admin` roles under any circumstance - they are system roles.
-6. THE Platform SHALL allow a Clinic_Admin to delete any non-system role, provided doing so would not leave the Clinic with no active Clinic_Admin.
+2. THE Platform SHALL allow a ClinicAdmin to create custom roles with a name and a set of `(module, action)` permissions.
+3. THE Platform SHALL allow a ClinicAdmin to edit the name and permissions of any non-system role (`Doctor`, `Receptionist`, `Nurse`, `Sales`, `Marketing`, `Frontdesk`, and custom roles).
+4. THE Platform SHALL allow a ClinicAdmin to edit the permissions of the `ClinicAdmin` role, but SHALL NOT allow editing of the `OrganizationAdmin` role's permissions.
+5. THE Platform SHALL NOT allow deletion of `OrganizationAdmin` or `ClinicAdmin` roles under any circumstance - they are system roles.
+6. THE Platform SHALL allow a ClinicAdmin to delete any non-system role, provided doing so would not leave the Clinic with no active ClinicAdmin.
 7. WHEN a role's permissions are updated, THE Platform SHALL apply the change to all Staff members holding that role within one request cycle.
 8. WHEN a Staff member holds multiple roles, THE Platform SHALL apply the union of all permissions as the effective permissions.
-9. WHEN a role is created, edited, or deleted, THE Platform SHALL record the change in the Audit_Log.
+9. WHEN a role is created, edited, or deleted, THE Platform SHALL record the change in the AuditLog.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
-| Editing `Organization_Admin` permissions | `ROLE_NOT_EDITABLE` |
-| Deleting `Organization_Admin` or `Clinic_Admin` role | `ROLE_NOT_DELETABLE` |
-| Deleting a role that would leave the Clinic with no active Clinic_Admin | `LAST_CLINIC_ADMIN` |
-| Assigning clinical module permission to `Organization_Admin` role | `ORG_SCOPE_VIOLATION` |
+| Editing `OrganizationAdmin` permissions | `ROLE_NOT_EDITABLE` |
+| Deleting `OrganizationAdmin` or `ClinicAdmin` role | `ROLE_NOT_DELETABLE` |
+| Deleting a role that would leave the Clinic with no active ClinicAdmin | `LAST_CLINIC_ADMIN` |
+| Assigning clinical module permission to `OrganizationAdmin` role | `ORG_SCOPE_VIOLATION` |
 
 #### Correctness Properties
 
-- `Organization_Admin` and `Clinic_Admin` roles SHALL exist in every Clinic at all times and SHALL NOT be deletable by any operation.
+- `OrganizationAdmin` and `ClinicAdmin` roles SHALL exist in every Clinic at all times and SHALL NOT be deletable by any operation.
 - For any Staff member S holding roles R1 and R2: `effective_permissions(S) = permissions(R1) ∪ permissions(R2)`.
-- For any Staff member S holding the `Organization_Admin` role, S SHALL NOT have permissions to `patients`, `appointments`, `leads`, `billing`, or `products` modules regardless of other roles.
+- For any Staff member S holding the `OrganizationAdmin` role, S SHALL NOT have permissions to `patients`, `appointments`, `leads`, `billing`, or `products` modules regardless of other roles.
 - For every `(module, action)` pair not granted by any role assigned to S, every request by S for that action SHALL be denied.
 
 ---
