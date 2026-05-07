@@ -14,7 +14,7 @@
 | GI-4 | Every Organization has at least one active OrganizationAdmin at all times. | Deactivation + deletion guards |
 | GI-5 | Every Clinic has at least one active ClinicAdmin at all times. | Deactivation + deletion guards |
 | GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation maintained). The platform assigns a `globalPatientId` (UUID) to each unique physical person at creation time via email or phone lookup. All Patient records for the same person across any Clinic or Organization share the same `globalPatientId`. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the **Hairscope Care App** only. Per-Clinic uniqueness on email and phone still applies. | DB unique constraint (per clinic) + global identity lookup on create |
-| GI-7 | A Patient may have at most one active Session (status: `Draft`) per Clinic at any point in time. Only `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. | Session create guard + progress graph query filter |
+| GI-7 | A Patient may have at most one active Session (status: `Draft`) per `sessionType` per Clinic at any point in time. Only `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. | Session create guard + progress graph query filter |
 | GI-8 | The OrganizationAdmin role cannot be granted permissions to `patients`, `appointments`, `leads`, `billing`, or `products` modules under any configuration. | Permission engine |
 | GI-9 | A Staff member's effective permissions are the union of all permissions granted by all their assigned roles. | Permission engine |
 | GI-10 | Deny is the default. If no role grants a permission, the action is denied. | Permission engine |
@@ -26,14 +26,14 @@
 | ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
 |:------------|-----------|-------------|
 | GI-11 | No two Patients within the same Clinic may share the same `email`. | DB unique constraint (per clinic) |
-| GI-12 | No two Patients within the same Clinic may share the same `phone`. | DB unique constraint (per clinic) |
-| GI-13 | A Patient may have at most one active Session (status: `Draft` or `Saved`) per Clinic at any point in time. | Session create guard |
+| GI-12 | No two Patients within the same Clinic may share the same `phone`. This constraint applies only when `phone` is provided — null phone values do not trigger a uniqueness conflict. | DB unique partial constraint (per clinic, non-null phone) |
+| GI-13 | A Patient may have at most one active Session (status: `Draft`) per `sessionType` per Clinic at any point in time. | Session create guard |
 | GI-14 | A Session in `Saved` or `Completed` status cannot be deleted. | Session delete guard |
 | GI-15 | A saved Session must contain a minimum of 6 TrichoscopyImages, one from each of the 6 mandatory positions: Frontal (P1), Left Temporal (P2), Right Temporal (P3), Top of the Head (P4), Crown (P5), Occipital (P6). Additional images beyond these 6 are permitted. | Session save validation |
 | GI-16 | A saved Session must contain at least one Frontal GlobalImage. | Session save validation |
 | GI-17 | Patient records cannot be deleted or archived except via GDPR erasure. | No delete mutation exposed |
 | GI-18 | Each QuestionnaireCategory must have exactly 5 active questions per Clinic at all times. | Question toggle guard |
-| GI-19 | Only `Saved` and `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` Sessions are excluded. | Progress graph query filter |
+| GI-19 | Only `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded. | Progress graph query filter |
 
 ---
 
