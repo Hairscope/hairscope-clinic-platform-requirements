@@ -122,7 +122,7 @@ Lead created
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL store the following fields for each Lead: `name`, `age`, `gender`, `email`, `phone`, `createdAt`, `status`, `priority`, `tags[]`, `leadSource`, `sourceDetail` (page URL or campaign ID), `clinicId` (nullable for unassigned leads), `assignedStaffId` (nullable).
+1. THE Platform SHALL store the following fields for each Lead: `firstName`, `lastName`, `age`, `genderAssignedAtBirth`, `email`, `phone`, `createdAt`, `status`, `priority`, `tags[]`, `leadSource`, `sourceDetail` (page URL or campaign ID), `clinicId` (nullable for unassigned leads), `assignedStaffId` (nullable).
 2. THE Platform SHALL allow duplicate Leads - the same email or phone MAY exist across multiple Lead records.
 3. THE Platform SHALL allow Staff to update `status`, `priority`, and `tags` at any time.
 4. WHEN a Lead is created via the SelfieAnalysis web component, THE Platform SHALL attach the selfie analysis questions, answers, and `selfieAnalysisReport` to the Lead profile. `selfieAnalysisReport` may be null if image capture failed or questions were incomplete - the Lead is still created and assigned.
@@ -131,6 +131,7 @@ Lead created
 7. WHEN a Lead is created, THE Platform SHALL record the action in the AuditLog.
 8. Any Clinic Staff member with lead access SHALL see all leads belonging to their Clinic (`clinicId` matches their Clinic), regardless of which staff member is assigned.
 9. OrganizationAdmins SHALL see all Leads across all Clinics within their Organization, including UnassignedLeads (`clinicId = null`).
+10. THE Platform SHALL allow creation of additional fields for Leads in the future if required.
 
 #### Failure Cases
 
@@ -155,7 +156,7 @@ Lead created
 #### Acceptance Criteria
 
 1. THE Platform SHALL provide a `createLead` mutation for Staff to manually create a Lead.
-2. `name` is the only required field; all other fields are optional.
+2. At least one of `firstName` or `lastName` is required; all other fields are optional.
 3. WHEN a Clinic-level Staff member creates a Lead manually, THE Platform SHALL automatically set `clinicId` to the Staff member's current Clinic and distribute the Lead via LeadDistributionAlgorithm. This is not affected by `leadAssignmentMode`.
 4. WHEN an OrganizationAdmin creates a Lead manually in `AUTO_ASSIGN` mode:
    - If a Clinic is selected → `clinicId` is set and LeadDistributionAlgorithm distributes the Lead.
@@ -170,7 +171,7 @@ Lead created
 
 | Condition | Error Code |
 |-----------|------------|
-| Missing `name` | `VALIDATION_ERROR` (field: `name`) |
+| Missing both `firstName` and `lastName` | `VALIDATION_ERROR` (field: `firstName`) |
 | Unauthorized user attempting to create a lead | `FORBIDDEN` |
 
 ---
@@ -224,7 +225,7 @@ Lead created
 2. THE SelfieAnalysis web component is authenticated using the Organization's API key. There are no clinic-level API keys.
 3. WHEN a visitor starts the SelfieAnalysis flow and the Organization has more than one active Clinic, THE Platform SHALL display a list of active Clinics for the visitor to select their preferred Clinic. Clinic selection is mandatory - the visitor cannot complete the flow without selecting a Clinic.
 4. WHEN the Organization has exactly one active Clinic, THE Platform SHALL skip the clinic selection screen and auto-assign the lead to that Clinic.
-5. WHEN a visitor completes the SelfieAnalysis flow, THE Platform SHALL capture: `name`, `age`, `gender`, `email`, `phone`.
+5. WHEN a visitor completes the SelfieAnalysis flow, THE Platform SHALL capture: `firstName`, `lastName`, `age`, `genderAssignedAtBirth`, `email`, `phone`. All fields except at least one of `firstName`/`lastName` and `genderAssignedAtBirth` are optional.
 6. THE Platform SHALL generate a `selfieAnalysisReport` and attach it to the Lead. The report may be null if image capture failed or questions were incomplete - the Lead is still created and assigned regardless.
 7. In `AUTO_ASSIGN` mode: the Lead is immediately assigned to the visitor-selected (or auto-assigned) Clinic and distributed via LeadDistributionAlgorithm assigns Staff.
 8. In `MANUAL_ASSIGN` mode: the visitor-selected Clinic is stored as a suggestion. The Lead is created as an UnassignedLead pending Org Admin confirmation.

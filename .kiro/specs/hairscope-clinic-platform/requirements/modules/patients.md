@@ -43,13 +43,13 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `phone`, `genderAssignedAtBirth`.
-2. THE Platform SHALL accept the following optional fields: `dateOfBirth`, `age`, `externalPatientId` (alphanumeric, for mapping to external clinic systems).
+1. THE Platform SHALL require the following fields when creating a Patient: `firstName`, `lastName`, `email`, `genderAssignedAtBirth`.
+2. THE Platform SHALL accept the following optional fields: `dateOfBirth`, `age`, `phone`, `externalPatientId` (alphanumeric, for mapping to external clinic systems).
 3. WHEN `dateOfBirth` is provided, THE Platform SHALL auto-calculate and store `age` from `dateOfBirth`, overriding any manually entered `age` value.
 4. WHEN `dateOfBirth` is not provided, THE Platform SHALL accept a manually entered `age` value.
 5. WHEN neither `dateOfBirth` nor `age` is provided, both fields SHALL remain null on the Patient record.
 6. WHEN a Staff member attempts to create a Patient with an `email` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
-7. WHEN a Staff member attempts to create a Patient with a `phone` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation.
+7. WHEN a Staff member attempts to create a Patient with a `phone` that already exists for another Patient in the same Clinic, THE Platform SHALL reject the creation. This check only applies when `phone` is provided — null phone values do not trigger a uniqueness conflict.
 8. THE Platform SHALL NOT expose a delete or archive mutation for Patient records. Removal is only possible via GDPR erasure.
 9. WHEN a `LeadConverted` event is received, THE Platform SHALL auto-populate the Patient profile fields from the Lead's data without requiring manual re-entry.
 10. THE Platform SHALL allow Staff to search Patients by name (first name, last name, or full name).
@@ -71,7 +71,7 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 
 - For any Patient P where `dateOfBirth` is provided: stored `age` = `floor((current_date − dateOfBirth) / 365.25)` at time of creation or update, overriding any manually entered value.
 - For any Patient P where `dateOfBirth` is not provided: `age` reflects the manually entered value, or null if not entered.
-- For any two distinct Patients P1 and P2 in the same Clinic: `P1.email ≠ P2.email` and `P1.phone ≠ P2.phone`.
+- For any two distinct Patients P1 and P2 in the same Clinic: `P1.email ≠ P2.email`. If both P1 and P2 have a non-null `phone`, then `P1.phone ≠ P2.phone`.
 - Two Patients in different Clinics MAY share the same email or phone - this is permitted and expected.
 - For any Patient P created at time T, P SHALL remain retrievable at all times T' > T unless a GDPR erasure is processed.
 
@@ -84,7 +84,7 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 #### Acceptance Criteria
 
 1. THE Platform SHALL assign a `globalPatientId` (UUID v4) to every Patient record at creation time.
-2. WHEN a new Patient is being created, THE Platform SHALL perform a global lookup by `email` and `phone` to check if a `globalPatientId` already exists for that person across any Clinic or Organization.
+2. WHEN a new Patient is being created, THE Platform SHALL perform a global lookup by `email` (if provided) and `phone` (if provided) to check if a `globalPatientId` already exists for that person across any Clinic or Organization. If neither email nor phone is provided, a new `globalPatientId` is always generated.
 3. IF a matching `globalPatientId` is found, THE Platform SHALL assign it to the new Patient record.
 4. IF no matching `globalPatientId` is found, THE Platform SHALL generate a new `globalPatientId` and assign it.
 5. THE `globalPatientId` SHALL be stored on every Patient record but SHALL NOT be exposed in any Staff-facing GraphQL query that could be used to access records from other Clinics.
@@ -99,8 +99,8 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 
 #### Correctness Properties
 
-- For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
-- For any two Patient records P1 and P2 where `P1.phone = P2.phone` (across any Clinics): `P1.globalPatientId = P2.globalPatientId`.
+- For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics, email non-null): `P1.globalPatientId = P2.globalPatientId`.
+- For any two Patient records P1 and P2 where `P1.phone = P2.phone` (across any Clinics, phone non-null): `P1.globalPatientId = P2.globalPatientId`.
 - For any Staff member S in Clinic C, no GraphQL query SHALL return Patient records from Clinic C' (C ≠ C') regardless of shared `globalPatientId`.
 - The `globalPatientId` lookup at creation time SHALL be atomic - concurrent Patient creations with the same email SHALL result in both records sharing the same `globalPatientId`, not two different ones.
 
