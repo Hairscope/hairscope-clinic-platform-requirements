@@ -1,0 +1,56 @@
+# Hairscope Clinic Platform
+
+> Version: 1.0.0 | Status: **Draft** | API: GraphQL
+
+**Hairscope Clinic Platform** is an Enterprise SaaS system for hair treatment clinics. It is a multi-tenant, GDPR + HIPAA compliant, event-driven backend platform with a GraphQL API and embedded web components for patient-facing experiences.
+
+## Documentation Structure
+
+| Section | Description |
+|---------|-------------|
+| [Requirements](/requirements) | Master requirements — system principles, invariants, and cross-cutting rules |
+| [Core](/requirements/core/identity-access) | Identity & Access, Organization, Audit, Data Ownership, System Invariants, Notification Service, Reminder Service |
+| [Modules](/requirements/modules/patients) | Patients, Sessions, Leads, Appointments, Catalog, Billing, Communication Policy |
+| [Web Components](/requirements/web-components/selfie-analysis) | Selfie Analysis, Appointment Booking |
+| [Shared](/requirements/shared/enums) | Enums, Error Codes, API Contracts, Event Definitions |
+
+## System Principles
+
+1. **Security by default** — Deny is the default for every permission check
+2. **GDPR & HIPAA first** — Patient data handling must satisfy both regulations
+3. **Tenant isolation** — No query may return data outside the org boundary
+4. **Event-driven** — Modules communicate via domain events only
+5. **Auditability** — Every state-changing operation produces an immutable audit log
+6. **Idempotency** — All mutations must be safe to retry
+7. **UTC everywhere** — Timestamps stored and transmitted in UTC
+8. **Explicit over implicit** — Every business rule has a formal server-side invariant
+
+## Architecture
+
+```
+Organization (Tenant)
+  └── Clinic (1..N per Org)
+        └── Staff (roles: Org_Admin, Clinic_Admin, Doctor, Nurse, Sales, etc.)
+              └── Permissions (module × action — union of roles)
+
+External Touchpoints
+  ├── Selfie Analysis Web Component (Stencil) → Lead capture + AI hair report
+  └── Appointment Booking Web Component (Stencil) → Self-serve booking
+```
+
+## Module Overview
+
+| Module | Scope |
+|--------|-------|
+| Identity & Access | Staff lifecycle, authentication, roles, permissions, invitations, password policy |
+| Organization | Org/clinic hierarchy, self-registration, clinic profile, inter-clinic transfers, dashboards |
+| Audit & Compliance | Immutable audit log, GDPR, HIPAA, consent, data retention |
+| Catalog | Services, medications, cosmetics, supplements, treatment kits, routines, document signing |
+| Patients | Patient profiles, medical documents, treatment progress, global identity, GDPR erasure |
+| Sessions | Session lifecycle, image capture, AI analysis, annotations, questionnaires, clinical reports |
+| Leads | Lead capture (manual, webhook, selfie), assignment, CRM actions, conversion to patient |
+| Appointments | Booking, calendar, status management, rescheduling, cancellation, smart scheduling |
+| Billing | Invoice generation, charges, discounts, refunds, PDF export, analytics |
+| Communication Policy | Templates, channel preferences, reminder rules, consent, branding, quiet hours |
+| Notification Service | Delivery infrastructure — channels, fallback, retry, rate limiting, webhooks |
+| Reminder Service | Time-based scheduling — due detection, recurrence, missed handling, timezone |
