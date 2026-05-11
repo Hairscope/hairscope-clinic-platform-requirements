@@ -19,7 +19,7 @@ export default function SignIn() {
         textAlign: 'center',
         maxWidth: '400px'
       }}>
-        <img src="/logo.png" alt="Hairscope" style={{ height: '32px', marginBottom: '24px' }} />
+        <img src="/logo.png" alt="Hairscope" style={{ height: '32px', marginBottom: '24px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
         <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px' }}>
           Internal Documentation
         </h1>
