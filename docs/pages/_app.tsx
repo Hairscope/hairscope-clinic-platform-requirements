@@ -1,14 +1,14 @@
 import type { AppProps } from 'next/app'
+import { SessionProvider } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import './styles.css'
-import './styles.css'
 
 NProgress.configure({ showSpinner: false, speed: 300, minimum: 0.1 })
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   const router = useRouter()
 
   useEffect(() => {
@@ -26,5 +26,9 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, [router])
 
-  return <Component {...pageProps} />
+  return (
+    <SessionProvider session={session}>
+      <Component {...pageProps} />
+    </SessionProvider>
+  )
 }

@@ -3,7 +3,7 @@ export default {
     title: 'Hairscope',
     type: 'page'
   },
-  private: {
+  internal: {
     title: 'Team Docs',
     type: 'page'
   }
