@@ -56,11 +56,15 @@ jobs:
             docker stop hairscope-docs 2>/dev/null || true
             docker rm hairscope-docs 2>/dev/null || true
 
-            # Run new container on port 3001
+            # Run new container on port 3001 with env vars
             docker run -d \
               --name hairscope-docs \
               --restart unless-stopped \
               -p 3001:3000 \
+              -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+              -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
               ghcr.io/hairscope/hairscope-docs:latest
 
             # Clean up old images

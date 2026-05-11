@@ -1,4 +1,10 @@
 export default {
-  index: 'Overview',
-  requirements: 'Requirements'
+  index: {
+    title: 'Hairscope',
+    type: 'page'
+  },
+  internal: {
+    title: 'Team Docs',
+    type: 'page'
+  }
 }

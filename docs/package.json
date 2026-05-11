@@ -10,6 +10,7 @@
   "dependencies": {
     "@types/nprogress": "^0.2.3",
     "next": "14.2.15",
+    "next-auth": "^4.24.14",
     "nextra": "3.2.5",
     "nextra-theme-docs": "3.2.5",
     "nprogress": "^0.2.0",

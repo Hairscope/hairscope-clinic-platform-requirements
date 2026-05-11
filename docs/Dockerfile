@@ -9,6 +9,9 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Build without requiring env vars (they're provided at runtime)
+ENV NEXTAUTH_URL=http://localhost:3000
 RUN npm run build
 
 # Stage 3: Production server
