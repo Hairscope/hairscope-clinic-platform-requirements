@@ -9,6 +9,9 @@ permissions:
   packages: write
   contents: read
 
+env:
+  IMAGE_NAME: ghcr.io/hairscope/hairscope-docs:latest
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -32,7 +35,7 @@ jobs:
         with:
           context: ./docs
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/hairscope-docs:latest
+          tags: ${{ env.IMAGE_NAME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -43,11 +46,11 @@ jobs:
           username: ${{ secrets.GCP_SSH_USER }}
           key: ${{ secrets.GCP_SSH_KEY }}
           script: |
-            # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Login to GitHub Container Registry using PAT
+            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u hairscope --password-stdin
 
             # Pull the latest image
-            docker pull ghcr.io/${{ github.repository_owner }}/hairscope-docs:latest
+            docker pull ghcr.io/hairscope/hairscope-docs:latest
 
             # Stop and remove existing container if running
             docker stop hairscope-docs 2>/dev/null || true
@@ -58,7 +61,7 @@ jobs:
               --name hairscope-docs \
               --restart unless-stopped \
               -p 3001:3000 \
-              ghcr.io/${{ github.repository_owner }}/hairscope-docs:latest
+              ghcr.io/hairscope/hairscope-docs:latest
 
             # Clean up old images
             docker image prune -f
