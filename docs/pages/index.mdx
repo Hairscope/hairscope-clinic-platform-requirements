@@ -1,56 +1,114 @@
 # Hairscope Clinic Platform
 
-> Version: 1.0.0 | Status: **Draft** | API: GraphQL
+## The Complete Hair Treatment Management System
 
-**Hairscope Clinic Platform** is an Enterprise SaaS system for hair treatment clinics. It is a multi-tenant, GDPR + HIPAA compliant, event-driven backend platform with a GraphQL API and embedded web components for patient-facing experiences.
+Hairscope is an enterprise clinic management platform purpose-built for hair treatment clinics and chains. It combines AI-powered hair analysis, patient management, appointment scheduling, and treatment tracking into a single unified system.
 
-## Documentation Structure
+---
 
-| Section | Description |
-|---------|-------------|
-| [Requirements](/requirements) | Master requirements — system principles, invariants, and cross-cutting rules |
-| [Core](/requirements/core/identity-access) | Identity & Access, Organization, Audit, Data Ownership, System Invariants, Notification Service, Reminder Service |
-| [Modules](/requirements/modules/patients) | Patients, Sessions, Leads, Appointments, Catalog, Billing, Communication Policy |
-| [Web Components](/requirements/web-components/selfie-analysis) | Selfie Analysis, Appointment Booking |
-| [Shared](/requirements/shared/enums) | Enums, Error Codes, API Contracts, Event Definitions |
+## What Hairscope Does
 
-## System Principles
+### AI-Powered Hair Analysis
 
-1. **Security by default** — Deny is the default for every permission check
-2. **GDPR & HIPAA first** — Patient data handling must satisfy both regulations
-3. **Tenant isolation** — No query may return data outside the org boundary
-4. **Event-driven** — Modules communicate via domain events only
-5. **Auditability** — Every state-changing operation produces an immutable audit log
-6. **Idempotency** — All mutations must be safe to retry
-7. **UTC everywhere** — Timestamps stored and transmitted in UTC
-8. **Explicit over implicit** — Every business rule has a formal server-side invariant
+Capture trichoscopy images during patient visits and let our AI instantly analyze hair count, density, thickness, and coverage. Get objective measurements that track treatment progress over time — no more subjective assessments.
 
-## Architecture
+### Patient Journey Management
+
+From the first lead inquiry to ongoing treatment sessions, Hairscope tracks the complete patient journey. Convert leads to patients seamlessly, maintain full treatment history, and generate professional clinical reports automatically.
+
+### Multi-Clinic Operations
+
+Manage an entire chain of clinics from a single platform. Organization-level oversight with clinic-level autonomy — each clinic operates independently while leadership gets aggregated visibility across all locations.
+
+### Embeddable Web Components
+
+Deploy AI-powered selfie analysis and appointment booking directly on your clinic's website. Capture leads 24/7 with instant hair assessments that drive appointment bookings — no staff intervention required.
+
+---
+
+## Key Capabilities
+
+| Capability | Description |
+|-----------|-------------|
+| **Trichoscopy Analysis** | AI-powered image analysis with hair count, density, thickness metrics per scalp position |
+| **Treatment Progress Tracking** | Visual graphs showing improvement across sessions over time |
+| **Smart Scheduling** | Automatic staff assignment based on qualifications, availability, and continuity of care |
+| **Catalog Management** | Unified catalog of services, medications, cosmetics, and supplements with treatment kits |
+| **Document Generation** | Auto-generated clinical reports, treatment plans, and prescriptions with digital signatures |
+| **Lead Capture** | Multi-channel lead ingestion — website selfie analysis, webhooks from campaigns, manual entry |
+| **Appointment Booking** | Patient self-service booking via embeddable web component with real-time slot availability |
+| **Billing & Invoicing** | Automatic invoice generation on session completion with configurable charges and discounts |
+| **Communication** | Configurable notifications and reminders via email, WhatsApp, SMS, and push |
+
+---
+
+## Who It's For
+
+### Clinic Chains & Franchises
+
+Manage multiple locations with centralized control. Organization admins oversee all clinics while each location operates autonomously with their own staff, catalog, and patient base.
+
+### Solo Clinics
+
+Everything a single clinic needs — from patient intake to treatment reports. Start with a trial, scale when ready.
+
+### Hair Treatment Specialists
+
+Purpose-built for trichology, PRP treatments, hair transplant consultations, and ongoing hair health monitoring. The AI models and questionnaires are designed specifically for hair treatment workflows.
+
+---
+
+## How It Works
 
 ```
-Organization (Tenant)
-  └── Clinic (1..N per Org)
-        └── Staff (roles: Org_Admin, Clinic_Admin, Doctor, Nurse, Sales, etc.)
-              └── Permissions (module × action — union of roles)
+Patient Journey:
 
-External Touchpoints
-  ├── Selfie Analysis Web Component (Stencil) → Lead capture + AI hair report
-  └── Appointment Booking Web Component (Stencil) → Self-serve booking
+Website Visit → Selfie Analysis → Lead Created → Appointment Booked
+                                                         ↓
+                                              Patient Arrives at Clinic
+                                                         ↓
+                                    Trichoscopy Images Captured by Staff
+                                                         ↓
+                                         AI Analysis (30 seconds)
+                                                         ↓
+                                    Clinical Report Auto-Generated
+                                                         ↓
+                              Doctor Reviews → Recommends Treatment Plan
+                                                         ↓
+                                Treatment Plan + Prescription Signed
+                                                         ↓
+                                      Invoice Generated → Patient Leaves
+                                                         ↓
+                                    Follow-up Reminders Scheduled
 ```
 
-## Module Overview
+---
 
-| Module | Scope |
-|--------|-------|
-| Identity & Access | Staff lifecycle, authentication, roles, permissions, invitations, password policy |
-| Organization | Org/clinic hierarchy, self-registration, clinic profile, inter-clinic transfers, dashboards |
-| Audit & Compliance | Immutable audit log, GDPR, HIPAA, consent, data retention |
-| Catalog | Services, medications, cosmetics, supplements, treatment kits, routines, document signing |
-| Patients | Patient profiles, medical documents, treatment progress, global identity, GDPR erasure |
-| Sessions | Session lifecycle, image capture, AI analysis, annotations, questionnaires, clinical reports |
-| Leads | Lead capture (manual, webhook, selfie), assignment, CRM actions, conversion to patient |
-| Appointments | Booking, calendar, status management, rescheduling, cancellation, smart scheduling |
-| Billing | Invoice generation, charges, discounts, refunds, PDF export, analytics |
-| Communication Policy | Templates, channel preferences, reminder rules, consent, branding, quiet hours |
-| Notification Service | Delivery infrastructure — channels, fallback, retry, rate limiting, webhooks |
-| Reminder Service | Time-based scheduling — due detection, recurrence, missed handling, timezone |
+## Platform Highlights
+
+- **GDPR & HIPAA Compliant** — Built for healthcare data from day one. Encryption at rest, audit trails, consent management, and right-to-erasure support.
+- **Multi-Tenant Architecture** — Complete data isolation between organizations. No clinic can ever access another clinic's data.
+- **Event-Driven** — Modules communicate via domain events, enabling extensibility without tight coupling.
+- **GraphQL API** — Modern, type-safe API with real-time subscriptions for live updates.
+- **Multi-Language** — Support for English, Spanish, Italian, Dutch, French, Russian, Arabic, and German. Reports generated in the clinic's configured language.
+- **White-Label Web Components** — Fully customizable selfie analysis and appointment booking widgets that match your clinic's branding.
+
+---
+
+## Security & Compliance
+
+| Standard | Coverage |
+|----------|----------|
+| GDPR | Full compliance — encryption, consent, right-to-erasure, data portability |
+| HIPAA | Audit trails, minimum necessary access, 7-year data retention |
+| Authentication | JWT-based, multi-device, no session expiry until logout |
+| Authorization | Role-based with granular permissions per module and action |
+| Data Isolation | Strict tenant isolation — cross-organization access is architecturally impossible |
+
+---
+
+## Get Started
+
+Hairscope is available as a managed SaaS platform. Register your organization, set up your first clinic, and start capturing trichoscopy images within minutes.
+
+For integration documentation, API references, and developer guides — contact our team.
