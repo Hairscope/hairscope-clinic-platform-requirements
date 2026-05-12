@@ -164,12 +164,13 @@
 #### Acceptance Criteria
 
 1. THE Platform SHALL support the following valid status transitions:
-   - `SCHEDULED → CONFIRMED`
+   - `SCHEDULED → CONFIRMED` (by Staff manually, or by Patient via confirmation link/web component)
    - `SCHEDULED → CANCELLED`
    - `SCHEDULED → NO_SHOW`
    - `CONFIRMED → COMPLETED`
    - `CONFIRMED → CANCELLED`
    - `CONFIRMED → NO_SHOW`
+2. THE Platform SHALL allow both Staff and Patients/Leads to trigger `SCHEDULED → CONFIRMED`. Staff may confirm after calling the patient; patients may confirm via a link in their booking confirmation email or via the web component.
 2. WHEN an appointment's status is changed, THE Platform SHALL record the change in the AuditLog.
 3. IF a Staff member attempts an invalid status transition, THE Platform SHALL reject the change.
 

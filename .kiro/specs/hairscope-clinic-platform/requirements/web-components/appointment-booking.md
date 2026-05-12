@@ -121,10 +121,11 @@
 
 1. THE Component SHALL provide a "Check appointments" link/button accessible from the main booking screen.
 2. WHEN clicked, THE Component SHALL display a search form asking for the visitor's email address.
-3. THE Component SHALL query the platform for all appointments matching that email for the Clinic.
-4. THE Component SHALL display matching appointments with: service name, date, time, and status.
-5. FOR each appointment in `SCHEDULED` or `CONFIRMED` status, THE Component SHALL display "Reschedule" and "Cancel" actions.
-6. THE Component SHALL NOT display appointments in `COMPLETED`, `CANCELLED`, or `NO_SHOW` status.
+3. AFTER the visitor enters their email, THE Platform SHALL send a one-time verification code (OTP) to that email address. The visitor must enter the OTP before appointment data is displayed.
+4. AFTER successful OTP verification, THE Component SHALL query the platform for all appointments matching that email for the Clinic.
+5. THE Component SHALL display matching appointments with: service name, date, time, and status.
+6. FOR each appointment in `SCHEDULED` or `CONFIRMED` status, THE Component SHALL display "Reschedule" and "Cancel" actions.
+7. THE Component SHALL NOT display appointments in `COMPLETED`, `CANCELLED`, or `NO_SHOW` status.
 
 #### Failure Cases
 
@@ -132,11 +133,13 @@
 |-----------|-----------|
 | No appointments found for email | "No appointments found" message |
 | Invalid email format | Client-side validation error |
+| Invalid or expired OTP | "Invalid code" error, allow retry |
 
 #### Correctness Properties
 
 - The search SHALL only return appointments for the authenticated Organization's Clinics.
 - No appointment data from other Organizations SHALL be accessible.
+- Appointment data SHALL NOT be displayed without successful OTP verification.
 
 ---
 

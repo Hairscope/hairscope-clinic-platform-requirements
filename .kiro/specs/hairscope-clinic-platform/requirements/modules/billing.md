@@ -37,7 +37,8 @@
 4. IF the Session has no linked appointment, THE Draft Invoice SHALL contain only the recommended catalog items (no service line item unless manually added by Staff).
 5. THE Platform SHALL allow Staff with billing edit permission to manually add SERVICE catalog items to a Draft Invoice (e.g., services provided during the session that were not pre-booked).
 6. WHILE the Invoice is in `DRAFT` status, THE Platform SHALL auto-sync line items with session recommendations: if recommendations are added, edited, or removed (including strike-through edits on Treatment Plan/Prescription), the corresponding auto-generated line items on the Invoice SHALL update automatically. Manual line items added by Staff are never auto-removed.
-7. THE Platform SHALL set the initial status to `DRAFT`.
+7. WHEN a Treatment Kit is recommended in a session, THE Invoice SHALL display it as a single line item with the kit's bundle price. The kit description MAY include the names of individual items within the kit.
+8. THE Platform SHALL set the initial status to `DRAFT`.
 8. WHEN an Invoice is generated, THE Platform SHALL emit `InvoiceGenerated` and record the generation in the AuditLog.
 9. Each Invoice is associated with exactly one Session and one Patient.
 
@@ -51,6 +52,7 @@
 #### Correctness Properties
 
 - For any Session S that transitions to `COMPLETED`: exactly one Invoice SHALL be generated for S.
+- Zero-item and zero-total invoices are valid — staff may add line items later.
 - For any Invoice I generated for Session S with a linked appointment: I SHALL contain a line item for the appointment's SERVICE catalog item.
 - For any Invoice I generated for Session S without a linked appointment: I SHALL contain line items for recommended catalog items only (staff may add services manually).
 - For any newly generated Invoice I: `I.status = DRAFT` immediately after generation.

@@ -76,7 +76,9 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 1. THE Platform SHALL allow any Staff member with session create permission to create a Session for a Patient, either independently or from an Appointment.
 2. WHEN creating a Session, THE Platform SHALL require a `sessionType` field specifying the type of treatment session.
 3. WHEN a Session is created from an Appointment, THE Platform SHALL store the `appointmentId` on the Session record. Each Appointment may have at most one linked Session.
-4. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session of the same `sessionType` in the same Clinic, THE Platform SHALL reject the creation.
+4. WHEN a Session is created manually by a Staff member, THE Platform SHALL set `assignedTo` to that Staff member.
+5. WHEN a Session is auto-created from an appointment (APT-3 AC-5), THE Platform SHALL assign it to the active Staff member with the least patient load for that day (determined by the scheduling engine).
+6. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session of the same `sessionType` in the same Clinic, THE Platform SHALL reject the creation.
 5. THE Platform SHALL persist Session data across logins until the Session is explicitly saved or deleted.
 6. WHEN a Staff member saves a Session, THE Platform SHALL:
    - Run all save validations defined for the SessionType (see type-specific requirements below)
@@ -321,7 +323,11 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 7. THE Platform SHALL allow ClinicAdmins to toggle platform-provided default questions on/off per category.
 8. WHEN a ClinicAdmin adds or removes questions, THE Platform SHALL enforce that the total active questions per category remains exactly 5.
 9. WHEN the StressOMeter score meets the defined threshold, THE Platform SHALL trigger product suggestions relevant to stress-related hair loss.
-10. WHEN questionnaire answers are edited after a Session is in `COMPLETED` status, THE Platform SHALL recalculate `RootCause` and `StressOMeter` based on the updated answers and regenerate the Clinical Trichoscopy Report to reflect the new values.
+10. WHEN questionnaire answers are edited after a Session is in `COMPLETED` status, THE Platform SHALL:
+    - Overwrite the previous answers with the new values (no versioning of answers — only the AuditLog preserves the change history).
+    - Recalculate `RootCause` and `StressOMeter` based on the updated answers.
+    - Mark the existing Clinical Trichoscopy Report as outdated. THE Platform SHALL display an indicator on the report page informing staff that the report is outdated and should be regenerated.
+    - The report is NOT auto-regenerated — staff must explicitly trigger regeneration to produce a new PDF reflecting the updated answers.
 
 #### Failure Cases
 
