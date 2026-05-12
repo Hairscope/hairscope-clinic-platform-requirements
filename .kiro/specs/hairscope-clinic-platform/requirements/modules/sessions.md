@@ -22,9 +22,9 @@
 - **StressQuestionnaire**: A separate set of ~10 questions used to calculate the StressOMeter score. Applicable to `HAIR_ANALYSIS` sessions.
 - **RootCause**: Automatically determined cause derived from questionnaire answers via a defined formula. Specific to `HAIR_ANALYSIS` sessions.
 - **StressOMeter**: A calculated stress score derived from the StressQuestionnaire. Specific to `HAIR_ANALYSIS` sessions.
-- **Routine**: A recommended usage schedule for a Product included in a Session recommendation.
+- **Routine**: A recommended usage schedule for a catalog item included in a Session recommendation.
 - **CompareView**: Side-by-side display of two Sessions of the same type for the same Patient, matching images by position.
-- **Prescription**: A formal medication order included in the Report when Medical Products are recommended.
+- **Prescription**: A formal medication order included when MEDICATION catalog items are recommended. Generated as a separate PDF with digital signature.
 
 ---
 
@@ -58,7 +58,7 @@ Sessions are a sub-resource of Patients. The `patients` module permission covers
 |-----------|---------------|
 | `patients.view` | View all sessions for a patient |
 | `patients.create` | Create new sessions for a patient |
-| `patients.edit` | Edit session content (questionnaire, products, doctor's note) after completion |
+| `patients.edit` | Edit session content (questionnaire, recommendations, doctor's note) after completion |
 | `patients.delete` | Delete DRAFT sessions only |
 
 Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NOT have access to sessions in any Clinic (GI-8).

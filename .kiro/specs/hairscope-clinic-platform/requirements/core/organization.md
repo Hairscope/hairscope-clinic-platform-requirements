@@ -9,7 +9,7 @@
 - **Organization**: The top-level tenant. Owns one or more Clinics.
 - **Clinic**: A physical or logical treatment location within an Organization.
 - **ClinicProfile**: The full configuration record for a Clinic including branding, working hours, and contact details.
-- **OrganizationAdmin**: Staff with `org`-scoped access. Can manage staff and clinic details across all clinics. Cannot access clinical modules (Patients, Appointments, Leads, Billing, Products).
+- **OrganizationAdmin**: Staff with `org`-scoped access. Can manage staff and clinic details across all clinics. Cannot access clinical modules (Patients, Appointments, Billing, Catalog). May access Leads for assignment purposes.
 - **ClinicAdmin**: Staff with full `clinic`-scoped access within their assigned Clinic, including all modules.
 - **InterClinicTransfer**: Reassignment of a Staff member from one Clinic to another within the same Organization.
 - **ClinicWorkingHours**: Per-day operating schedule for a Clinic. Defines when the clinic is open. Used to derive patient-facing appointment slot availability.
