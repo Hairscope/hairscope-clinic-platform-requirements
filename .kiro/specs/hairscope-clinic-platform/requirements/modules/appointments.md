@@ -61,10 +61,11 @@
 1. THE Platform SHALL allow ClinicAdmins and OrganizationAdmins to configure ClinicWorkingHours per day of the week, with `startTime` and `endTime` per day.
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
 3. WHEN ClinicWorkingHours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
-4. THE Platform SHALL derive available AppointmentSlots from ClinicWorkingHours and the duration of the selected Service, excluding already-occupied slots.
-5. AppointmentSlot availability shown to patients is based on ClinicWorkingHours only - StaffAvailability is not factored into patient-facing slot display.
+4. THE Platform SHALL derive available AppointmentSlots from the **intersection** of ClinicWorkingHours AND StaffAvailability for the selected service. A slot is only available if the clinic is operating AND at least one qualified staff member for the selected service is available during that slot.
+5. THE Platform SHALL NOT display slots where the clinic is open but no qualified staff is available for the selected service.
 6. WHEN a Staff member or patient attempts to book a slot outside ClinicWorkingHours, THE Platform SHALL reject the booking.
-7. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
+7. WHEN a Staff member or patient attempts to book a slot where no qualified staff is available, THE Platform SHALL reject the booking.
+8. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
 
 #### Failure Cases
 
@@ -72,14 +73,17 @@
 |-----------|------------|
 | Booking slot outside ClinicWorkingHours | `SLOT_OUTSIDE_WORKING_HOURS` |
 | Booking on a closed day | `SLOT_OUTSIDE_WORKING_HOURS` |
+| No qualified staff available in the selected slot | `SLOT_NOT_AVAILABLE` |
 | `startTime` ≥ `endTime` for a day | `VALIDATION_ERROR` |
 | Clinic timezone not configured | `CLINIC_TIMEZONE_NOT_SET` |
 
 #### Correctness Properties
 
 - For any AppointmentSlot on day D: `slot.start ≥ ClinicWorkingHours[D].start` and `slot.end ≤ ClinicWorkingHours[D].end`.
-- For any two appointments A1 and A2 on the same day in the same Clinic: their time slots SHALL NOT overlap.
+- For any displayed AppointmentSlot S for service X: at least one Staff member in `X.qualifiedStaff` SHALL be available during S.
+- For any two appointments A1 and A2 assigned to the same Staff member on the same day: their time slots SHALL NOT overlap.
 - For any day D marked as closed: no AppointmentSlot SHALL be generated for D.
+- StaffAvailability details (names, schedules) SHALL NOT be exposed to patients — only the resulting available slots are shown.
 
 ---
 
@@ -260,7 +264,7 @@ The SmartScheduling engine SHALL apply the following rules in order, moving to t
 | 1 | **Continuity of care** | If the booker is an existing Patient in this Clinic AND that Patient has a previous completed appointment for the same Service AND the previously assigned Staff member is in the `qualifiedStaff` list for this Service AND is available in the requested slot → assign that Staff member. |
 | 2 | **Least busy qualified staff** | From the `qualifiedStaff` list for the Service, select the Staff member who is available in the requested slot AND has the fewest `SCHEDULED` or `CONFIRMED` appointments on that day. |
 | 3 | **Any available qualified staff** | From the `qualifiedStaff` list, select any Staff member who is available in the requested slot, regardless of load. |
-| 4 | **No assignment** | If no qualified Staff member is available in the requested slot, THE Platform SHALL still create the appointment with `assignedStaff = null` and flag it for manual assignment by a ClinicAdmin. |
+| 4 | **No assignment** | If no qualified Staff member is available in the requested slot (edge case — e.g., staff availability changed between slot display and booking), THE Platform SHALL still create the appointment with `assignedStaff = null` and flag it for manual assignment by a ClinicAdmin. |
 
 #### Acceptance Criteria
 

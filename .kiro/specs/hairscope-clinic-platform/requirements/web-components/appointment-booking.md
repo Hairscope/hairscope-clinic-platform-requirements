@@ -55,10 +55,10 @@
 
 #### Acceptance Criteria
 
-1. AFTER selecting a service, THE Component SHALL display a calendar showing available dates based on the Clinic's working hours.
+1. AFTER selecting a service, THE Component SHALL display a calendar showing available dates. A date is available if the clinic is operating AND at least one qualified staff member for the selected service is available on that day.
 2. THE Component SHALL visually distinguish: available dates, today's date, selected date, and unavailable/closed dates.
 3. THE Component SHALL NOT show dates in the past.
-4. WHEN a date is selected, THE Component SHALL display available time slots for that date, calculated from the Clinic's working hours and the selected service's duration, excluding already-booked slots.
+4. WHEN a date is selected, THE Component SHALL display available time slots for that date, calculated from the intersection of the Clinic's working hours, the selected service's duration, qualified staff availability, and already-booked slots.
 5. THE visitor SHALL select exactly one time slot to proceed.
 6. THE Component SHALL display dates and times in the Clinic's configured timezone.
 7. IF no slots are available on a selected date, THE Component SHALL display a "No available slots" message for that date.
