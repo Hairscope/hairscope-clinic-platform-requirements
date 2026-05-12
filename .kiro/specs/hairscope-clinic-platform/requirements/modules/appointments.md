@@ -91,10 +91,14 @@
 
 1. THE Platform SHALL allow Staff to book an appointment by selecting a Lead or Patient, a Service, and an available AppointmentSlot.
 2. Each appointment has exactly one Service.
-3. WHEN an appointment is booked, THE Platform SHALL set the initial status to `SCHEDULED`.
-4. WHEN an appointment is booked, THE Platform SHALL send an email notification to the Lead's or Patient's email address.
-5. THE Platform SHALL prevent double-booking of the same AppointmentSlot for the same Clinic.
-6. WHEN an appointment is booked, THE Platform SHALL emit `AppointmentBooked` and record the action in the AuditLog.
+3. Each appointment record SHALL store both `leadId` (nullable) and `patientId` (nullable). `leadId` is set when the appointment is booked for a Lead. `patientId` is set when booked for a Patient.
+4. WHEN a Lead is converted to a Patient (LM-10) and that Lead has active appointments (`SCHEDULED` or `CONFIRMED`), THE Platform SHALL update those appointments to also set `patientId` to the newly created Patient's ID. The `leadId` remains unchanged for reference.
+5. WHEN an appointment with a `patientId` transitions to `CONFIRMED` status, THE Platform SHALL automatically create a `DRAFT` Session for that Patient (if one does not already exist for the same `sessionType` in that Clinic).
+6. WHEN an appointment is booked, THE Platform SHALL set the initial status to `SCHEDULED`.
+7. WHEN an appointment is booked, THE Platform SHALL send an email notification to the Lead's or Patient's email address.
+8. THE Platform SHALL prevent double-booking of the same AppointmentSlot for the same Clinic.
+9. WHEN an appointment is booked, THE Platform SHALL emit `AppointmentBooked` and record the action in the AuditLog.
+10. THE Platform SHALL support walk-in appointments: Staff can create an appointment directly from the calendar page without prior booking, setting the status immediately to `CONFIRMED`.
 
 #### Failure Cases
 
@@ -167,8 +171,7 @@
    - `CONFIRMED → CANCELLED`
    - `CONFIRMED → NO_SHOW`
 2. WHEN an appointment's status is changed, THE Platform SHALL record the change in the AuditLog.
-3. WHEN an appointment transitions to `COMPLETED`, THE Platform SHALL emit `AppointmentCompleted`.
-4. IF a Staff member attempts an invalid status transition, THE Platform SHALL reject the change.
+3. IF a Staff member attempts an invalid status transition, THE Platform SHALL reject the change.
 
 #### Failure Cases
 
@@ -280,3 +283,47 @@ The SmartScheduling engine SHALL apply the following rules in order, moving to t
 - `assignedStaffId` is never returned in any patient-facing or web-component-facing GraphQL query.
 - Rule priority is deterministic - for any given appointment, the same input state SHALL always produce the same assignment result.
 - An appointment with `assignedStaff = null` SHALL be bookable - the slot is reserved even without an assignment.
+
+
+---
+
+### APT-10: Appointment Completion and Next Visit Scheduling
+
+**User Story:** As a Staff member, I want to mark an appointment as completed and optionally schedule the patient's next visit so that continuity of care is maintained.
+
+#### Acceptance Criteria
+
+1. WHEN a Staff member marks an appointment as `COMPLETED`, THE Platform SHALL present an option to schedule a next visit appointment for the same Patient.
+2. IF the Staff member chooses to schedule a next visit, THE Platform SHALL display the service selection and slot booking flow (same as APT-3) pre-populated with the same service and patient.
+3. THE next visit appointment SHALL be a new independent appointment record — not linked to the completed one.
+4. THE Platform SHALL allow the Staff member to skip next visit scheduling and simply complete the appointment without booking a follow-up.
+5. Appointment completion is independent of session completion — an appointment can be completed without a session, and a session can be completed without the appointment being marked complete.
+
+#### Correctness Properties
+
+- Completing an appointment SHALL NOT automatically complete any linked session.
+- Completing a session SHALL NOT automatically complete any linked appointment.
+- The next visit appointment (if created) SHALL follow all standard booking rules (slot availability, SmartScheduling, etc.).
+
+---
+
+### APT-11: Appointment Cancellation Cascade
+
+**User Story:** As a Staff member, I want draft sessions to be automatically cleaned up when their linked appointment is cancelled so that orphaned data doesn't accumulate.
+
+#### Acceptance Criteria
+
+1. WHEN an appointment is cancelled and it has a linked `DRAFT` Session, THE Platform SHALL automatically delete that DRAFT Session and emit `SessionDeleted`.
+2. IF the linked Session is in `SAVED` or `COMPLETED` status, THE Platform SHALL NOT delete it — only DRAFT sessions are affected by appointment cancellation.
+3. THE Platform SHALL record the cascade deletion in the AuditLog.
+
+#### Correctness Properties
+
+- For any cancelled appointment A with a linked DRAFT Session S: S SHALL be deleted.
+- For any cancelled appointment A with a linked SAVED or COMPLETED Session S: S SHALL remain unchanged.
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

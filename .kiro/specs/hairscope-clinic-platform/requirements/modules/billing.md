@@ -36,9 +36,10 @@
 3. THE Draft Invoice SHALL include line items for all catalog items recommended in the Session with their prices.
 4. IF the Session has no linked appointment, THE Draft Invoice SHALL contain only the recommended catalog items (no service line item unless manually added by Staff).
 5. THE Platform SHALL allow Staff with billing edit permission to manually add SERVICE catalog items to a Draft Invoice (e.g., services provided during the session that were not pre-booked).
-6. THE Platform SHALL set the initial status to `DRAFT`.
-7. WHEN an Invoice is generated, THE Platform SHALL emit `InvoiceGenerated` and record the generation in the AuditLog.
-8. Each Invoice is associated with exactly one Session and one Patient.
+6. WHILE the Invoice is in `DRAFT` status, THE Platform SHALL auto-sync line items with session recommendations: if recommendations are added, edited, or removed (including strike-through edits on Treatment Plan/Prescription), the corresponding auto-generated line items on the Invoice SHALL update automatically. Manual line items added by Staff are never auto-removed.
+7. THE Platform SHALL set the initial status to `DRAFT`.
+8. WHEN an Invoice is generated, THE Platform SHALL emit `InvoiceGenerated` and record the generation in the AuditLog.
+9. Each Invoice is associated with exactly one Session and one Patient.
 
 #### Failure Cases
 
@@ -57,26 +58,33 @@
 
 ---
 
-### BIL-2: Invoice Review, Miscellaneous Charges, and Discounts
+### BIL-2: Invoice Review, Manual Line Items, Miscellaneous Charges, and Discounts
 
-**User Story:** As a Staff member with billing edit permission, I want to review, add miscellaneous charges, and apply discounts to an invoice before finalizing it so that all costs and adjustments are accurately captured.
+**User Story:** As a Staff member with billing edit permission, I want to review, add manual line items, add miscellaneous charges, and apply discounts to an invoice before finalizing it so that all costs and adjustments are accurately captured.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL allow Staff with billing edit permission to add MiscCharges to a `DRAFT` Invoice.
-2. WHEN a MiscCharge is added, `description` and `amount` are required.
-3. THE Platform SHALL allow Staff to edit or remove MiscCharges from a `DRAFT` Invoice.
-4. THE Platform SHALL allow Staff with billing edit permission to add one or more Discounts to a `DRAFT` Invoice.
-5. WHEN a Discount is added, THE Platform SHALL require a `description` and either a `fixedAmount` or a `percentage` (not both).
-6. THE Platform SHALL allow Staff to edit or remove Discounts from a `DRAFT` Invoice.
-7. WHEN MiscCharges or Discounts are added, edited, or removed, THE Platform SHALL recalculate `subtotal`, `discountAmount`, `taxableAmount`, `tax`, and `total`.
-8. THE Platform SHALL allow Staff to configure a tax rate per Clinic, applied to the TaxableAmount when calculating the Total.
-9. WHEN a MiscCharge or Discount is added, edited, or removed, THE Platform SHALL record the change in the AuditLog.
+1. THE Platform SHALL allow Staff with billing edit permission to add manual line items to a `DRAFT` Invoice.
+2. WHEN a manual line item is added, THE Platform SHALL require: `name`, `quantity`, `unitPrice`. Total for the line item is calculated as `quantity × unitPrice`.
+3. THE Platform SHALL allow Staff to edit or remove manual line items from a `DRAFT` Invoice.
+4. THE Platform SHALL allow Staff with billing edit permission to add MiscCharges to a `DRAFT` Invoice.
+5. WHEN a MiscCharge is added, `description` and `amount` are required.
+6. THE Platform SHALL allow Staff to edit or remove MiscCharges from a `DRAFT` Invoice.
+7. THE Platform SHALL allow Staff with billing edit permission to add one or more Discounts to a `DRAFT` Invoice.
+8. WHEN a Discount is added, THE Platform SHALL require a `description` and either a `fixedAmount` or a `percentage` (not both).
+9. THE Platform SHALL allow Staff to edit or remove Discounts from a `DRAFT` Invoice.
+10. WHEN line items, MiscCharges, or Discounts are added, edited, or removed, THE Platform SHALL recalculate `subtotal`, `discountAmount`, `taxableAmount`, `tax`, and `total`.
+11. THE Platform SHALL allow Staff to configure a tax rate per Clinic, applied to the TaxableAmount when calculating the Total.
+12. WHEN any line item, MiscCharge, or Discount is added, edited, or removed, THE Platform SHALL record the change in the AuditLog.
 
 #### Failure Cases
 
 | Condition | Error Code |
 |-----------|------------|
+| Missing `name` on manual line item | `VALIDATION_ERROR` (field: `name`) |
+| Missing `quantity` on manual line item | `VALIDATION_ERROR` (field: `quantity`) |
+| `quantity` ≤ 0 on manual line item | `VALIDATION_ERROR` (field: `quantity`) |
+| Missing `unitPrice` on manual line item | `VALIDATION_ERROR` (field: `unitPrice`) |
 | Missing `description` on MiscCharge or Discount | `VALIDATION_ERROR` (field: `description`) |
 | Missing `amount` on MiscCharge | `VALIDATION_ERROR` (field: `amount`) |
 | Both `fixedAmount` and `percentage` provided on Discount | `VALIDATION_ERROR` |
@@ -86,7 +94,7 @@
 
 #### Correctness Properties
 
-- For any Invoice I: `I.subtotal = sum(all line item amounts on I excluding discounts)`.
+- For any Invoice I: `I.subtotal = sum(all auto-generated line items) + sum(all manual line items where each = quantity × unitPrice) + sum(all MiscCharge amounts)`.
 - For any Invoice I: `I.discountAmount = sum(all Discount amounts on I)`.
 - For any Invoice I: `I.taxableAmount = I.subtotal - I.discountAmount`.
 - For any Invoice I with tax rate T: `I.total = I.taxableAmount × (1 + T)`.
@@ -221,3 +229,10 @@
 - After a partial refund: `I.status = PARTIALLY_REFUNDED` and `I.refundedAmount = sum(all partial refund amounts)`.
 - Refunded amounts SHALL be subtracted from the Clinic's billing analytics totals for the relevant date range.
 - The platform SHALL NOT store any payment transaction records, card details, or bank account information related to refunds.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

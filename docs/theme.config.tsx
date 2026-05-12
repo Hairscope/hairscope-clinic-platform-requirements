@@ -7,8 +7,22 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/Hairscope/hairscope-clinic-platform-requirements'
   },
   docsRepositoryBase: 'https://github.com/Hairscope/hairscope-clinic-platform-requirements/tree/main/docs',
+  head: (
+    <>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="description" content="Hairscope Documentation — Platform guides, features, and resources for clinics and teams." />
+      <meta name="og:title" content="Hairscope Documentation" />
+      <meta name="og:description" content="Platform guides, features, and resources for clinics and teams." />
+      <link rel="icon" href="/logo.png" />
+    </>
+  ),
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s – Hairscope Docs'
+    }
+  },
   footer: {
-    content: <span>Hairscope Clinic Platform — Requirements &amp; Design Documentation</span>
+    content: <span>© {new Date().getFullYear()} Hairscope. All rights reserved.</span>
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,

@@ -15,7 +15,7 @@
 | GI-5 | Every Clinic has at least one active ClinicAdmin at all times. | Deactivation + deletion guards |
 | GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation maintained). The platform assigns a `globalPatientId` (UUID) to each unique physical person at creation time via email or phone lookup. All Patient records for the same person across any Clinic or Organization share the same `globalPatientId`. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the **Hairscope Care App** only. Per-Clinic uniqueness on email and phone still applies. | DB unique constraint (per clinic) + global identity lookup on create |
 | GI-7 | A Patient may have at most one active Session (status: `Draft`) per `sessionType` per Clinic at any point in time. Only `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. | Session create guard + progress graph query filter |
-| GI-8 | The OrganizationAdmin role cannot be granted permissions to `patients`, `appointments`, `leads`, `billing`, or `catalog` modules under any configuration. | Permission engine |
+| GI-8 | The OrganizationAdmin role cannot be granted permissions to `patients`, `appointments`, `billing`, or `catalog` modules under any configuration. OrganizationAdmins MAY access the `leads` module for assignment and unassigned lead management purposes. | Permission engine |
 | GI-9 | A Staff member's effective permissions are the union of all permissions granted by all their assigned roles. | Permission engine |
 | GI-10 | Deny is the default. If no role grants a permission, the action is denied. | Permission engine |
 

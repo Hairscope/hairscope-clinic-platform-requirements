@@ -90,8 +90,9 @@ Default roles are provided by the platform. Some are **system roles** - they can
 1. **Deny by default** - If no role assigned to a Staff member explicitly grants a permission, the action is denied.
 2. **Union of roles** - A Staff member holding multiple roles has the union of all permissions granted by those roles.
 3. **Immediate propagation** - When a role's permissions are updated, the change takes effect on the next request by any Staff member holding that role.
-4. **Org scope hard limit** - The OrganizationAdmin role cannot be granted permissions to Patients, Appointments, Leads, Billing, or Catalog modules under any configuration.
+4. **Org scope hard limit** - The OrganizationAdmin role cannot be granted permissions to Patients, Appointments, Billing, or Catalog modules under any configuration. OrganizationAdmins MAY access the Leads module for assignment and unassigned lead management purposes.
 5. **Plan gate** - Even if a role grants a permission, if the Organization's active plan does not include the feature, the action is denied.
+6. **Dual-role resolution** - When a Staff member holds both OrganizationAdmin and ClinicAdmin roles (e.g., the self-registering user), the highest permission level applies. ClinicAdmin permissions override the OrganizationAdmin clinical module restriction (Rule 4) when the Staff member is operating within their assigned Clinic. The OrgAdmin restriction only applies when accessing other Clinics' data.
 
 ### 4.2 Permission Matrix
 
@@ -196,19 +197,27 @@ Every state-changing operation on the following entities must produce an audit l
 
 - Staff (create, update, deactivate, reactivate, delete, transfer)
 - Roles and Permissions (create, update, delete)
-- Clinic Profile (update)
+- Organization (create, update)
+- Clinic (create, update, deactivate, reactivate)
 - Patient (create, update, GDPR erasure)
 - Session (create, save, complete, delete)
 - Trichoscopy annotations (edit, save)
 - Medical Documents (upload, delete)
-- Leads (create, update, convert, delete)
+- Digital Signatures (upload, delete)
+- Leads (create, update, convert)
 - Appointments (create, reschedule, cancel, status change)
 - Catalog Items (create, update, delete)
-- Invoices (generate, add charge, finalize)
-- Reports (generate, regenerate, share)
-- Authentication (login, logout, failed login, invite sent, invite used)
+- Treatment Kits (create, update, delete)
+- Invoices (generate, add line item, edit line item, remove line item, add charge, edit charge, remove charge, finalize, refund_full, refund_partial)
+- Clinical Reports (generate, regenerate, share, download)
+- Treatment Plans (generate, regenerate, share, download, edit recommendation)
+- Prescriptions (generate, regenerate, share, download, edit recommendation)
+- Authentication (login, logout, failed login, password reset requested, password reset completed, invite sent, invite used, invite expired, invite cancelled)
 - Data transfers (staff deletion data transfer)
 - Plan changes (received from external system)
+- Webhook Sources (create, update, delete)
+- Communication Policy (template update, rule update, consent update, branding update)
+- Import/Export (import initiated, import completed, export initiated, export completed)
 
 ### 8.2 Audit Entry Structure
 
@@ -304,7 +313,37 @@ Each audit log entry must contain:
 - Erasure is recorded in the audit log with the actor and timestamp.
 - Erasure cannot be undone.
 
-### 10.3 Staff Deletion and Responsibility Reassignment
+### 10.3 Data Import and Export
+
+> **Status: Deferred** — Import/Export functionality will be available in later versions. These rules define the intended behavior for when it is implemented.
+
+#### Import Rules
+
+1. THE Platform SHALL support bulk data import from external systems via CSV and Excel (`.xlsx`) file formats.
+2. Import SHALL be available per module: Patients, Sessions, Leads, Appointments, Catalog Items, Invoices.
+3. THE Platform SHALL validate imported data against the same rules as manual creation (required fields, uniqueness constraints, format validation).
+4. THE Platform SHALL reject invalid rows and report errors per row without failing the entire import.
+5. Import operations SHALL be queued in the backend and processed asynchronously. The initiating user SHALL receive a notification when the import is complete.
+6. THE Platform SHALL record each import operation in the AuditLog including: actor, module, row count (success/failed), and timestamp.
+
+#### Export Rules
+
+1. THE Platform SHALL support data export in CSV and Excel (`.xlsx`) formats.
+2. Export SHALL be available per module: Patients, Sessions, Leads, Appointments, Catalog Items, Invoices, Audit Logs.
+3. OrganizationAdmins SHALL have a "full organization export" capability that exports all data across all Clinics in their Organization.
+4. ClinicAdmins SHALL be able to export data scoped to their own Clinic only.
+5. Export operations SHALL be queued in the backend and processed asynchronously. The initiating user SHALL receive a notification when the export is ready for download.
+6. THE Platform SHALL record each export operation in the AuditLog including: actor, module, scope, and timestamp.
+7. Export files SHALL be available for download for 7 days after generation, then automatically deleted.
+
+#### Import/Export Permissions
+
+1. THE Platform SHALL define an `import_export` permission that controls who can perform import and export operations.
+2. OrganizationAdmins and ClinicAdmins SHALL have this permission by default within their respective scopes.
+3. THE permission MAY be granted to other roles by a ClinicAdmin.
+4. OrganizationAdmin scope: all Clinics in the Organization. ClinicAdmin scope: their own Clinic only.
+
+### 10.4 Staff Deletion and Responsibility Reassignment
 
 #### Principle
 

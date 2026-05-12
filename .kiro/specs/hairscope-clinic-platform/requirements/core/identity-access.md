@@ -129,12 +129,13 @@ The invite flow has two distinct phases with different actors:
 
 #### Acceptance Criteria
 
-1. WHEN an Admin deactivates a Staff member, THE Platform SHALL set status to `Inactive` and immediately invalidate all active JWTs for that Staff member.
-2. WHEN a Staff member is deactivated, THE Platform SHALL preserve all records associated with that Staff member unchanged.
-3. THE Platform SHALL NOT allow deactivation of the last remaining active ClinicAdmin in a Clinic.
-4. THE Platform SHALL NOT allow deactivation of the last remaining active OrganizationAdmin in an Organization.
-5. THE Platform SHALL allow reactivation of a deactivated Staff member, restoring authentication access.
-6. WHEN deactivated or reactivated, THE Platform SHALL record the action in the AuditLog.
+1. WHEN an Admin deactivates a Staff member, THE Platform SHALL require reassignment of all `assignedTo` records (sessions, leads, appointments) to other active Staff members before deactivation proceeds (same pattern as staff deletion IAM-5).
+2. WHEN reassignment is complete, THE Platform SHALL set status to `Inactive` and immediately invalidate all active JWTs for that Staff member.
+3. WHEN a Staff member is deactivated, THE Platform SHALL preserve all records associated with that Staff member unchanged (attribution fields remain intact).
+4. THE Platform SHALL NOT allow deactivation of the last remaining active ClinicAdmin in a Clinic.
+5. THE Platform SHALL NOT allow deactivation of the last remaining active OrganizationAdmin in an Organization.
+6. THE Platform SHALL allow reactivation of a deactivated Staff member, restoring authentication access. Reactivation does NOT restore previous record assignments — those remain with the reassigned recipients.
+7. WHEN deactivated or reactivated, THE Platform SHALL record the action in the AuditLog.
 
 #### Failure Cases
 
@@ -220,7 +221,7 @@ The invite flow has two distinct phases with different actors:
 
 - `OrganizationAdmin` and `ClinicAdmin` roles SHALL exist in every Clinic at all times and SHALL NOT be deletable by any operation.
 - For any Staff member S holding roles R1 and R2: `effective_permissions(S) = permissions(R1) ∪ permissions(R2)`.
-- For any Staff member S holding the `OrganizationAdmin` role, S SHALL NOT have permissions to `patients`, `appointments`, `leads`, `billing`, or `catalog` modules regardless of other roles.
+- For any Staff member S holding the `OrganizationAdmin` role, S SHALL NOT have permissions to `patients`, `appointments`, `billing`, or `catalog` modules regardless of other roles. S MAY access the `leads` module for assignment purposes.
 - For every `(module, action)` pair not granted by any role assigned to S, every request by S for that action SHALL be denied.
 
 ---

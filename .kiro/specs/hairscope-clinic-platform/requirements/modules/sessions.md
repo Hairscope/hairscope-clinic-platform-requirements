@@ -9,7 +9,7 @@
 
 ## Glossary
 
-- **Session**: A clinical treatment session for a Patient. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
+- **Session**: A trichoscopy analysis session for a Patient. Represents the image capture and AI analysis workflow — NOT the entire clinical visit. A patient's clinical visit may include additional procedures (e.g., PRP treatment) after the trichoscopy session is completed. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
 - **SessionType**: The type of treatment session. Determines the image capture requirements, questionnaire categories, AI analysis models, and report structure. Currently: `HAIR_ANALYSIS`. Future types may include `SKIN_TREATMENT`, `HAIR_REMOVAL`, etc.
 - **SessionStatus**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` - see `shared/enums.md`.
 - **GlobalImage**: A standard photograph taken from a predefined position. Used for overall assessment (e.g., hair loss stage).
@@ -152,7 +152,7 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 5. THE Platform SHALL allow Staff to download the Clinical Trichoscopy Report as a PDF.
 5. THE Platform SHALL allow Staff to share the Report with the Patient via email.
 6. THE Platform SHALL allow Staff to share the Report with the Patient via WhatsApp.
-7. THE Platform SHALL generate a shareable link to the Report accessible within the platform.
+7. THE Platform SHALL generate a shareable link to the Report accessible without platform authentication. Shareable links SHALL remain valid for the same duration as patient data retention (indefinite during active subscription; 7 years post-cancellation). Links are invalidated if the Patient undergoes GDPR erasure.
 8. THE Platform SHALL allow Staff to compare any two Sessions of the same `sessionType` for the same Patient in a CompareView.
 9. WHEN comparing images in the CompareView, THE Platform SHALL only allow comparison of images from the same position.
 
@@ -335,3 +335,10 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 - For any Clinic C and any Hair Analysis category K: `count(active questions for C in K) = 5` at all times.
 - For any two Sessions with identical questionnaire answers, the calculated `RootCause` SHALL be identical.
 - For any two Sessions with identical StressQuestionnaire answers, the calculated `StressOMeter` score SHALL be identical.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.
