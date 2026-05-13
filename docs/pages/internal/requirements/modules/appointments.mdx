@@ -61,10 +61,11 @@
 1. THE Platform SHALL allow ClinicAdmins and OrganizationAdmins to configure ClinicWorkingHours per day of the week, with `startTime` and `endTime` per day.
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
 3. WHEN ClinicWorkingHours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
-4. THE Platform SHALL derive available AppointmentSlots from ClinicWorkingHours and the duration of the selected Service, excluding already-occupied slots.
-5. AppointmentSlot availability shown to patients is based on ClinicWorkingHours only - StaffAvailability is not factored into patient-facing slot display.
+4. THE Platform SHALL derive available AppointmentSlots from the **intersection** of ClinicWorkingHours AND StaffAvailability for the selected service. A slot is only available if the clinic is operating AND at least one qualified staff member for the selected service is available during that slot.
+5. THE Platform SHALL NOT display slots where the clinic is open but no qualified staff is available for the selected service.
 6. WHEN a Staff member or patient attempts to book a slot outside ClinicWorkingHours, THE Platform SHALL reject the booking.
-7. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
+7. WHEN a Staff member or patient attempts to book a slot where no qualified staff is available, THE Platform SHALL reject the booking.
+8. IF a Clinic has not configured a timezone, THE Platform SHALL reject any attempt to view or book appointment slots and return a `CLINIC_TIMEZONE_NOT_SET` error.
 
 #### Failure Cases
 
@@ -72,14 +73,17 @@
 |-----------|------------|
 | Booking slot outside ClinicWorkingHours | `SLOT_OUTSIDE_WORKING_HOURS` |
 | Booking on a closed day | `SLOT_OUTSIDE_WORKING_HOURS` |
+| No qualified staff available in the selected slot | `SLOT_NOT_AVAILABLE` |
 | `startTime` ≥ `endTime` for a day | `VALIDATION_ERROR` |
 | Clinic timezone not configured | `CLINIC_TIMEZONE_NOT_SET` |
 
 #### Correctness Properties
 
 - For any AppointmentSlot on day D: `slot.start ≥ ClinicWorkingHours[D].start` and `slot.end ≤ ClinicWorkingHours[D].end`.
-- For any two appointments A1 and A2 on the same day in the same Clinic: their time slots SHALL NOT overlap.
+- For any displayed AppointmentSlot S for service X: at least one Staff member in `X.qualifiedStaff` SHALL be available during S.
+- For any two appointments A1 and A2 assigned to the same Staff member on the same day: their time slots SHALL NOT overlap.
 - For any day D marked as closed: no AppointmentSlot SHALL be generated for D.
+- StaffAvailability details (names, schedules) SHALL NOT be exposed to patients — only the resulting available slots are shown.
 
 ---
 
@@ -91,10 +95,14 @@
 
 1. THE Platform SHALL allow Staff to book an appointment by selecting a Lead or Patient, a Service, and an available AppointmentSlot.
 2. Each appointment has exactly one Service.
-3. WHEN an appointment is booked, THE Platform SHALL set the initial status to `SCHEDULED`.
-4. WHEN an appointment is booked, THE Platform SHALL send an email notification to the Lead's or Patient's email address.
-5. THE Platform SHALL prevent double-booking of the same AppointmentSlot for the same Clinic.
-6. WHEN an appointment is booked, THE Platform SHALL emit `AppointmentBooked` and record the action in the AuditLog.
+3. Each appointment record SHALL store both `leadId` (nullable) and `patientId` (nullable). `leadId` is set when the appointment is booked for a Lead. `patientId` is set when booked for a Patient.
+4. WHEN a Lead is converted to a Patient (LM-10) and that Lead has active appointments (`SCHEDULED` or `CONFIRMED`), THE Platform SHALL update those appointments to also set `patientId` to the newly created Patient's ID. The `leadId` remains unchanged for reference.
+5. WHEN an appointment with a `patientId` transitions to `CONFIRMED` status, THE Platform SHALL automatically create a `DRAFT` Session for that Patient (if one does not already exist for the same `sessionType` in that Clinic).
+6. WHEN an appointment is booked, THE Platform SHALL set the initial status to `SCHEDULED`.
+7. WHEN an appointment is booked, THE Platform SHALL send an email notification to the Lead's or Patient's email address.
+8. THE Platform SHALL prevent double-booking of the same AppointmentSlot for the same Clinic.
+9. WHEN an appointment is booked, THE Platform SHALL emit `AppointmentBooked` and record the action in the AuditLog.
+10. THE Platform SHALL support walk-in appointments: Staff can create an appointment directly from the calendar page without prior booking, setting the status immediately to `CONFIRMED`.
 
 #### Failure Cases
 
@@ -160,15 +168,15 @@
 #### Acceptance Criteria
 
 1. THE Platform SHALL support the following valid status transitions:
-   - `SCHEDULED → CONFIRMED`
+   - `SCHEDULED → CONFIRMED` (by Staff manually, or by Patient via confirmation link/web component)
    - `SCHEDULED → CANCELLED`
    - `SCHEDULED → NO_SHOW`
    - `CONFIRMED → COMPLETED`
    - `CONFIRMED → CANCELLED`
    - `CONFIRMED → NO_SHOW`
+2. THE Platform SHALL allow both Staff and Patients/Leads to trigger `SCHEDULED → CONFIRMED`. Staff may confirm after calling the patient; patients may confirm via a link in their booking confirmation email or via the web component.
 2. WHEN an appointment's status is changed, THE Platform SHALL record the change in the AuditLog.
-3. WHEN an appointment transitions to `COMPLETED`, THE Platform SHALL emit `AppointmentCompleted`.
-4. IF a Staff member attempts an invalid status transition, THE Platform SHALL reject the change.
+3. IF a Staff member attempts an invalid status transition, THE Platform SHALL reject the change.
 
 #### Failure Cases
 
@@ -256,7 +264,7 @@ The SmartScheduling engine SHALL apply the following rules in order, moving to t
 | 1 | **Continuity of care** | If the booker is an existing Patient in this Clinic AND that Patient has a previous completed appointment for the same Service AND the previously assigned Staff member is in the `qualifiedStaff` list for this Service AND is available in the requested slot → assign that Staff member. |
 | 2 | **Least busy qualified staff** | From the `qualifiedStaff` list for the Service, select the Staff member who is available in the requested slot AND has the fewest `SCHEDULED` or `CONFIRMED` appointments on that day. |
 | 3 | **Any available qualified staff** | From the `qualifiedStaff` list, select any Staff member who is available in the requested slot, regardless of load. |
-| 4 | **No assignment** | If no qualified Staff member is available in the requested slot, THE Platform SHALL still create the appointment with `assignedStaff = null` and flag it for manual assignment by a ClinicAdmin. |
+| 4 | **No assignment** | If no qualified Staff member is available in the requested slot (edge case — e.g., staff availability changed between slot display and booking), THE Platform SHALL still create the appointment with `assignedStaff = null` and flag it for manual assignment by a ClinicAdmin. |
 
 #### Acceptance Criteria
 
@@ -280,3 +288,47 @@ The SmartScheduling engine SHALL apply the following rules in order, moving to t
 - `assignedStaffId` is never returned in any patient-facing or web-component-facing GraphQL query.
 - Rule priority is deterministic - for any given appointment, the same input state SHALL always produce the same assignment result.
 - An appointment with `assignedStaff = null` SHALL be bookable - the slot is reserved even without an assignment.
+
+
+---
+
+### APT-10: Appointment Completion and Next Visit Scheduling
+
+**User Story:** As a Staff member, I want to mark an appointment as completed and optionally schedule the patient's next visit so that continuity of care is maintained.
+
+#### Acceptance Criteria
+
+1. WHEN a Staff member marks an appointment as `COMPLETED`, THE Platform SHALL present an option to schedule a next visit appointment for the same Patient.
+2. IF the Staff member chooses to schedule a next visit, THE Platform SHALL display the service selection and slot booking flow (same as APT-3) pre-populated with the same service and patient.
+3. THE next visit appointment SHALL be a new independent appointment record — not linked to the completed one.
+4. THE Platform SHALL allow the Staff member to skip next visit scheduling and simply complete the appointment without booking a follow-up.
+5. Appointment completion is independent of session completion — an appointment can be completed without a session, and a session can be completed without the appointment being marked complete.
+
+#### Correctness Properties
+
+- Completing an appointment SHALL NOT automatically complete any linked session.
+- Completing a session SHALL NOT automatically complete any linked appointment.
+- The next visit appointment (if created) SHALL follow all standard booking rules (slot availability, SmartScheduling, etc.).
+
+---
+
+### APT-11: Appointment Cancellation Cascade
+
+**User Story:** As a Staff member, I want draft sessions to be automatically cleaned up when their linked appointment is cancelled so that orphaned data doesn't accumulate.
+
+#### Acceptance Criteria
+
+1. WHEN an appointment is cancelled and it has a linked `DRAFT` Session, THE Platform SHALL automatically delete that DRAFT Session and emit `SessionDeleted`.
+2. IF the linked Session is in `SAVED` or `COMPLETED` status, THE Platform SHALL NOT delete it — only DRAFT sessions are affected by appointment cancellation.
+3. THE Platform SHALL record the cascade deletion in the AuditLog.
+
+#### Correctness Properties
+
+- For any cancelled appointment A with a linked DRAFT Session S: S SHALL be deleted.
+- For any cancelled appointment A with a linked SAVED or COMPLETED Session S: S SHALL remain unchanged.
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

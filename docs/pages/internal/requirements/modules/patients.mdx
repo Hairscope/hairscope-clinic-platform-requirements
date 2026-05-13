@@ -181,3 +181,10 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 - After erasure, no query SHALL return the original personal identifiers for the erased Patient.
 - Clinical data (sessions, images, reports) SHALL remain intact after erasure.
 - Erasure of Patient P in Clinic C SHALL NOT affect any Patient record in Clinic C' (C ≠ C') even if they share the same `globalPatientId`.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

@@ -1,5 +1,6 @@
 import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
+import versions from './versions.json'
 
 const config: DocsThemeConfig = {
   logo: <img src="/logo.png" alt="Hairscope" style={{ height: '28px' }} />,
@@ -14,13 +15,9 @@ const config: DocsThemeConfig = {
       <meta name="og:title" content="Hairscope Documentation" />
       <meta name="og:description" content="Platform guides, features, and resources for clinics and teams." />
       <link rel="icon" href="/logo.png" />
+      <title>Hairscope Docs</title>
     </>
   ),
-  useNextSeoProps() {
-    return {
-      titleTemplate: '%s – Hairscope Docs'
-    }
-  },
   footer: {
     content: <span>© {new Date().getFullYear()} Hairscope. All rights reserved.</span>
   },
@@ -36,28 +33,34 @@ const config: DocsThemeConfig = {
     next: true
   },
   navbar: {
-    extraContent: () => {
-      return (
-        <select
-          onChange={(e) => {
-            if (e.target.value !== 'current') {
-              window.location.href = `/versions/${e.target.value}`
-            }
-          }}
-          defaultValue="current"
-          style={{
-            padding: '4px 8px',
-            borderRadius: '6px',
-            border: '1px solid var(--nextra-border-color)',
-            background: 'transparent',
-            fontSize: '14px',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="current">v1.0.0 (current)</option>
-        </select>
-      )
-    }
+    extraContent: (
+      <select
+        onChange={(e) => {
+          if (e.target.value !== 'current') {
+            const tag = e.target.value
+            window.open(
+              `https://github.com/Hairscope/hairscope-clinic-platform-requirements/tree/${tag}`,
+              '_blank'
+            )
+          }
+        }}
+        defaultValue="current"
+        style={{
+          padding: '4px 8px',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb',
+          background: 'transparent',
+          fontSize: '13px',
+          cursor: 'pointer'
+        }}
+      >
+        {versions.versions.map((v) => (
+          <option key={v.version} value={v.status === 'current' ? 'current' : v.tag}>
+            v{v.version} {v.status === 'current' ? '(current)' : `(${v.date})`}
+          </option>
+        ))}
+      </select>
+    )
   }
 }
 

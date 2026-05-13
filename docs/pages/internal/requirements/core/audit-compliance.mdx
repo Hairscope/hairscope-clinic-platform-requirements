@@ -47,21 +47,27 @@ Every state-changing operation on the following entities MUST produce an AuditLo
 | Staff | create, update, deactivate, reactivate, delete, inter-clinic transfer |
 | Role | create, update, delete |
 | Permission | update |
-| ClinicProfile | update |
-| Organization | create |
-| Clinic | create |
+| Organization | create, update |
+| Clinic | create, update, deactivate, reactivate |
 | Patient | create, update, gdpr_erasure |
 | Session | create, save, complete, delete |
 | TrichoscopyImage annotations | edit_save |
 | MedicalDocument | upload, delete |
-| Lead | create, update, convert, delete |
+| Lead | create, update, convert |
 | Appointment | create, reschedule, cancel, status_change |
 | Catalog Item | create, update, delete |
-| Invoice | generate, add_charge, edit_charge, remove_charge, finalize |
-| Report | generate, regenerate, share |
-| Authentication | login_success, login_failure, logout, invite_sent, invite_used, invite_expired |
+| Treatment Kit | create, update, delete |
+| Invoice | generate, add_line_item, edit_line_item, remove_line_item, add_charge, edit_charge, remove_charge, finalize, refund_full, refund_partial |
+| Treatment Plan | generate, regenerate, share, download, edit_recommendation |
+| Prescription | generate, regenerate, share, download, edit_recommendation |
+| Clinical Report | generate, regenerate, share, download |
+| Digital Signature | upload, delete |
+| Authentication | login_success, login_failure, logout, password_reset_requested, password_reset_completed, invite_sent, invite_used, invite_expired, invite_cancelled |
 | DataTransfer | staff_deletion_transfer |
 | Plan | plan_updated (received from external system) |
+| WebhookSource | create, update, delete |
+| Communication Policy | template_update, rule_update, consent_update, branding_update |
+| Import/Export | import_initiated, import_completed, export_initiated, export_completed |
 
 ---
 
