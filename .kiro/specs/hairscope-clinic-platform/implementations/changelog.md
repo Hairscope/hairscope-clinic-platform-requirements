@@ -1,0 +1,26 @@
+# Implementation Documents — Changelog
+
+All notable changes to the Hairscope Clinic Platform implementation documents are documented here. Latest entries are at the top.
+
+---
+
+## v1.0.0 — 2026-05-14
+
+### Initial Release
+- 16 platform infrastructure documents covering tech stack through environment configuration
+- 10 module implementation documents (IAM, Organization, Patients, Sessions, Leads, Appointments, Catalog, Billing, Communication Policy, Audit)
+- Architecture aligned with designs v1.0.0 and requirements v1.1.1
+
+### Key Implementation Decisions
+- TypeScript + NestJS modular monolith with pnpm workspaces
+- Bun runtime (Node.js 20 LTS fallback)
+- MongoDB + Mongoose with replica set for transactions
+- Redis for caching, BullMQ job queues, and event streaming
+- Transactional Outbox + Redis Streams for event-driven architecture
+- Separate Worker Services: Reminder, Notification, Report Generation, AI Models
+- Typst self-hosted for PDF generation (reports, treatment plans, prescriptions, invoices)
+- SMTP2Go for email, Firebase Cloud Messaging for push notifications
+- GCP Compute Engine deployment with Docker containers
+- Jest unit/integration tests + Playwright E2E tests
+
+---

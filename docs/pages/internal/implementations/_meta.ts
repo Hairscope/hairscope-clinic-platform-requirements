@@ -1,0 +1,21 @@
+export default {
+  index: 'Master Implementations',
+  changelog: 'Changelog',
+  'tech-stack': 'Tech Stack',
+  'project-setup': 'Project Setup',
+  'module-structure': 'Module Structure',
+  database: 'Database',
+  authentication: 'Authentication',
+  authorization: 'Authorization',
+  graphql: 'GraphQL',
+  'event-system': 'Event System',
+  'worker-services': 'Worker Services',
+  'file-storage': 'File Storage',
+  'pdf-generation': 'PDF Generation',
+  email: 'Email',
+  'push-notifications': 'Push Notifications',
+  testing: 'Testing',
+  deployment: 'Deployment',
+  'environment-config': 'Environment Config',
+  modules: 'Module Implementations'
+}

@@ -1,0 +1,106 @@
+# Tech Stack
+
+> Covers: Technology choices, versions, runtime environment, and dependency management.
+
+---
+
+# 1. Runtime
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Runtime | Bun (primary), Node.js (fallback) | Bun 1.x, Node.js 20 LTS |
+| Language | TypeScript | 5.x (strict mode) |
+| Framework | NestJS | 10.x |
+| Package Manager | pnpm | 9.x (workspaces) |
+
+Bun SHALL be the primary runtime for development and production.
+
+IF Bun compatibility issues arise with any dependency, Node.js 20 LTS SHALL be used as fallback without code changes.
+
+TypeScript SHALL be configured in strict mode across all packages.
+
+---
+
+# 2. Core Dependencies
+
+| Concern | Package | Purpose |
+|---------|---------|---------|
+| GraphQL | `@nestjs/graphql` + `@apollo/server` | API layer |
+| Database | `@nestjs/mongoose` + `mongoose` | MongoDB ODM |
+| Cache | `@nestjs/cache-manager` + `cache-manager-redis-yet` | Redis cache |
+| Validation | `class-validator` + `class-transformer` | Input validation |
+| Auth | `jsonwebtoken` + `argon2` | JWT + password hashing |
+| Events | `@nestjs/event-emitter` | In-process domain events |
+| Queue | `@nestjs/bullmq` + `bullmq` | Job queues for workers |
+| Config | `@nestjs/config` | Environment configuration |
+| Storage | `@google-cloud/storage` | GCS file uploads |
+| Email | `nodemailer` | SMTP2Go integration |
+| Push | `firebase-admin` | FCM push notifications |
+| PDF | Typst CLI (self-hosted binary) | PDF generation |
+
+---
+
+# 3. Development Dependencies
+
+| Concern | Package | Purpose |
+|---------|---------|---------|
+| Testing (E2E) | `playwright` | End-to-end API testing |
+| Testing (Unit) | `jest` + `@nestjs/testing` | Unit and integration tests |
+| Linting | `eslint` + `@typescript-eslint` | Code quality |
+| Formatting | `prettier` | Code formatting |
+| API Testing | `supertest` | HTTP assertion library |
+
+---
+
+# 4. Infrastructure
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Database | MongoDB 7.x | Primary persistence |
+| Cache/Queue | Redis 7.x | Caching, BullMQ job queue, event streaming |
+| Object Storage | Google Cloud Storage | Files, images, PDFs |
+| Container | Docker | Deployment packaging |
+| CI/CD | GitHub Actions | Build, test, deploy pipeline |
+| Server | GCP Compute Engine | Production hosting |
+
+---
+
+# 5. Monorepo Structure
+
+The project SHALL use pnpm workspaces:
+
+```
+hairscope-backend/
+├── pnpm-workspace.yaml
+├── package.json (root)
+├── packages/
+│   ├── api/              → Main NestJS application (modular monolith)
+│   ├── worker-reminder/  → Reminder Service worker
+│   ├── worker-notification/ → Notification Service worker
+│   ├── worker-report/    → Report Generation worker
+│   └── shared/           → Shared types, contracts, utilities
+├── docker/
+│   ├── Dockerfile.api
+│   ├── Dockerfile.worker-reminder
+│   ├── Dockerfile.worker-notification
+│   ├── Dockerfile.worker-report
+│   └── docker-compose.yml
+├── typst/
+│   └── templates/        → Typst PDF templates
+├── tests/
+│   └── e2e/              → Playwright E2E tests
+└── .github/
+    └── workflows/        → CI/CD pipelines
+```
+
+---
+
+# 6. Version Constraints
+
+All dependencies SHALL use exact versions (no ranges) in production packages.
+
+Development dependencies MAY use caret ranges.
+
+Dependency updates SHALL be reviewed and tested before merging.
+
+---
