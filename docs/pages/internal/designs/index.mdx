@@ -1,0 +1,63 @@
+# Hairscope Clinic Platform - Master Designs
+
+> Covers: System architecture, repository structure, domain modeling, authentication, authorization, data layer, event processing, GraphQL architecture, engine architecture, storage, observability, audit architecture, testing strategy, deployment, security, and performance.
+
+---
+
+## Architecture Overview
+
+```
+Modular Monolith Core (single deployable)
+├── Modules (own domain state + business logic):
+│   ├── IAM
+│   ├── Organization
+│   ├── Audit
+│   ├── Patients
+│   ├── Sessions
+│   ├── Appointments
+│   ├── Leads
+│   ├── Catalog
+│   ├── Billing
+│   └── Communication Policy
+│
+├── Engines (stateless, deterministic, no side effects):
+│   ├── Access Resolution Engine
+│   ├── Entitlement Engine
+│   ├── Lead Distribution Engine
+│   ├── Smart Scheduling Engine
+│   └── Recommendation Engine
+│
+└── Platform Infrastructure:
+    ├── Transactional Outbox
+    ├── Event Bus
+    ├── File Storage
+    └── GraphQL API Layer
+
+Separate Worker Services (stateful async infrastructure)
+├── Reminder Service
+├── Notification Service
+├── AI Models
+└── Report Generation Service
+```
+
+## Design Documents
+
+| Document | Scope |
+|----------|-------|
+| [System Architecture](./system-architecture) | Platform boundaries, layers, modules, engines, worker services |
+| [Repository Architecture](./repository-architecture) | Source code organization, module structure, naming rules |
+| [Domain Modeling](./domain-modeling) | Aggregates, invariants, lifecycles, cross-module relationships |
+| [Authentication](./authentication) | Identity model, JWT, AuthSession, token rotation |
+| [Authorization](./authorization) | Access resolution, permission evaluation, tenant-aware access |
+| [Data Layer](./data-layer) | Data ownership, persistence boundaries, access patterns |
+| [Event Processing](./event-processing) | Domain events, delivery guarantees, async processing |
+| [GraphQL Architecture](./graphql-architecture) | API surface, schema composition, transport layer |
+| [Engine Architecture](./engine-architecture) | Stateless engines, decision systems, invocation model |
+| [Storage Architecture](./storage-architecture) | Persistence strategy, object storage, caching |
+| [Observability](./observability) | Logging, tracing, metrics, monitoring |
+| [Audit Architecture](./audit-architecture) | Immutable audit log, compliance alignment |
+| [Testing Strategy](./testing-strategy) | Testing principles, coverage, correctness |
+| [Deployment Architecture](./deployment-architecture) | Runtime topology, environments, scaling |
+| [Security Architecture](./security-architecture) | Data protection, compliance, incident response |
+| [Performance Architecture](./performance-architecture) | Latency targets, scaling, optimization |
+| [Module Designs](./modules) | Per-module detailed designs |

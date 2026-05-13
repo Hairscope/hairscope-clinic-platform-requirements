@@ -1,4 +1,6 @@
 export default {
+  index: 'Master Designs',
+  changelog: 'Changelog',
   'system-architecture': 'System Architecture',
   'repository-architecture': 'Repository Architecture',
   'domain-modeling': 'Domain Modeling',

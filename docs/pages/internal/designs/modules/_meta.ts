@@ -1,4 +1,5 @@
 export default {
+  index: 'Overview',
   patients: 'Patients',
   sessions: 'Sessions',
   leads: 'Leads',
