@@ -1,9 +1,6 @@
 # Hairscope Platform — GraphQL Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** API Layer, GraphQL Schema, and Request Lifecycle
+> Covers: GraphQL API surface, schema composition, transport layer design, and query/mutation patterns.
 
 ---
 

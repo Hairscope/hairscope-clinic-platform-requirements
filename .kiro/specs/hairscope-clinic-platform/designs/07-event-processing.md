@@ -1,9 +1,6 @@
 # Hairscope Platform — Event Processing
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Domain Events, Event Flow, and Asynchronous Processing
+> Covers: Domain events, event lifecycle, event delivery guarantees, cross-module communication patterns, and asynchronous processing principles.
 
 ---
 

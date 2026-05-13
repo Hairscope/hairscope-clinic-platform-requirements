@@ -1,9 +1,6 @@
 # Hairscope Platform — Security Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Data Protection, Access Control, and Compliance (GDPR, HIPAA)
+> Covers: Data protection, access control, tenant isolation, compliance (GDPR, HIPAA), and incident response.
 
 ---
 

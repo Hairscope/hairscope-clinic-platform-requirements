@@ -1,9 +1,6 @@
 # Hairscope Platform — Testing Strategy
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Validation of System Behavior, Boundaries, and Guarantees
+> Covers: Testing principles, testing layers, correctness validation, and quality assurance approach.
 
 ---
 

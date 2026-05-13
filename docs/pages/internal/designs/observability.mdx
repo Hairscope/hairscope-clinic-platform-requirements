@@ -1,9 +1,6 @@
 # Hairscope Platform — Observability
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** System Visibility, Monitoring, and Diagnostics
+> Covers: Logging, tracing, metrics, monitoring, and operational visibility.
 
 ---
 

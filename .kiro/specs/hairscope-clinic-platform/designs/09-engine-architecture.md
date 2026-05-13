@@ -1,9 +1,6 @@
 # Hairscope Platform — Engine Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Decision Engines and Computation Systems
+> Covers: Stateless decision engines, computation principles, engine types, invocation model, and engine boundaries.
 
 ---
 

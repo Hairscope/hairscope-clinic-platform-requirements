@@ -1,9 +1,6 @@
 # Hairscope Platform — Domain Modeling
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Domain Model Definitions for Hairscope Platform Backend
+> Covers: Core business entities, aggregate definitions, aggregate ownership, lifecycle models, cross-module relationships, identity models, and domain invariants.
 
 ---
 

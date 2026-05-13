@@ -1,9 +1,6 @@
 # Hairscope Platform — Storage Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Physical Storage, Persistence Strategy, and Data Organization
+> Covers: Persistence strategy, object storage, caching, and storage boundaries.
 
 ---
 

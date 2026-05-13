@@ -1,9 +1,6 @@
 # Module: Patients
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Module Design  
-> **Scope:** Patient Identity, Patient Profile, Medical Documents, Treatment Progress, and Patient–Session Relationship
+> Covers: Patient aggregate, patient lifecycle, global identity linkage, medical documents, and cross-module relationships.
 
 ---
 

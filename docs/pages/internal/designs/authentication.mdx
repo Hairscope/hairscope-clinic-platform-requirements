@@ -1,9 +1,6 @@
 # Hairscope Platform — Authentication
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Identity and Authentication
+> Covers: Identity model, authentication mechanism, session model, token structure, token rotation, and authentication validation rules.
 
 ---
 

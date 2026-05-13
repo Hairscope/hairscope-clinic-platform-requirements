@@ -1,9 +1,6 @@
 # Hairscope Platform — Deployment Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Deployment Model, Runtime Topology, and Environment Strategy
+> Covers: Deployment model, runtime topology, environment strategy, scalability principles, and reliability considerations.
 
 ---
 

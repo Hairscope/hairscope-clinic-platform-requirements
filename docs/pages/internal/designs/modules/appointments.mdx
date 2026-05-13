@@ -1,9 +1,6 @@
 # Module: Appointments
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Module Design  
-> **Scope:** Appointment Scheduling, Appointment Lifecycle, Appointment References, and Clinical Workflow Initiation
+> Covers: Appointment aggregate, appointment lifecycle, slot management, smart scheduling integration, and cross-module relationships.
 
 ---
 

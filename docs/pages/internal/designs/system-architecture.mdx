@@ -1,9 +1,6 @@
 # Hairscope Platform — System Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Entire Hairscope Platform Backend
+> Covers: Platform boundaries, architectural layers, module boundaries, module interaction rules, event flow, engine architecture, worker services, storage architecture, tenancy boundaries, and system-wide correctness guarantees.
 
 ---
 

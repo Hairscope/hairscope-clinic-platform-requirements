@@ -1,9 +1,6 @@
 # Hairscope Platform — Audit Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Audit Logging, Historical Records, and Compliance
+> Covers: Immutable audit log design, audit consistency, compliance alignment, and audit data lifecycle.
 
 ---
 

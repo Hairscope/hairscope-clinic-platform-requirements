@@ -1,9 +1,6 @@
 # Hairscope Platform — Authorization
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Access Resolution
+> Covers: Access resolution, permission evaluation, tenant-aware authorization, and enforcement model.
 
 ---
 

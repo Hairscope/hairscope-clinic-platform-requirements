@@ -1,9 +1,6 @@
 # Hairscope Platform — Data Layer
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Data Ownership, Persistence Boundaries, and Access Patterns
+> Covers: Data ownership boundaries, persistence responsibilities, data access patterns, consistency rules, and data lifecycle principles.
 
 ---
 

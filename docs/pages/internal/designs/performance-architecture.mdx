@@ -1,9 +1,6 @@
 # Hairscope Platform — Performance Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** System Performance, Scalability, and Efficiency
+> Covers: Latency targets, scaling strategy, optimization principles, and workload management.
 
 ---
 

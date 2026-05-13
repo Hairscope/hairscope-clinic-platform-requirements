@@ -1,9 +1,6 @@
 # Module: Leads
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Module Design  
-> **Scope:** Lead Capture, Lead Lifecycle, Lead Interactions, Conversion, and Pre-Patient Relationship Management
+> Covers: Lead aggregate, lead lifecycle, assignment model, conversion workflow, and cross-module relationships.
 
 ---
 

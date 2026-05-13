@@ -1,9 +1,6 @@
 # Hairscope Platform — Repository Architecture
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Platform Design  
-> **Scope:** Hairscope Platform Backend Repository
+> Covers: Repository boundaries, source code organization, module internal structure, engine placement, infrastructure placement, dependency direction, shared code rules, testing placement, and forbidden architectural patterns.
 
 ---
 

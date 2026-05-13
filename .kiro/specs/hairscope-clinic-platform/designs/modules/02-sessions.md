@@ -1,9 +1,6 @@
 # Module: Sessions
 
-> **Version:** 1.0.0  
-> **Status:** Draft  
-> **Layer:** Module Design  
-> **Scope:** Clinical Sessions, Session Lifecycle, Clinical Inputs, and Session-Level References
+> Covers: Session aggregate, session lifecycle, clinical inputs, catalog item recommendations, and cross-module relationships.
 
 ---
 
