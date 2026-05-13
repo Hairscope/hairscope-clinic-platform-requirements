@@ -190,12 +190,11 @@ Owns:
 
 ---
 
-## 3.8 Products Module
+## 3.8 Catalog Module
 
 Owns:
 
-- Product
-- Service
+- CatalogItem (unified entity with types: SERVICE, MEDICATION, COSMETIC, SUPPLEMENT)
 
 ---
 

@@ -239,6 +239,8 @@ AuthSession SHALL expire after a defined duration.
 
 Expired AuthSessions SHALL deny access.
 
+> **Note:** Per IAM-9, the user experience is "no session expiry" — sessions remain active until explicit logout or account deactivation. This is achieved through transparent token rotation: JWTs are short-lived for security, but the platform auto-renews them via refresh tokens without requiring user re-authentication. The AuthSession aggregate tracks the logical session which persists until revocation.
+
 ---
 
 ## 7.2 Revocation

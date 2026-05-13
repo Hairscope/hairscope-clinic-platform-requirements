@@ -115,6 +115,8 @@ coordinating:
 Engines SHALL execute within the application runtime and SHALL NOT
 be deployed as independent services.
 
+> **Exception:** Worker Services (Reminder Service, Notification Service, AI Models, Report Generation Service) are NOT engines. They are stateful infrastructure services that MAY be deployed as independent services, scaled separately from the modular monolith core. See `01-system-architecture.md` Section 5.1.
+
 ---
 
 ## 3.2 Data Storage Systems

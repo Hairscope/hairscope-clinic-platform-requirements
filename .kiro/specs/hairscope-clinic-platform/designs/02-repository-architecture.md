@@ -212,7 +212,7 @@ patients/
 sessions/
 leads/
 appointments/
-products/
+catalog/
 billing/
 ```
 

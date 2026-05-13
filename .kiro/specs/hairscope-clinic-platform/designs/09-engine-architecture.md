@@ -119,15 +119,15 @@ Generates recommendations based on provided context.
 
 ---
 
-## 4.4 AI Analysis Engine
+## 4.4 AI Models (Worker Service)
 
-Produces analysis outputs based on provided inputs.
+> **Note:** AI Models are NOT a stateless engine. They are a stateful Worker Service deployed separately. See `01-system-architecture.md` Section 5.1 for Worker Service architecture. Retained here for historical reference only.
 
 ---
 
-## 4.5 Report Generation Engine
+## 4.5 Report Generation Service (Worker Service)
 
-Produces structured outputs derived from session data.
+> **Note:** Report Generation is NOT a stateless engine. It is a stateful Worker Service that renders PDFs, stores files, tracks generation state, and retries failures. See `01-system-architecture.md` Section 5.1 for Worker Service architecture. Retained here for historical reference only.
 
 ---
 

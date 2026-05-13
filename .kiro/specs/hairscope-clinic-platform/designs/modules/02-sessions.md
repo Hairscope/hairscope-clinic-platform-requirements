@@ -22,7 +22,7 @@ The Sessions module owns:
 - annotations  
 - questionnaire responses  
 - doctor notes  
-- session-level references to recommended products  
+- session-level references to recommended catalog items  
 
 A Session cannot exist without a valid Patient.
 
@@ -42,7 +42,7 @@ The Sessions module SHALL NOT:
 
 - perform AI analysis  
 - generate reports  
-- manage product catalogs  
+- manage catalogs  
 - manage billing  
 - define independent access control  
 
@@ -69,7 +69,7 @@ The Session aggregate SHALL contain:
 - Annotation  
 - QuestionnaireResponse  
 - DoctorNote  
-- ProductRecommendationReference  
+- CatalogItemRecommendationReference  
 
 ---
 
@@ -129,7 +129,7 @@ that depend on external processing.
 After completion, only the following fields SHALL remain editable:
 
 - questionnaire responses  
-- product recommendations  
+- catalog item recommendations  
 - doctor notes  
 
 Clinical images and annotations SHALL remain immutable after completion.
@@ -205,12 +205,12 @@ for lifecycle control.
 
 ---
 
-## 12.3 Products Module
+## 12.3 Catalog Module
 
-A Session MAY reference Products by identifier
+A Session MAY reference CatalogItems by identifier
 for recommendation purposes.
 
-The Sessions module SHALL NOT depend on Products module behavior.
+The Sessions module SHALL NOT depend on Catalog module behavior.
 
 ---
 
@@ -232,13 +232,13 @@ The Sessions module owns:
 - annotations  
 - questionnaire responses  
 - doctor notes  
-- product recommendation references  
+- catalog item recommendation references  
 
 The Sessions module does NOT own:
 
 - patient profile data  
 - appointment state  
-- product catalog data  
+- catalog data  
 - billing state  
 
 ---

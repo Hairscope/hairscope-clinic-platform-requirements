@@ -140,7 +140,7 @@ The platform is divided into bounded contexts:
 
 ## Commercial Domain
 
-- Products
+- Catalog
 - Billing
 
 ---
@@ -441,39 +441,28 @@ Owns:
 
 ---
 
-# 11. Products Domain
+# 11. Catalog Domain
 
 ## Aggregates
 
-### Product (Aggregate Root)
+### CatalogItem (Aggregate Root)
 
-Represents a sellable item.
+Represents a unified catalog entry (SERVICE, MEDICATION, COSMETIC, SUPPLEMENT).
 
 Owns:
 
-- product definition
+- catalog item definition
+- item type
 - availability
 - pricing
-
----
-
-### Service (Aggregate Root)
-
-Represents clinical service.
-
-Owns:
-
-- service definition
-- duration
 - applicability
 
 ---
 
 ## Invariants
 
-- Products are clinic-scoped
-- Services are clinic-scoped
-- Products may be referenced in sessions and billing
+- CatalogItems are clinic-scoped
+- CatalogItems may be referenced in sessions and billing
 
 ---
 
