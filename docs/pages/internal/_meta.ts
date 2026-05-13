@@ -1,4 +1,5 @@
 export default {
   index: 'Team Docs',
-  requirements: 'Requirements'
+  requirements: 'Requirements',
+  designs: 'Designs'
 }

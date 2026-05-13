@@ -1,0 +1,20 @@
+# Changelog — Designs
+
+All notable changes to the Hairscope Clinic Platform design documents are documented here. Latest entries are at the top.
+
+---
+
+## v1.0.0 — 2026-05-13
+
+### Initial Release
+- 16 platform design documents covering system architecture through performance
+- 6 module design documents (Patients, Sessions, Leads, Appointments, Catalog, Billing)
+- Architecture aligned with requirements v1.1.1
+
+### Key Architectural Decisions
+- Modular Monolith Core with isolated modules
+- Stateless Engines for decision computation
+- Separate Worker Services for async infrastructure (Reminder, Notification, AI Models, Report Generation)
+- Event-driven cross-module communication via Transactional Outbox
+- Identity-only JWT with transparent token rotation (IAM-9 compliance)
+- Communication Policy Module owns business rules; Worker Services execute them

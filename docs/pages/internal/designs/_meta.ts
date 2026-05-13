@@ -1,0 +1,21 @@
+export default {
+  index: 'Master Designs',
+  changelog: 'Changelog',
+  'system-architecture': 'System Architecture',
+  'repository-architecture': 'Repository Architecture',
+  'domain-modeling': 'Domain Modeling',
+  authentication: 'Authentication',
+  authorization: 'Authorization',
+  'data-layer': 'Data Layer',
+  'event-processing': 'Event Processing',
+  'graphql-architecture': 'GraphQL Architecture',
+  'engine-architecture': 'Engine Architecture',
+  'storage-architecture': 'Storage Architecture',
+  observability: 'Observability',
+  'audit-architecture': 'Audit Architecture',
+  'testing-strategy': 'Testing Strategy',
+  'deployment-architecture': 'Deployment Architecture',
+  'security-architecture': 'Security Architecture',
+  'performance-architecture': 'Performance Architecture',
+  modules: 'Module Designs'
+}
