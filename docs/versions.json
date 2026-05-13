@@ -1,0 +1,19 @@
+{
+  "current": "1.1.0",
+  "versions": [
+    {
+      "version": "1.1.0",
+      "date": "2026-05-13",
+      "tag": "v1.1.0",
+      "status": "current",
+      "notes": "Catalog module, notification/reminder services, web components, visibility mode, billing sync"
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-04-29",
+      "tag": "v1.0.0",
+      "status": "archived",
+      "notes": "Initial requirements - core modules, patients, sessions, leads, appointments, products, billing"
+    }
+  ]
+}

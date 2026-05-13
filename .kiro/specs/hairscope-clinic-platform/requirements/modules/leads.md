@@ -481,3 +481,10 @@ The current implementation distributes leads evenly across eligible Staff member
 - The LeadDistributionAlgorithm SHALL distribute leads evenly across eligible Staff members over time. The current implementation is RoundRobin.
 - After manual reassignment, `L.assignedStaffId` SHALL reference the new assignee and the AuditLog SHALL record the previous assignee.
 - `assignedStaffId` is always set when `clinicId` is set - a clinic-scoped lead without a staff assignment is not permitted.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

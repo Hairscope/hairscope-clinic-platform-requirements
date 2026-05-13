@@ -222,11 +222,17 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 4. WHEN generating the Prescription PDF (if MEDICATION items exist), THE Platform SHALL include: patient details, generating staff member's details (name, specialization, license number), clinic details, date, all MEDICATION items with routines, and the staff member's digital signature image.
 5. THE Platform SHALL require the generating staff member to have a digital signature image uploaded in their profile. If no signature exists, generation SHALL be blocked.
 6. THE Platform SHALL record in the AuditLog: who generated the documents, when, and which session.
-7. IF recommendations are edited after documents have been generated, THE Platform SHALL invalidate the previous documents and require the staff member to re-approve and re-sign to generate new versions.
-8. THE Clinical Trichoscopy Report SHALL include the name and details of the staff member who saved the session (captured images), NOT the staff member who signs the Treatment Plan.
-9. Any Staff member with the appropriate permission may generate Treatment Plans and Prescriptions — there is no role-specific restriction. The generating staff member's name and signature appear on the document, and they are liable for the recommendations. It is the ClinicAdmin's responsibility to assign appropriate permissions.
-10. THE Platform SHALL allow Staff to share generated Treatment Plans and Prescriptions with the Patient via: PDF download, email, WhatsApp, and shareable link (same mechanisms as the Clinical Trichoscopy Report). Sharing is only possible AFTER the document has been generated and signed.
-11. Treatment Plans and Prescriptions SHALL NOT be shareable before they are generated and signed.
+7. IF recommendations are edited after documents have been generated, THE Platform SHALL NOT delete the previous recommendations from the document. Instead:
+   - The removed/changed item SHALL remain in the PDF with a strike-through formatting.
+   - A reason for the change, the date of change, and the signing staff member's signature SHALL be displayed alongside the struck-through item.
+   - The new/replacement item SHALL be added as a new line item below with the current date and signature.
+   - This creates an immutable audit trail within the document itself for clinical trust.
+8. WHEN recommendations are edited after signing, THE Platform SHALL regenerate the Treatment Plan and/or Prescription PDF incorporating the strike-through history. The new PDF version supersedes the previous one.
+9. THE Clinical Trichoscopy Report SHALL include the name and details of the staff member who saved the session (captured images), NOT the staff member who signs the Treatment Plan.
+10. Any Staff member with the appropriate permission may generate Treatment Plans and Prescriptions — there is no role-specific restriction. The generating staff member's name and signature appear on the document, and they are liable for the recommendations. It is the ClinicAdmin's responsibility to assign appropriate permissions.
+11. THE Platform SHALL allow Staff to share generated Treatment Plans and Prescriptions with the Patient via: PDF download, email, WhatsApp, and shareable link (same mechanisms as the Clinical Trichoscopy Report). Sharing is only possible AFTER the document has been generated and signed.
+12. Treatment Plans and Prescriptions SHALL NOT be shareable before they are generated and signed.
+13. THE Platform SHALL maintain a version history of all generated Treatment Plan and Prescription PDFs. Previous versions remain accessible for audit purposes but are marked as superseded.
 
 #### Failure Cases
 
@@ -236,13 +242,16 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 | Session has no recommendations (attempting to generate Treatment Plan) | `NO_RECOMMENDATIONS` |
 | Session has no MEDICATION recommendations (attempting to generate Prescription) | `NO_MEDICATION_RECOMMENDATIONS` |
 | Staff member lacks permission to generate documents | `FORBIDDEN` |
+| Missing reason when editing a previously signed recommendation | `VALIDATION_ERROR` (field: `reason`) |
 
 #### Correctness Properties
 
 - The Treatment Plan PDF SHALL display the generating staff member's name and signature, not the staff who captured images.
 - The Clinical Trichoscopy Report SHALL display the staff member's name who saved the session.
-- After recommendations are edited post-signing: previously generated Treatment Plan and Prescription PDFs SHALL be marked as superseded. New versions require re-signing.
+- After recommendations are edited post-signing: the regenerated PDF SHALL show struck-through items with reason, date, and signature — plus new items as additions. No information is lost.
 - For any Treatment Plan or Prescription generated at time T: the AuditLog SHALL contain an entry recording the signing staff member, session, and timestamp T.
+- All previous PDF versions SHALL remain accessible for audit purposes. Only the latest version is the active document.
+- The strike-through edit history applies to ALL recommendation types: medications, cosmetics, supplements, and services.
 
 ---
 
@@ -271,3 +280,10 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 
 - For any Staff member S: at most one active signature image exists at any time.
 - For any document generation request by Staff member S: if `S.signature` is null, the request SHALL fail.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

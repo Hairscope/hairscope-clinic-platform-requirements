@@ -9,7 +9,7 @@
 
 ## Glossary
 
-- **Session**: A clinical treatment session for a Patient. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
+- **Session**: A trichoscopy analysis session for a Patient. Represents the image capture and AI analysis workflow — NOT the entire clinical visit. A patient's clinical visit may include additional procedures (e.g., PRP treatment) after the trichoscopy session is completed. Always belongs to exactly one Patient and one Clinic. Cannot exist without a Patient.
 - **SessionType**: The type of treatment session. Determines the image capture requirements, questionnaire categories, AI analysis models, and report structure. Currently: `HAIR_ANALYSIS`. Future types may include `SKIN_TREATMENT`, `HAIR_REMOVAL`, etc.
 - **SessionStatus**: `DRAFT` | `SAVED` | `COMPLETED` | `DELETED` - see `shared/enums.md`.
 - **GlobalImage**: A standard photograph taken from a predefined position. Used for overall assessment (e.g., hair loss stage).
@@ -22,9 +22,9 @@
 - **StressQuestionnaire**: A separate set of ~10 questions used to calculate the StressOMeter score. Applicable to `HAIR_ANALYSIS` sessions.
 - **RootCause**: Automatically determined cause derived from questionnaire answers via a defined formula. Specific to `HAIR_ANALYSIS` sessions.
 - **StressOMeter**: A calculated stress score derived from the StressQuestionnaire. Specific to `HAIR_ANALYSIS` sessions.
-- **Routine**: A recommended usage schedule for a Product included in a Session recommendation.
+- **Routine**: A recommended usage schedule for a catalog item included in a Session recommendation.
 - **CompareView**: Side-by-side display of two Sessions of the same type for the same Patient, matching images by position.
-- **Prescription**: A formal medication order included in the Report when Medical Products are recommended.
+- **Prescription**: A formal medication order included when MEDICATION catalog items are recommended. Generated as a separate PDF with digital signature.
 
 ---
 
@@ -58,7 +58,7 @@ Sessions are a sub-resource of Patients. The `patients` module permission covers
 |-----------|---------------|
 | `patients.view` | View all sessions for a patient |
 | `patients.create` | Create new sessions for a patient |
-| `patients.edit` | Edit session content (questionnaire, products, doctor's note) after completion |
+| `patients.edit` | Edit session content (questionnaire, recommendations, doctor's note) after completion |
 | `patients.delete` | Delete DRAFT sessions only |
 
 Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NOT have access to sessions in any Clinic (GI-8).
@@ -76,7 +76,9 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 1. THE Platform SHALL allow any Staff member with session create permission to create a Session for a Patient, either independently or from an Appointment.
 2. WHEN creating a Session, THE Platform SHALL require a `sessionType` field specifying the type of treatment session.
 3. WHEN a Session is created from an Appointment, THE Platform SHALL store the `appointmentId` on the Session record. Each Appointment may have at most one linked Session.
-4. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session of the same `sessionType` in the same Clinic, THE Platform SHALL reject the creation.
+4. WHEN a Session is created manually by a Staff member, THE Platform SHALL set `assignedTo` to that Staff member.
+5. WHEN a Session is auto-created from an appointment (APT-3 AC-5), THE Platform SHALL assign it to the active Staff member with the least patient load for that day (determined by the scheduling engine).
+6. WHEN a Session is created for a Patient who already has an active (`DRAFT`) Session of the same `sessionType` in the same Clinic, THE Platform SHALL reject the creation.
 5. THE Platform SHALL persist Session data across logins until the Session is explicitly saved or deleted.
 6. WHEN a Staff member saves a Session, THE Platform SHALL:
    - Run all save validations defined for the SessionType (see type-specific requirements below)
@@ -152,7 +154,7 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 5. THE Platform SHALL allow Staff to download the Clinical Trichoscopy Report as a PDF.
 5. THE Platform SHALL allow Staff to share the Report with the Patient via email.
 6. THE Platform SHALL allow Staff to share the Report with the Patient via WhatsApp.
-7. THE Platform SHALL generate a shareable link to the Report accessible within the platform.
+7. THE Platform SHALL generate a shareable link to the Report accessible without platform authentication. Shareable links SHALL remain valid for the same duration as patient data retention (indefinite during active subscription; 7 years post-cancellation). Links are invalidated if the Patient undergoes GDPR erasure.
 8. THE Platform SHALL allow Staff to compare any two Sessions of the same `sessionType` for the same Patient in a CompareView.
 9. WHEN comparing images in the CompareView, THE Platform SHALL only allow comparison of images from the same position.
 
@@ -321,7 +323,11 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 7. THE Platform SHALL allow ClinicAdmins to toggle platform-provided default questions on/off per category.
 8. WHEN a ClinicAdmin adds or removes questions, THE Platform SHALL enforce that the total active questions per category remains exactly 5.
 9. WHEN the StressOMeter score meets the defined threshold, THE Platform SHALL trigger product suggestions relevant to stress-related hair loss.
-10. WHEN questionnaire answers are edited after a Session is in `COMPLETED` status, THE Platform SHALL recalculate `RootCause` and `StressOMeter` based on the updated answers and regenerate the Clinical Trichoscopy Report to reflect the new values.
+10. WHEN questionnaire answers are edited after a Session is in `COMPLETED` status, THE Platform SHALL:
+    - Overwrite the previous answers with the new values (no versioning of answers — only the AuditLog preserves the change history).
+    - Recalculate `RootCause` and `StressOMeter` based on the updated answers.
+    - Mark the existing Clinical Trichoscopy Report as outdated. THE Platform SHALL display an indicator on the report page informing staff that the report is outdated and should be regenerated.
+    - The report is NOT auto-regenerated — staff must explicitly trigger regeneration to produce a new PDF reflecting the updated answers.
 
 #### Failure Cases
 
@@ -335,3 +341,10 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 - For any Clinic C and any Hair Analysis category K: `count(active questions for C in K) = 5` at all times.
 - For any two Sessions with identical questionnaire answers, the calculated `RootCause` SHALL be identical.
 - For any two Sessions with identical StressQuestionnaire answers, the calculated `StressOMeter` score SHALL be identical.
+
+
+---
+
+## Import / Export
+
+> **Status: Deferred** — Import and Export functionality for this module will be available in later versions. See `requirements.md` Section 10.3 for the platform-wide import/export rules. This module will support bulk import and export via CSV and Excel formats.

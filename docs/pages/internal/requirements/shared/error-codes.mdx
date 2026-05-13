@@ -79,7 +79,9 @@
 | `ROLE_NOT_EDITABLE` | Attempted to edit a fixed system role (e.g., OrganizationAdmin) |
 | `ROLE_NOT_DELETABLE` | Attempted to delete a system role (OrganizationAdmin or ClinicAdmin) |
 | `CROSS_ORG_TRANSFER_DENIED` | Inter-clinic transfer attempted across different Organizations |
+| `TRANSFER_RECORDS_UNRESOLVED` | Staff transfer blocked — assignedTo records in source Clinic must be reassigned first |
 | `CURRENCY_ENFORCEMENT_VIOLATION` | Clinic currency change rejected because the Organization enforces a single currency |
+| `VISIBILITY_MODE_ENFORCEMENT_VIOLATION` | Clinic visibility mode change rejected because the Organization enforces RESTRICTED mode |
 
 ---
 

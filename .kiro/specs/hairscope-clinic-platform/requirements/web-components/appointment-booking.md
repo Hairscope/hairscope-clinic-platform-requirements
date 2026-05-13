@@ -55,10 +55,10 @@
 
 #### Acceptance Criteria
 
-1. AFTER selecting a service, THE Component SHALL display a calendar showing available dates based on the Clinic's working hours.
+1. AFTER selecting a service, THE Component SHALL display a calendar showing available dates. A date is available if the clinic is operating AND at least one qualified staff member for the selected service is available on that day.
 2. THE Component SHALL visually distinguish: available dates, today's date, selected date, and unavailable/closed dates.
 3. THE Component SHALL NOT show dates in the past.
-4. WHEN a date is selected, THE Component SHALL display available time slots for that date, calculated from the Clinic's working hours and the selected service's duration, excluding already-booked slots.
+4. WHEN a date is selected, THE Component SHALL display available time slots for that date, calculated from the intersection of the Clinic's working hours, the selected service's duration, qualified staff availability, and already-booked slots.
 5. THE visitor SHALL select exactly one time slot to proceed.
 6. THE Component SHALL display dates and times in the Clinic's configured timezone.
 7. IF no slots are available on a selected date, THE Component SHALL display a "No available slots" message for that date.
@@ -121,10 +121,11 @@
 
 1. THE Component SHALL provide a "Check appointments" link/button accessible from the main booking screen.
 2. WHEN clicked, THE Component SHALL display a search form asking for the visitor's email address.
-3. THE Component SHALL query the platform for all appointments matching that email for the Clinic.
-4. THE Component SHALL display matching appointments with: service name, date, time, and status.
-5. FOR each appointment in `SCHEDULED` or `CONFIRMED` status, THE Component SHALL display "Reschedule" and "Cancel" actions.
-6. THE Component SHALL NOT display appointments in `COMPLETED`, `CANCELLED`, or `NO_SHOW` status.
+3. AFTER the visitor enters their email, THE Platform SHALL send a one-time verification code (OTP) to that email address. The visitor must enter the OTP before appointment data is displayed.
+4. AFTER successful OTP verification, THE Component SHALL query the platform for all appointments matching that email for the Clinic.
+5. THE Component SHALL display matching appointments with: service name, date, time, and status.
+6. FOR each appointment in `SCHEDULED` or `CONFIRMED` status, THE Component SHALL display "Reschedule" and "Cancel" actions.
+7. THE Component SHALL NOT display appointments in `COMPLETED`, `CANCELLED`, or `NO_SHOW` status.
 
 #### Failure Cases
 
@@ -132,11 +133,13 @@
 |-----------|-----------|
 | No appointments found for email | "No appointments found" message |
 | Invalid email format | Client-side validation error |
+| Invalid or expired OTP | "Invalid code" error, allow retry |
 
 #### Correctness Properties
 
 - The search SHALL only return appointments for the authenticated Organization's Clinics.
 - No appointment data from other Organizations SHALL be accessible.
+- Appointment data SHALL NOT be displayed without successful OTP verification.
 
 ---
 

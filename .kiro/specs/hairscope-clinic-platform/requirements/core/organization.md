@@ -9,7 +9,7 @@
 - **Organization**: The top-level tenant. Owns one or more Clinics.
 - **Clinic**: A physical or logical treatment location within an Organization.
 - **ClinicProfile**: The full configuration record for a Clinic including branding, working hours, and contact details.
-- **OrganizationAdmin**: Staff with `org`-scoped access. Can manage staff and clinic details across all clinics. Cannot access clinical modules (Patients, Appointments, Leads, Billing, Products).
+- **OrganizationAdmin**: Staff with `org`-scoped access. Can manage staff and clinic details across all clinics. Cannot access clinical modules (Patients, Appointments, Billing, Catalog). May access Leads for assignment purposes.
 - **ClinicAdmin**: Staff with full `clinic`-scoped access within their assigned Clinic, including all modules.
 - **InterClinicTransfer**: Reassignment of a Staff member from one Clinic to another within the same Organization.
 - **ClinicWorkingHours**: Per-day operating schedule for a Clinic. Defines when the clinic is open. Used to derive patient-facing appointment slot availability.
@@ -37,7 +37,7 @@
 5. OrganizationAdmins SHALL be able to view all Clinics within their Organization including profiles and staff rosters.
 6. OrganizationAdmins SHALL be able to manage staff across all Clinics (invite, edit, deactivate, delete, transfer).
 7. OrganizationAdmins SHALL be able to edit all ClinicProfile fields for any Clinic in their Organization.
-8. OrganizationAdmins SHALL NOT have access to Patients, Appointments, Leads, Billing, or Catalog in any Clinic.
+8. OrganizationAdmins SHALL NOT have access to Patients, Appointments, Billing, or Catalog in any Clinic. OrganizationAdmins MAY access Leads for assignment and unassigned lead management.
 9. Clinic-level Staff SHALL NOT access data belonging to other Clinics within the same Organization.
 10. THE Platform SHALL allow OrganizationAdmins to create new Clinics; minimum required fields are Clinic name and address.
 
@@ -53,7 +53,7 @@
 #### Correctness Properties
 
 - For any Staff member S with only clinic-level roles in Clinic C, every request targeting data in Clinic C' (C ≠ C') SHALL be denied.
-- For any OrganizationAdmin A, every request targeting `patients`, `appointments`, `leads`, `billing`, or `catalog` data SHALL be denied.
+- For any OrganizationAdmin A, every request targeting `patients`, `appointments`, `billing`, or `catalog` data SHALL be denied. Requests targeting `leads` for assignment purposes SHALL be allowed.
 - At all times, count of active OrganizationAdmins per Organization ≥ 1.
 - At all times, count of active ClinicAdmins per Clinic ≥ 1.
 
@@ -147,12 +147,15 @@
 #### Acceptance Criteria
 
 1. THE Platform SHALL allow OrganizationAdmins to transfer a Staff member from a source Clinic to a destination Clinic within the same Organization.
-2. WHEN transferred, THE Platform SHALL remove the Staff member's access to the source Clinic and grant access to the destination Clinic.
-3. THE Platform SHALL allow the OrganizationAdmin to optionally reassign the Staff member's owned records in the source Clinic to another Staff member before the transfer completes.
-4. IF the Staff member is the last active ClinicAdmin in the source Clinic, THE Platform SHALL block the transfer until another ClinicAdmin is designated for the source Clinic.
-5. THE Platform SHALL NOT allow transfer between different Organizations.
-6. WHEN transferred, THE Platform SHALL send an email notification to the Staff member.
-7. WHEN transferred, THE Platform SHALL record the transfer in the AuditLog including source Clinic, destination Clinic, actor, and timestamp.
+2. THE Platform SHALL require the OrgAdmin to reassign all `assignedTo` records (sessions, leads, appointments) in the source Clinic to other active Staff members before the transfer can proceed. Transfer is blocked until reassignment is complete (same pattern as staff deletion).
+3. WHEN transferred, THE Platform SHALL remove the Staff member's access to the source Clinic and grant access to the destination Clinic.
+4. THE Platform SHALL allow the OrgAdmin to assign roles from the destination Clinic's existing role list during the transfer. The OrgAdmin can only assign roles that already exist in the destination Clinic — they cannot create new roles.
+5. IF the OrgAdmin does not assign roles during transfer, THE Platform SHALL reset the Staff member to no roles in the destination Clinic. The destination ClinicAdmin must then assign appropriate roles before the Staff member can perform any actions.
+6. WHEN transferred, THE Platform SHALL reset the Staff member's StaffAvailability to empty (no availability configured). The Staff member is excluded from SmartScheduling until availability is configured in the destination Clinic.
+7. IF the Staff member is the last active ClinicAdmin in the source Clinic, THE Platform SHALL block the transfer until another ClinicAdmin is designated for the source Clinic.
+8. THE Platform SHALL NOT allow transfer between different Organizations.
+9. WHEN transferred, THE Platform SHALL send an email notification to the Staff member.
+10. WHEN transferred, THE Platform SHALL record the transfer in the AuditLog including source Clinic, destination Clinic, reassignment details, role assignments, actor, and timestamp.
 
 #### Failure Cases
 
@@ -162,11 +165,14 @@
 | Staff member is last active ClinicAdmin in source Clinic | `LAST_CLINIC_ADMIN` |
 | Destination Clinic not found or not in same Organization | `FORBIDDEN` |
 | Initiator is not an OrganizationAdmin | `FORBIDDEN` |
+| Unresolved `assignedTo` records in source Clinic | `TRANSFER_RECORDS_UNRESOLVED` |
 
 #### Correctness Properties
 
 - After transfer from C1 to C2, every request by S targeting C1 data SHALL be denied.
-- After transfer from C1 to C2, S SHALL have access to C2 data per their assigned roles.
+- After transfer from C1 to C2, S SHALL have access to C2 data per their assigned roles (if any).
+- After transfer, all `assignedTo` records previously owned by S in the source Clinic SHALL reference a different active Staff member.
+- After transfer, S's StaffAvailability in the source Clinic is no longer active. Availability in the destination Clinic is empty until configured.
 - After any transfer, count of active ClinicAdmins in source Clinic SHALL remain ≥ 1.
 - Transfer between different Organizations SHALL always fail regardless of actor.
 
@@ -294,3 +300,77 @@
 - For any two Clinics C1 and C2 within the same Organization, reports generated at the same time SHALL use the same ReportTemplate structure.
 - The ReportHeader (clinic branding) within the template SHALL reflect each Clinic's own configured header, not a shared one.
 - After a ReportTemplate update, all reports generated after the update SHALL use the new template. Reports generated before the update SHALL retain their original structure.
+
+---
+
+### ORG-9: Record Visibility Mode (HIPAA Compliance)
+
+**User Story:** As a ClinicAdmin or OrganizationAdmin, I want to restrict record visibility so that staff only see records assigned to them, ensuring HIPAA minimum-necessary compliance.
+
+#### Visibility Modes
+
+| Mode | Behaviour |
+|------|-----------|
+| `OPEN` (default) | All staff with module permission can see all records in their Clinic |
+| `RESTRICTED` | Staff can only see records assigned to them. ClinicAdmins always see all records in their Clinic regardless of assignment. |
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL support a `recordVisibilityMode` setting at both Organization level and Clinic level, with values `OPEN` or `RESTRICTED`.
+2. THE default mode SHALL be `OPEN`.
+3. Organization-level setting takes priority: IF the Organization sets `RESTRICTED`, all Clinics in that Organization SHALL operate in restricted mode regardless of their individual setting.
+4. IF the Organization sets `OPEN` (or leaves it unset), each Clinic MAY independently choose `OPEN` or `RESTRICTED`.
+5. WHEN `RESTRICTED` mode is active for a Clinic:
+   - Staff with `patients.view` permission SHALL only see Patients assigned to them (via `assignedTo` on sessions, or direct patient assignment).
+   - Staff with `leads.view` permission SHALL only see Leads assigned to them.
+   - Staff with `appointments.view` permission SHALL only see Appointments assigned to them.
+   - ClinicAdmins SHALL always see ALL records in their Clinic regardless of assignment.
+6. WHEN `OPEN` mode is active, all staff with the relevant module permission SHALL see all records in their Clinic (current behaviour).
+7. THE Platform SHALL allow ClinicAdmins and OrganizationAdmins to change the visibility mode at any time. Changes take effect on the next request.
+8. WHEN the visibility mode is changed, THE Platform SHALL record the change in the AuditLog.
+9. Catalog items and Treatment Kits are NOT affected by visibility mode — they are always visible to all staff with `catalog.view` permission (shared clinic resources).
+10. Billing/Invoices follow the visibility of their linked Session — if a staff member can see the session, they can see its invoice.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| ClinicAdmin attempting to set `OPEN` when Organization enforces `RESTRICTED` | `VISIBILITY_MODE_ENFORCEMENT_VIOLATION` |
+
+#### Correctness Properties
+
+- In `RESTRICTED` mode: for any Staff member S (non-admin) in Clinic C, queries SHALL only return records where `assignedTo = S.id`.
+- In `RESTRICTED` mode: for any ClinicAdmin A in Clinic C, queries SHALL return ALL records in C regardless of assignment.
+- Organization-level `RESTRICTED` SHALL override any Clinic-level `OPEN` setting.
+- Changing visibility mode SHALL NOT modify any record assignments — it only changes query filtering.
+
+---
+
+### ORG-10: Individual Record Reassignment
+
+**User Story:** As a ClinicAdmin, I want to reassign individual patients, leads, or appointments from one staff member to another so that I can balance workload or handle staff changes without bulk operations.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL allow ClinicAdmins and OrganizationAdmins to reassign individual records (one at a time) from one active Staff member to another within the same Clinic.
+2. Reassignable record types: Patients (session `assignedTo`), Leads (`assignedTo`), Appointments (`assignedTo`).
+3. THE Platform SHALL validate that the recipient Staff member is active and belongs to the same Clinic.
+4. WHEN a record is reassigned, THE Platform SHALL update the `assignedTo` field to the new Staff member.
+5. WHEN a record is reassigned, THE Platform SHALL record the change in the AuditLog including: previous assignee, new assignee, record type, record ID, actor, and timestamp.
+6. ClinicAdmins and OrganizationAdmins SHALL have reassignment permission by default. Other staff MAY be granted reassignment permission via their role configuration.
+7. Reassignment SHALL NOT modify attribution fields (`createdBy`, `authoredBy`) — only the `assignedTo` responsibility field changes.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Recipient is inactive | `RECIPIENT_INACTIVE` |
+| Recipient belongs to a different Clinic | `FORBIDDEN` |
+| Non-admin attempting reassignment without permission | `FORBIDDEN` |
+| Record not found | `NOT_FOUND` |
+
+#### Correctness Properties
+
+- After reassignment of record R from Staff A to Staff B: `R.assignedTo = B.id`.
+- Attribution fields on R SHALL remain unchanged after reassignment.
+- In `RESTRICTED` visibility mode: after reassignment from A to B, A SHALL no longer see R and B SHALL now see R.
