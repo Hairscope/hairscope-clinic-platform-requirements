@@ -4,6 +4,6 @@ export default {
   sessions: 'Sessions',
   leads: 'Leads',
   appointments: 'Appointments',
-  catalog: 'Catalog (supersedes Products)',
+  catalog: 'Catalog',
   billing: 'Billing'
 }
