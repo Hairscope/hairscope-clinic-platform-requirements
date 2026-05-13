@@ -308,8 +308,12 @@ Platform modules are bounded contexts.
 
 ## Commercial Modules
 
-- Products
+- Catalog
 - Billing
+
+## Communication Module
+
+- Communication Policy
 
 ## Future Modules
 
@@ -339,14 +343,41 @@ They do not own domain state.
 
 Platform engines include:
 
+- Access Resolution Engine
+- Entitlement Engine
 - Lead Distribution Engine
 - Smart Scheduling Engine
-- AI Analysis Engine
 - Recommendation Engine
-- Report Generation Engine
-- Entitlement Engine
 
 Future engines MAY be introduced without changing module boundaries.
+
+---
+
+# 5.1 Worker Services
+
+Worker Services are stateful asynchronous infrastructure services.
+
+They are deployed separately from the modular monolith core.
+
+They own persistent state, produce side effects, and interact with external systems.
+
+They execute policy defined by business modules — they do NOT own business logic.
+
+Platform Worker Services include:
+
+- **Reminder Service** — Understands time. Consumes domain events, queries Communication Policy for rules, creates and manages ReminderSchedules, emits `ReminderDue` when schedules fire.
+- **Notification Service** — Delivers messages. Consumes `ReminderDue` and `NotificationRequested`, renders templates, resolves channels, sends via providers (Email, WhatsApp, SMS, Push, In-App), tracks delivery state, handles retries and bounces.
+- **AI Models** — Processes images and data for analysis. Consumes `SessionSaved`, runs AI models, emits `AIAnalysisCompleted` or `AIAnalysisFailed`. Stateful (tracks analysis state, retries).
+- **Report Generation Service** — Generates PDF documents. Renders Clinical Trichoscopy Reports, Treatment Plans, Prescriptions, Invoices. Stores files, uploads to object storage, tracks generation state, retries failures.
+
+Worker Services:
+
+- own persistent state (schedules, delivery logs, generation state)
+- produce side effects (send emails, upload files, call external APIs)
+- are NOT deterministic (depend on external systems)
+- are independently deployable and scalable
+- execute policy defined by business modules
+- communicate with the core via domain events
 
 ---
 
@@ -367,7 +398,7 @@ Clients
 |                    API Layer                         |
 |------------------------------------------------------|
 | GraphQL API                                          |
-| HTTP Endpoints                                       |
+| HTTP Endpoints (uploads, webhooks)                   |
 | Authentication                                       |
 | Authorization                                        |
 | Validation                                           |
@@ -391,49 +422,43 @@ Clients
 +------------------------------------------------------+
 |                     Modules                          |
 |------------------------------------------------------|
-| IAM                                                  |
-| Organization                                         |
-| Audit                                                |
-| Patients                                             |
-| Sessions                                             |
-| Leads                                                |
-| Appointments                                         |
-| Products                                             |
-| Billing                                              |
+| IAM              | Organization    | Audit           |
+| Patients         | Sessions        | Leads           |
+| Appointments     | Catalog         | Billing         |
+| Communication Policy                                 |
 +------------------------------------------------------+
             │
             ▼
 +------------------------------------------------------+
 |                     Engines                          |
 |------------------------------------------------------|
-| Lead Distribution                                    |
-| Smart Scheduling                                     |
-| AI Analysis                                          |
+| Access Resolution    | Entitlement                   |
+| Lead Distribution    | Smart Scheduling              |
 | Recommendation                                       |
-| Report Generation                                    |
-| Entitlement                                          |
 +------------------------------------------------------+
             │
             ▼
 +------------------------------------------------------+
-|               Infrastructure Layer                   |
+|            Platform Infrastructure                   |
 |------------------------------------------------------|
-| Event Bus                                            |
-| Transactional Outbox Dispatcher                      |
-| Job Workers                                          |
-| Cache                                                |
-| Object Storage                                       |
-| Notification Delivery                                |
-| Observability                                        |
-| External Integrations                                |
+| Transactional Outbox | Event Bus                     |
+| File Storage         | Cache                         |
+| GraphQL API Layer    | Observability                 |
++------------------------------------------------------+
+            │
+            ▼
++------------------------------------------------------+
+|          Worker Services (separate deploy)           |
+|------------------------------------------------------|
+| Reminder Service     | Notification Service          |
+| AI Models            | Report Generation Service     |
 +------------------------------------------------------+
             │
             ▼
 +------------------------------------------------------+
 |                   Persistence                        |
 |------------------------------------------------------|
-| MongoDB                                              |
-| Object Storage                                       |
+| MongoDB              | Object Storage                |
 | Future Search Index                                  |
 +------------------------------------------------------+
 ```
@@ -460,6 +485,11 @@ Allowed:
 ```text
 LeadConverted → Patients creates Patient
 SessionCompleted → Billing creates Invoice
+SessionCompleted → Report Generation Service generates Clinical Report
+TreatmentPlanSigned → Billing updates Invoice line items
+AppointmentBooked → Reminder Service creates reminder schedules
+ReminderDue → Notification Service delivers message
+CatalogItemDeleted → Appointments cancels future bookings
 ```
 
 Forbidden:
@@ -468,6 +498,7 @@ Forbidden:
 Billing updates Patient state directly
 Leads writes directly into Patient collection
 Appointments modifies Staff roles
+Notification Service defines reminder rules (owned by Communication Policy)
 ```
 
 ---
@@ -561,9 +592,11 @@ All access enforcement happens server-side.
 
 Horizontally scalable:
 
-- API nodes
-- worker nodes
-- dispatcher nodes
+- API nodes (modular monolith core)
+- worker service nodes (Reminder, Notification, AI, Report Generation)
+- dispatcher nodes (outbox)
+
+Worker Services scale independently from the core.
 
 System SHALL remain operational under partial subsystem failure.
 
