@@ -5,6 +5,7 @@ export default {
   },
   internal: {
     title: 'Team Docs',
-    type: 'page'
+    type: 'page',
+    href: '/internal'
   }
 }
