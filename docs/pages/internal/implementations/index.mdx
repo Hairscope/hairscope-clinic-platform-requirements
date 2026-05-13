@@ -1,0 +1,83 @@
+# Hairscope Clinic Platform - Master Implementations
+
+> Scope: NestJS backend implementation specifications for the Hairscope Clinic Platform. Covers tech stack, architecture patterns, infrastructure services, deployment, and module-level implementation details.
+
+---
+
+## Platform Infrastructure
+
+| # | Document | Covers |
+|---|----------|--------|
+| 01 | [Tech Stack](/internal/implementations/tech-stack) | Runtime, dependencies, monorepo structure |
+| 02 | [Project Setup](/internal/implementations/project-setup) | Workspace configuration, scripts, tooling |
+| 03 | [Module Structure](/internal/implementations/module-structure) | NestJS module patterns, layering, conventions |
+| 04 | [Database](/internal/implementations/database) | MongoDB, Mongoose schemas, transactions, indexing |
+| 05 | [Authentication](/internal/implementations/authentication) | JWT, argon2, AuthSession, token rotation |
+| 06 | [Authorization](/internal/implementations/authorization) | Access Resolution Engine, permission guards |
+| 07 | [GraphQL](/internal/implementations/graphql) | Apollo Server, code-first schema, pagination |
+| 08 | [Event System](/internal/implementations/event-system) | Transactional Outbox, Redis Streams, idempotency |
+| 09 | [Worker Services](/internal/implementations/worker-services) | Reminder, Notification, Report Generation, AI |
+| 10 | [File Storage](/internal/implementations/file-storage) | GCS integration, signed URLs, tenant isolation |
+| 11 | [PDF Generation](/internal/implementations/pdf-generation) | Typst self-hosted, templates, document types |
+| 12 | [Email](/internal/implementations/email) | SMTP2Go, Nodemailer, Handlebars templates |
+| 13 | [Push Notifications](/internal/implementations/push-notifications) | FCM, device tokens, delivery |
+| 14 | [Testing](/internal/implementations/testing) | Jest, Playwright, factories, CI integration |
+| 15 | [Deployment](/internal/implementations/deployment) | Docker, GitHub Actions, GCP Compute Engine |
+| 16 | [Environment Config](/internal/implementations/environment-config) | ConfigModule, validation, secrets |
+
+---
+
+## Module Implementations
+
+| # | Module | Covers |
+|---|--------|--------|
+| 01 | [IAM](/internal/implementations/modules/iam) | Staff lifecycle, invites, roles, password policy |
+| 02 | [Organization](/internal/implementations/modules/organization) | Org/Clinic hierarchy, profiles, visibility mode |
+| 03 | [Patients](/internal/implementations/modules/patients) | Patient CRUD, global identity, GDPR erasure |
+| 04 | [Sessions](/internal/implementations/modules/sessions) | Session lifecycle, treatment plans, signatures |
+| 05 | [Leads](/internal/implementations/modules/leads) | Lead lifecycle, distribution, conversion |
+| 06 | [Appointments](/internal/implementations/modules/appointments) | Booking, slot availability, smart scheduling |
+| 07 | [Catalog](/internal/implementations/modules/catalog) | Items, treatment kits, routines |
+| 08 | [Billing](/internal/implementations/modules/billing) | Invoices, payments, auto-sync |
+| 09 | [Communication Policy](/internal/implementations/modules/communication-policy) | Reminder rules, channels, templates |
+| 10 | [Audit](/internal/implementations/modules/audit) | Append-only log, immutable attribution |
+
+---
+
+## Architecture Summary
+
+```text
+Modular Monolith Core (single deployable)
+├── Modules:
+│   ├── IAM
+│   ├── Organization
+│   ├── Audit
+│   ├── Patients
+│   ├── Sessions
+│   ├── Appointments
+│   ├── Leads
+│   ├── Catalog
+│   ├── Billing
+│   └── Communication Policy
+│
+├── Engines (stateless, deterministic):
+│   ├── Access Resolution Engine
+│   ├── Entitlement Engine
+│   ├── Lead Distribution Engine
+│   ├── Smart Scheduling Engine
+│   └── Recommendation Engine
+│
+└── Platform Infrastructure:
+    ├── Transactional Outbox
+    ├── Event Bus (Redis Streams)
+    ├── File Storage (GCS)
+    └── GraphQL API Layer
+
+Separate Worker Services (stateful async)
+├── Reminder Service
+├── Notification Service
+├── AI Models
+└── Report Generation Service
+```
+
+---

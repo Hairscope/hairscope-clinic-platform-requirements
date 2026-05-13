@@ -4,6 +4,7 @@ import versions from '../versions.json'
 const groupMap: Record<string, string> = {
   '/internal/requirements': 'requirements',
   '/internal/designs': 'design',
+  '/internal/implementations': 'implementations',
   '/guides': 'guides',
   '/features': 'features',
   '/developer': 'developer'
