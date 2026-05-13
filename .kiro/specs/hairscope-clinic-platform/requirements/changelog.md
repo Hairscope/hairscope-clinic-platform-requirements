@@ -1,4 +1,4 @@
-# Changelog
+# Changelog — Requirements
 
 All notable changes to the Hairscope Clinic Platform requirements are documented here. Latest entries are at the top.
 
