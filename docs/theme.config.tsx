@@ -14,7 +14,7 @@ const config: DocsThemeConfig = {
       <meta name="description" content="Hairscope Documentation — Platform guides, features, and resources for clinics and teams." />
       <meta name="og:title" content="Hairscope Documentation" />
       <meta name="og:description" content="Platform guides, features, and resources for clinics and teams." />
-      <link rel="icon" href="/logo.png" />
+      <link rel="icon" href="/favicon.png" />
       <title>Hairscope Docs</title>
     </>
   ),
