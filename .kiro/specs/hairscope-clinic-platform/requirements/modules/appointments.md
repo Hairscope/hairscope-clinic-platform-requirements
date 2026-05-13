@@ -36,6 +36,8 @@
 4. THE Platform SHALL NOT allow booking a SERVICE that has no `qualifiedStaff` configured.
 5. THE `qualifiedStaff` list SHALL NOT be exposed to patients or leads — it is used exclusively by the SmartScheduling engine.
 6. WHEN a SERVICE catalog item is deleted (handled by Catalog Module CAT-4), all future appointments referencing that service are cancelled with notifications.
+7. THE Platform SHALL NOT display inactive or deleted SERVICE items in the booking interface. Only active services are bookable.
+8. THE Platform SHALL allow ClinicAdmins to mark individual SERVICE items as "not available for public booking" — these services will not appear in the Appointment Booking Web Component but remain bookable by Staff internally.
 
 #### Failure Cases
 
@@ -61,6 +63,10 @@
 1. THE Platform SHALL allow ClinicAdmins and OrganizationAdmins to configure ClinicWorkingHours per day of the week, with `startTime` and `endTime` per day.
 2. THE Platform SHALL allow individual days to be marked as closed (no appointments available).
 3. WHEN ClinicWorkingHours are updated, THE Platform SHALL apply the new schedule to all future slot availability calculations.
+4. WHEN ClinicWorkingHours are changed and existing appointments (`SCHEDULED` or `CONFIRMED`) fall outside the new working hours, THE Platform SHALL:
+   - Display a warning to the admin showing the count and details of affected appointments.
+   - IF the admin confirms the change, THE Platform SHALL auto-cancel all affected appointments, emit `AppointmentCancelled` for each, and send cancellation notifications to patients/leads.
+5. WHEN a day is marked as closed and existing appointments exist on that day, THE Platform SHALL apply the same warn-then-cancel behaviour as working hour changes (AC-4).
 4. THE Platform SHALL derive available AppointmentSlots from the **intersection** of ClinicWorkingHours AND StaffAvailability for the selected service. A slot is only available if the clinic is operating AND at least one qualified staff member for the selected service is available during that slot.
 5. THE Platform SHALL NOT display slots where the clinic is open but no qualified staff is available for the selected service.
 6. WHEN a Staff member or patient attempts to book a slot outside ClinicWorkingHours, THE Platform SHALL reject the booking.
@@ -103,6 +109,8 @@
 8. THE Platform SHALL prevent double-booking of the same AppointmentSlot for the same Clinic.
 9. WHEN an appointment is booked, THE Platform SHALL emit `AppointmentBooked` and record the action in the AuditLog.
 10. THE Platform SHALL support walk-in appointments: Staff can create an appointment directly from the calendar page without prior booking, setting the status immediately to `CONFIRMED`.
+11. Appointments SHALL NOT be bookable anonymously. A Lead or Patient record must be associated with every appointment.
+12. WHEN a visitor books via the web component and their email matches an existing Patient in the Clinic, THE Platform SHALL link the appointment to that existing Patient record (set `patientId`).
 
 #### Failure Cases
 

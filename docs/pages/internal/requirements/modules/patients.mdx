@@ -90,6 +90,7 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 5. THE `globalPatientId` SHALL be stored on every Patient record but SHALL NOT be exposed in any Staff-facing GraphQL query that could be used to access records from other Clinics.
 6. THE Platform SHALL reserve the `globalPatientId` exclusively for the **Hairscope Care App**, which will use it to aggregate the patient's full cross-clinic treatment journey. Patient-facing features are out of scope for this document.
 7. WHEN a GDPR erasure is processed for a Patient record, THE Platform SHALL anonymize the personal identifiers on that specific Clinic's Patient record only. Records in other Clinics sharing the same `globalPatientId` are unaffected unless separate erasure requests are submitted.
+8. Staff SHALL NOT be able to manually link, unlink, or modify the `globalPatientId` on any Patient record. It is system-managed only.
 
 #### Failure Cases
 
@@ -167,6 +168,7 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 5. THE Platform SHALL require explicit confirmation (`confirmed: true`) before proceeding with erasure.
 6. Erasure is irreversible. THE Platform SHALL NOT provide an undo mechanism.
 7. WHEN erasure is completed, THE Platform SHALL record the action in the AuditLog with actor and timestamp.
+8. AFTER GDPR erasure is completed, ALL shareable links (reports, treatment plans, prescriptions) associated with the erased Patient SHALL return 404. This applies to all document types.
 
 #### Failure Cases
 

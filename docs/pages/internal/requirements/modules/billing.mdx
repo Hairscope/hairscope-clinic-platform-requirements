@@ -41,6 +41,8 @@
 8. THE Platform SHALL set the initial status to `DRAFT`.
 8. WHEN an Invoice is generated, THE Platform SHALL emit `InvoiceGenerated` and record the generation in the AuditLog.
 9. Each Invoice is associated with exactly one Session and one Patient.
+10. THE Platform SHALL also support creating invoices independently of sessions — for product-only sales where no trichoscopy session is involved. Staff with billing create permission can create a standalone invoice for a Patient.
+11. WHEN a Treatment Plan and/or Prescription is signed (CAT-7), THE Platform SHALL automatically update the linked session's invoice with the signed recommendations as line items. If no invoice exists yet, one is created.
 
 #### Failure Cases
 

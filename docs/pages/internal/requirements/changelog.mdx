@@ -1,6 +1,24 @@
-# Changelog
+# Changelog — Requirements
 
 All notable changes to the Hairscope Clinic Platform requirements are documented here. Latest entries are at the top.
+
+---
+
+## v1.1.1 — 2026-05-13
+
+### Added
+- AI analysis failure cases: partial failure handling, timeout (60s), stuck session detection (>1 hour alert)
+- Routine structure: `dosage` field (required for MEDICATION), corrected `frequency` (repeat interval — every day, every other day, every 2 weeks), clarified `duration` (how long to continue)
+- Appointment booking via web component auto-creates Lead if no existing Patient/Lead match
+- OTP verification for booking email match (deferred)
+- Working hour changes: warn admin of affected appointments, auto-cancel on confirmation
+- LOST lead status cancels active appointments
+- Catalog items support `INACTIVE` status (hidden but retained for history)
+- Standalone invoices without sessions (product-only sales)
+- Invoice auto-updates on Treatment Plan/Prescription signing
+- 7 new events: `TreatmentPlanSigned`, `PrescriptionSigned`, `TreatmentPlanRegenerated`, `PrescriptionRegenerated`, `CatalogItemDeleted`, `LeadLost`, `WorkingHoursChanged`
+- Fixed consumers: `AppointmentRescheduled` (+Reminder Service), `AppointmentCancelled` (+Sessions delete DRAFT, +Reminder Service)
+- 36 edge case clarifications: globalPatientId system-managed, no re-conversion, inactive services not bookable, public booking toggle, no anonymous booking, existing patient auto-linking, reminders without notifications, GDPR erasure 404s all links
 
 ---
 

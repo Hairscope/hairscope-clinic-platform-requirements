@@ -79,21 +79,84 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 
 ### CAT-2: Routine Configuration
 
-**User Story:** As a Doctor, I want to define customizable routines for each catalog item so that patients receive clear usage instructions in their treatment plans and prescriptions.
+**User Story:** As a Staff member, I want to define reusable routine templates for catalog items so that patients receive clear, structured usage instructions in their treatment plans and prescriptions.
+
+#### Routine Structure
+
+A Routine is a structured schedule instruction. It has two variants depending on the catalog item type:
+
+**Product Routine (MEDICATION, COSMETIC, SUPPLEMENT):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | String | Yes | Routine template name (for reuse) |
+| `dosage` | String | Yes (MEDICATION), Optional (others) | Amount per intake (e.g., "1 tablet", "5ml", "2 drops", "pea-sized amount", "apply to scalp") |
+| `schedule` | Array of TimeSlots | Yes | When in the day to take/apply. Implicitly defines how many times per day. |
+| `frequency` | String | Yes | How often the routine repeats (e.g., "every day", "every other day", "every 2 weeks", "once a week") |
+| `duration` | String | No | How long to continue the routine (e.g., "6 months", "3 months", "30 days", "until next visit") |
+| `startDate` | Date | No | When to start (if not immediately) |
+| `endDate` | Date | No | When to stop |
+| `instructions` | String | No | Free text additional instructions (e.g., "take with water", "apply on damp hair", "avoid sun exposure after application") |
+| `reminderEnabled` | Boolean | No | Whether to send reminders (Care App integration, future) |
+
+**TimeSlot values:**
+- `MORNING_BEFORE_MEAL`
+- `MORNING_AFTER_MEAL`
+- `MORNING_ANYTIME`
+- `NOON_BEFORE_MEAL`
+- `NOON_AFTER_MEAL`
+- `NOON_ANYTIME`
+- `AFTERNOON_BEFORE_MEAL`
+- `AFTERNOON_AFTER_MEAL`
+- `AFTERNOON_ANYTIME`
+- `EVENING_BEFORE_MEAL`
+- `EVENING_AFTER_MEAL`
+- `EVENING_ANYTIME`
+- `NIGHT_BEFORE_MEAL`
+- `NIGHT_AFTER_MEAL`
+- `NIGHT_ANYTIME`
+
+**Service Routine (SERVICE):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | String | Yes | Routine template name (for reuse) |
+| `frequency` | String | Yes | How often (e.g., "once a week", "every 2 weeks", "once a month") |
+| `duration` | String | No | For how long to continue (e.g., "6 months", "3 months", "until improvement") |
+| `totalSessions` | Number | No | Total number of sessions recommended |
+| `instructions` | String | No | Free text additional instructions |
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL store a `routine` on every catalog item as a structured object containing: `frequency` (e.g., "twice daily", "once a month"), `duration` (e.g., "6 months", "3 months"), `instructions` (free text, e.g., "apply morning and night", "take with food").
-2. THE Platform SHALL allow routines to be customized per session recommendation — the catalog item's default routine serves as a template, but the doctor may override it for a specific patient.
-3. WHEN a catalog item is recommended in a session, THE Platform SHALL copy the item's default routine as the starting point, allowing the doctor to modify it for that recommendation.
-4. THE Platform SHALL include the routine (default or customized) in the Treatment Plan and Prescription PDFs.
-5. THE Platform SHALL validate that MEDICATION items always have a non-empty routine before the item can be saved.
+1. THE Platform SHALL support Routines as reusable templates. A Routine template can be created independently (routine library) OR directly on a catalog item at creation/edit time.
+2. THE Platform SHALL store routines with the structured fields defined above, varying by catalog item type (Product Routine for MEDICATION/COSMETIC/SUPPLEMENT, Service Routine for SERVICE).
+3. FOR Product Routines, THE Platform SHALL support a daily schedule using TimeSlot values (Morning/Noon/Afternoon/Evening/Night × Before/After Meal). Multiple time slots can be selected per routine.
+4. FOR Service Routines, THE Platform SHALL support frequency-based scheduling (e.g., "twice a month for 6 months", "once a week for 12 weeks").
+5. THE Platform SHALL allow routines to be customized per session recommendation — the catalog item's default routine serves as a template, but the staff may override any field for a specific patient.
+6. WHEN a catalog item is recommended in a session, THE Platform SHALL copy the item's default routine as the starting point, allowing the staff to modify it for that recommendation.
+7. THE Platform SHALL allow routines to be created and managed independently of catalog items (reusable routine library).
+8. THE Platform SHALL allow Staff to attach a routine when manually adding items to a treatment plan (not just from catalog recommendations).
+9. THE Platform SHALL include the routine (default or customized) in the Treatment Plan and Prescription PDFs.
+10. THE Platform SHALL validate that MEDICATION items always have a non-empty routine with at least one TimeSlot before the item can be saved.
+11. `startDate` and `endDate` are optional. If not provided, the routine is assumed to start immediately and continue for the specified duration.
+12. `reminderEnabled` is optional and reserved for future Care App integration. When enabled, the Reminder Service will send routine reminders to the patient.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| MEDICATION without routine | `VALIDATION_ERROR` (field: `routine`) |
+| MEDICATION routine with zero TimeSlots | `VALIDATION_ERROR` (field: `schedule`) |
+| Invalid TimeSlot value | `VALIDATION_ERROR` (field: `schedule`) |
+| Routine template not found | `NOT_FOUND` |
 
 #### Correctness Properties
 
-- For any MEDICATION item M in the catalog: `M.routine` is always non-null.
-- For any session recommendation R referencing catalog item I: `R.routine` may differ from `I.routine` (doctor override).
+- For any MEDICATION item M in the catalog: `M.routine` is always non-null and has at least one TimeSlot.
+- For any session recommendation R referencing catalog item I: `R.routine` may differ from `I.routine` (staff override).
 - The routine displayed in the Treatment Plan/Prescription SHALL be the session-specific routine, not the catalog default (unless unchanged).
+- Routine templates are reusable — the same template can be linked to multiple catalog items without duplication.
+- Deleting a routine template SHALL NOT affect existing session recommendations that copied from it (they hold their own copy).
 
 ---
 
@@ -133,7 +196,7 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 2. THE Platform SHALL require explicit confirmation (`confirmed: true`) before deleting a SERVICE item with active appointments.
 3. WHEN a SERVICE item is deleted and confirmed, THE Platform SHALL cancel all future appointments (`SCHEDULED` or `CONFIRMED` status) that reference that service, emit `AppointmentCancelled` for each, and send cancellation notifications.
 4. WHEN a SERVICE item is deleted, THE Platform SHALL retain the service name and details on all past (COMPLETED, CANCELLED, NO_SHOW) appointments as a snapshot (soft reference preservation).
-5. WHEN a non-SERVICE catalog item (MEDICATION, COSMETIC, SUPPLEMENT) is deleted, THE Platform SHALL retain the item's name, description, and routine on all existing session recommendations and generated Treatment Plans/Prescriptions. The `externalLink` will no longer resolve but the document content remains intact.
+5. WHEN a non-SERVICE catalog item (MEDICATION, COSMETIC, SUPPLEMENT) is to be removed, THE Platform SHALL support setting it to `INACTIVE` status (hidden from catalog search and recommendations but retained for historical reference). Hard deletion is also supported — in that case, the item's name, description, and routine are retained as snapshots on all existing session recommendations and generated Treatment Plans/Prescriptions. The `externalLink` will no longer resolve but the document content remains intact.
 6. WHEN a catalog item that is part of a Treatment Kit is deleted, THE Platform SHALL remove it from the kit and update the kit accordingly.
 7. WHEN a Treatment Kit is deleted, THE Platform SHALL retain the kit's name, description, items, and routines on all existing session recommendations as a snapshot. The `externalLink` will no longer resolve but the document content remains intact.
 8. WHEN a catalog item or Treatment Kit is deleted, THE Platform SHALL record the action in the AuditLog.
@@ -196,7 +259,7 @@ OrganizationAdmins do NOT have access to the `catalog` module (consistent with G
 1. THE Platform SHALL allow Staff to recommend any catalog item (SERVICE, MEDICATION, COSMETIC, SUPPLEMENT) or Treatment Kit in a session.
 2. WHEN recommending a catalog item, THE Platform SHALL copy the item's default routine as a starting point. The doctor MAY customize the routine for this specific recommendation.
 3. THE Platform SHALL allow multiple recommendations per session (any mix of types and kits).
-4. WHEN a session is in `COMPLETED` status, THE Platform SHALL allow editing of recommendations and routines. Editing after Treatment Plan/Prescription generation requires re-generation and re-signing.
+4. WHEN a session is in `COMPLETED` status, THE Platform SHALL allow editing of recommendations and routines. WHEN recommendations are updated, THE Platform SHALL automatically regenerate the Treatment Plan and Prescription PDFs (with strike-through history). The staff must re-sign the regenerated documents.
 5. THE Platform SHALL group recommendations by type for document generation:
    - All recommendations → Treatment Plan PDF
    - MEDICATION recommendations only → Prescription PDF

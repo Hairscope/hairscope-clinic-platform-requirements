@@ -95,6 +95,9 @@
    - Send an email confirmation to the visitor's email
    - Invoke the SmartScheduling engine (server-side, not visible to visitor)
 6. THE Component SHALL display a confirmation screen with the appointment details after successful booking.
+7. WHEN a visitor books via the web component and their email does NOT match an existing Patient or Lead in the Clinic, THE Platform SHALL automatically create a Lead record with the visitor's details and link the appointment to that Lead (`leadId` set).
+8. WHEN a visitor's email matches an existing Patient in the Clinic, THE Platform SHALL link the appointment to that Patient (set `patientId`). No duplicate Patient or Lead is created.
+9. **(Deferred)** WHEN a visitor's email matches an existing Patient or Lead, THE Platform SHOULD verify ownership via OTP sent to that email before linking. This prevents accidental or malicious booking under someone else's identity. Until implemented, linking is based on email match without verification.
 
 #### Failure Cases
 

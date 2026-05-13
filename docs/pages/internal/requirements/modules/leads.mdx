@@ -347,6 +347,7 @@ Lead created
 4. THE Platform SHALL allow Staff to set and update `priority` and `tags`.
 5. WHEN status, priority, or tags are changed, THE Platform SHALL record the change in the AuditLog.
 6. THE Platform SHALL allow a ClinicAdmin or OrganizationAdmin to override a Lead's status to any value including reverting from `CONVERTED`, to correct mistakes. This override is recorded in the AuditLog with the actor's identity.
+7. WHEN a Lead's status is changed to `LOST` and that Lead has active appointments (`SCHEDULED` or `CONFIRMED`), THE Platform SHALL cancel those appointments, emit `AppointmentCancelled` for each, and send cancellation notifications.
 
 #### Failure Cases
 
@@ -392,6 +393,7 @@ Lead created
 - For any Lead L converted to Patient P: every field present in L that maps to a Patient field SHALL be present and equal in P immediately after conversion.
 - For any Lead L where `L.email` matches an existing Patient's email in the same Clinic: conversion SHALL fail and no Patient record SHALL be created.
 - After conversion via LM-10: `L.status = CONVERTED`. Admin override via LM-9 AC-6 may revert this.
+- A Lead that has been converted (status = CONVERTED) SHALL NOT be convertible again. Only one conversion per Lead is permitted.
 
 ---
 

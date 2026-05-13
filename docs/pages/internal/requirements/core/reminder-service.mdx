@@ -66,6 +66,7 @@
 4. THE Service SHALL process due reminders in batches to handle high volumes efficiently.
 5. THE Service SHALL use distributed locking to prevent duplicate firing when multiple service instances are running.
 6. AFTER a `ReminderDue` event is emitted, the Notification Service is responsible for actual delivery. The Reminder Service's responsibility ends at emission.
+7. Reminder schedules MAY exist without triggering notifications — if the Communication Policy has no active notification rule for the reminder type, the `ReminderDue` event is emitted but no notification is delivered. The reminder still fires and is recorded.
 
 #### Correctness Properties
 

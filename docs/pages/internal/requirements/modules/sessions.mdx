@@ -194,13 +194,19 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
 
 #### Failure Cases
 
-| Condition | Error Code |
-|-----------|------------|
-| AI analysis service unavailable | `SERVICE_UNAVAILABLE` (async - notified via event) |
-| AI analysis fails after max retries | `ASYNC_OPERATION_FAILED` (async - notified via event) |
+| Condition | Error Code | Behaviour |
+|-----------|------------|-----------|
+| AI analysis service unavailable | `SERVICE_UNAVAILABLE` | Retried up to 3 times with exponential backoff |
+| AI analysis fails after max retries (all images) | `ASYNC_OPERATION_FAILED` | Session remains in `SAVED` status; staff notified; manual resubmission available |
+| AI analysis fails for some images but succeeds for others (partial failure) | `PARTIAL_ANALYSIS_FAILURE` | Successful images get results; failed images marked with `FAILED` status; session remains in `SAVED` until all images have results or are manually resubmitted |
+| AI analysis returns invalid/corrupt results | `ASYNC_OPERATION_FAILED` | Treated as failure; image marked `FAILED`; staff can resubmit |
+| AI analysis timeout (no response within 60 seconds) | `SERVICE_UNAVAILABLE` | Treated as transient failure; retried |
+| Session stuck in SAVED (AI never responds) | — | Staff can manually resubmit all images; operational alert raised if session is in SAVED for > 1 hour |
 
 #### Correctness Properties
 
+- For any Session S where AI analysis completes for ALL images, the session SHALL transition to `COMPLETED`.
+- For any Session S where AI analysis fails for ANY image, the session SHALL remain in `SAVED` status until all images have successful results (via retry or manual resubmission).
 - For any Session S where AI analysis completes, the Staff member who saved S SHALL receive at least one notification (in-app or push).
 - Resubmitting an image for AI analysis SHALL produce a result equivalent to the original submission for the same image content.
 
