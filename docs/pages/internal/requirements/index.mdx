@@ -1,6 +1,6 @@
 # Hairscope Clinic Platform - Master Requirements
 
-> Version: 1.0.0 | Status: **Final** | API: GraphQL | Last Updated: 2025-04-29
+> Covers: System principles, global invariants, identity model, permission engine, time handling, ID strategy, API contracts, audit requirements, error handling, data lifecycle, performance constraints, multi-device rules, versioning strategy, extensibility, and separation of concerns.
 
 ---
 
