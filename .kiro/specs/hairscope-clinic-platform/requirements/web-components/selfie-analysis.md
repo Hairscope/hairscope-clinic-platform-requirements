@@ -79,6 +79,7 @@
 4. THE Component SHALL emit a `lead-form-submit` event to the host page when the form is submitted.
 5. THE Component SHALL validate all required fields client-side before submission.
 6. THE Component SHALL support configurable form field labels per locale via the `config.form.leadFormLabels` property.
+7. IN `LEAD` mode, THE Platform SHALL create the Lead record after the profile form is submitted (SA-2), not after analysis completion. This ensures the lead is captured even if the visitor abandons the flow before results.
 
 #### Failure Cases
 
@@ -154,6 +155,7 @@
 4. THE Component SHALL display a "Book Appointment" call-to-action button (unless disabled via `config.disableAppointment`).
 5. THE Component SHALL display a treatment recommendation call-to-action button (if configured).
 6. IN `LEAD` mode, THE Component SHALL emit a `lead-captured` event with the `leadId` after the Lead is successfully persisted.
+7. THE Component SHALL allow the visitor to restart the analysis flow from the beginning after viewing results (new capture, new analysis).
 
 #### Failure Cases
 

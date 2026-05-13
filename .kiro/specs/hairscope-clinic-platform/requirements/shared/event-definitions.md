@@ -477,6 +477,7 @@ Emitted when an Appointment's slot is changed.
 
 **Consumers:**
 - Notification Service → sends reschedule confirmation email
+- Reminder Service → updates reminder schedules to reflect new time
 
 ---
 
@@ -496,6 +497,8 @@ Emitted when an Appointment is cancelled.
 **Consumers:**
 - Notification Service → sends cancellation email
 - Slot availability service → releases the slot
+- Sessions Module → deletes linked DRAFT session if one exists (APT-11)
+- Reminder Service → cancels all pending reminder schedules for this appointment
 
 ---
 
@@ -615,6 +618,162 @@ Emitted when a full or partial refund is recorded against a Finalized Invoice.
 
 **Consumers:**
 - Analytics Service → deducts refunded amount from billing KPIs
+
+---
+
+## Treatment Plan & Prescription Events
+
+### `TreatmentPlanSigned`
+Emitted when a Staff member signs and generates a Treatment Plan PDF.
+
+**Payload:**
+```json
+{
+  "sessionId": "uuid",
+  "patientId": "uuid",
+  "clinicId": "uuid",
+  "signedByStaffId": "uuid",
+  "treatmentPlanId": "uuid",
+  "treatmentPlanUrl": "string",
+  "containsMedication": "boolean",
+  "recommendationCount": "number"
+}
+```
+
+**Consumers:**
+- Billing Module → auto-updates invoice with signed recommendations as line items
+- Notification Service → notifies relevant staff
+
+---
+
+### `PrescriptionSigned`
+Emitted when a Staff member signs and generates a Prescription PDF (only when MEDICATION items exist).
+
+**Payload:**
+```json
+{
+  "sessionId": "uuid",
+  "patientId": "uuid",
+  "clinicId": "uuid",
+  "signedByStaffId": "uuid",
+  "prescriptionId": "uuid",
+  "prescriptionUrl": "string",
+  "medicationCount": "number"
+}
+```
+
+**Consumers:**
+- Billing Module → ensures medication line items are on the invoice
+- Notification Service → notifies relevant staff
+
+---
+
+### `TreatmentPlanRegenerated`
+Emitted when a Treatment Plan is regenerated due to recommendation edits after signing.
+
+**Payload:**
+```json
+{
+  "sessionId": "uuid",
+  "treatmentPlanId": "uuid",
+  "clinicId": "uuid",
+  "regeneratedByStaffId": "uuid",
+  "previousVersion": "number",
+  "newVersion": "number",
+  "trigger": "RECOMMENDATION_EDIT"
+}
+```
+
+**Consumers:**
+- Billing Module → syncs invoice line items with updated recommendations
+- Session Module → updates treatment plan URL
+
+---
+
+### `PrescriptionRegenerated`
+Emitted when a Prescription is regenerated due to medication recommendation edits after signing.
+
+**Payload:**
+```json
+{
+  "sessionId": "uuid",
+  "prescriptionId": "uuid",
+  "clinicId": "uuid",
+  "regeneratedByStaffId": "uuid",
+  "previousVersion": "number",
+  "newVersion": "number",
+  "trigger": "RECOMMENDATION_EDIT"
+}
+```
+
+**Consumers:**
+- Billing Module → syncs medication line items with updated recommendations
+- Session Module → updates prescription URL
+
+---
+
+## Catalog Events
+
+### `CatalogItemDeleted`
+Emitted when a SERVICE catalog item is deleted (triggering appointment cancellations).
+
+**Payload:**
+```json
+{
+  "catalogItemId": "uuid",
+  "catalogItemType": "SERVICE | MEDICATION | COSMETIC | SUPPLEMENT",
+  "clinicId": "uuid",
+  "deletedByStaffId": "uuid",
+  "affectedAppointmentCount": "number"
+}
+```
+
+**Consumers:**
+- Appointments Module → cancels all future appointments referencing this service (SERVICE type only)
+- Notification Service → sends cancellation notifications to affected patients/leads
+
+---
+
+## Lead Events (additional)
+
+### `LeadLost`
+Emitted when a Lead's status is changed to LOST.
+
+**Payload:**
+```json
+{
+  "leadId": "uuid",
+  "clinicId": "uuid",
+  "changedByStaffId": "uuid",
+  "activeAppointmentCount": "number"
+}
+```
+
+**Consumers:**
+- Appointments Module → cancels all active appointments for this lead
+- Notification Service → sends cancellation notifications
+
+---
+
+## Clinic Events
+
+### `WorkingHoursChanged`
+Emitted when a Clinic's working hours are updated and existing appointments are affected.
+
+**Payload:**
+```json
+{
+  "clinicId": "uuid",
+  "changedByStaffId": "uuid",
+  "affectedAppointmentIds": ["uuid"],
+  "effectiveDate": "ISO8601 UTC"
+}
+```
+
+**Consumers:**
+- Appointments Module → cancels affected appointments outside new working hours
+- Notification Service → sends cancellation notifications to affected patients/leads
+- Reminder Service → cancels reminder schedules for affected appointments
 
 ---
 
