@@ -1,19 +1,37 @@
 {
-  "current": "1.1.0",
-  "versions": [
-    {
-      "version": "1.1.0",
-      "date": "2026-05-13",
-      "tag": "v1.1.0",
-      "status": "current",
-      "notes": "Catalog module, notification/reminder services, web components, visibility mode, billing sync"
+  "groups": {
+    "requirements": {
+      "current": "1.1.0",
+      "versions": [
+        { "version": "1.1.0", "date": "2026-05-13", "tag": "requirements-v1.1.0" },
+        { "version": "1.0.0", "date": "2025-04-29", "tag": "requirements-v1.0.0" }
+      ]
     },
-    {
-      "version": "1.0.0",
-      "date": "2025-04-29",
-      "tag": "v1.0.0",
-      "status": "archived",
-      "notes": "Initial requirements - core modules, patients, sessions, leads, appointments, products, billing"
+    "guides": {
+      "current": "0.0.1",
+      "versions": [
+        { "version": "0.0.1", "date": "2026-05-13", "tag": "guides-v0.0.1" }
+      ]
+    },
+    "features": {
+      "current": "0.0.1",
+      "versions": [
+        { "version": "0.0.1", "date": "2026-05-13", "tag": "features-v0.0.1" }
+      ]
+    },
+    "developer": {
+      "current": "0.0.1",
+      "versions": [
+        { "version": "0.0.1", "date": "2026-05-13", "tag": "developer-v0.0.1" }
+      ]
+    },
+    "design": {
+      "current": "0.0.0",
+      "versions": []
+    },
+    "implementation": {
+      "current": "0.0.0",
+      "versions": []
     }
-  ]
+  }
 }

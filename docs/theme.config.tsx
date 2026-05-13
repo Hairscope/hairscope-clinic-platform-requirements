@@ -1,6 +1,6 @@
 import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
-import versions from './versions.json'
+import VersionDropdown from './components/VersionDropdown'
 
 const config: DocsThemeConfig = {
   logo: (
@@ -41,34 +41,7 @@ const config: DocsThemeConfig = {
     next: true
   },
   navbar: {
-    extraContent: (
-      <select
-        onChange={(e) => {
-          if (e.target.value !== 'current') {
-            const tag = e.target.value
-            window.open(
-              `https://github.com/Hairscope/hairscope-clinic-platform-requirements/tree/${tag}`,
-              '_blank'
-            )
-          }
-        }}
-        defaultValue="current"
-        style={{
-          padding: '4px 8px',
-          borderRadius: '6px',
-          border: '1px solid #e5e7eb',
-          background: 'transparent',
-          fontSize: '13px',
-          cursor: 'pointer'
-        }}
-      >
-        {versions.versions.map((v) => (
-          <option key={v.version} value={v.status === 'current' ? 'current' : v.tag}>
-            v{v.version} {v.status === 'current' ? '(current)' : `(${v.date})`}
-          </option>
-        ))}
-      </select>
-    )
+    extraContent: <VersionDropdown />
   }
 }
 
