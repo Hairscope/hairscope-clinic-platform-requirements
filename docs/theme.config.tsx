@@ -3,9 +3,17 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 import versions from './versions.json'
 
 const config: DocsThemeConfig = {
-  logo: <img src="/logo.png" alt="Hairscope" style={{ height: '28px' }} />,
+  logo: (
+    <>
+      <img src="/logo.png" alt="Hairscope" className="nextra-logo" />
+      <style>{`
+        .nextra-logo { height: 16px; }
+        @media (min-width: 768px) { .nextra-logo { height: 28px; } }
+      `}</style>
+    </>
+  ),
   project: {
-    link: 'https://github.com/Hairscope/hairscope-clinic-platform-requirements'
+    link: ''
   },
   docsRepositoryBase: 'https://github.com/Hairscope/hairscope-clinic-platform-requirements/tree/main/docs',
   head: (
