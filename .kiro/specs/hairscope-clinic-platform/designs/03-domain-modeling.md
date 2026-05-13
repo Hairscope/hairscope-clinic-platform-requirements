@@ -143,6 +143,10 @@ The platform is divided into bounded contexts:
 - Catalog
 - Billing
 
+## Communication Domain
+
+- Communication Policy
+
 ---
 
 # 4. IAM Domain
@@ -562,7 +566,8 @@ NEW → ASSIGNED → CONVERTED / LOST
 ### Appointment
 
 ```text
-SCHEDULED → COMPLETED / CANCELLED
+SCHEDULED → CONFIRMED → COMPLETED / CANCELLED / NO_SHOW
+SCHEDULED → CANCELLED / NO_SHOW
 ```
 
 ### Invoice

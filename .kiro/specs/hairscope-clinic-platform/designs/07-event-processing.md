@@ -260,9 +260,15 @@ Examples:
 
 ```text
 SessionCompleted → Billing generates Invoice  
+SessionCompleted → Report Generation Service generates Clinical Report
 LeadConverted → Patients creates Patient  
-AppointmentScheduled → Sessions prepares workflow  
+AppointmentBooked → Reminder Service creates reminder schedules
+ReminderDue → Notification Service delivers message
+TreatmentPlanSigned → Billing updates Invoice line items
+CatalogItemDeleted → Appointments cancels future bookings
 ```
+
+> **Note:** Worker Services (Reminder Service, Notification Service, AI Models, Report Generation Service) are major event consumers. They are deployed separately but participate in the same event-driven architecture.
 
 ---
 

@@ -206,6 +206,19 @@ Owns:
 
 ---
 
+## 3.10 Communication Policy Module
+
+Owns:
+
+- NotificationTemplate
+- ChannelPreference
+- ReminderRule
+- ConsentPreference
+- NotificationBranding
+- QuietHoursConfig
+
+---
+
 # 4. Persistence Boundaries
 
 Each module SHALL define its own persistence boundary.

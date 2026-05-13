@@ -214,6 +214,7 @@ leads/
 appointments/
 catalog/
 billing/
+communication-policy/
 ```
 
 Future modules MAY be added.
@@ -424,13 +425,14 @@ Engines SHALL be composed into workflows inside modules.
 Examples:
 
 ```text
+access-resolution/
+entitlement/
 lead-distribution/
 smart-scheduling/
-ai-analysis/
 recommendation/
-report-generation/
-entitlement/
 ```
+
+> **Note:** AI Models and Report Generation Service are Worker Services, not engines. They are deployed separately. See `01-system-architecture.md` Section 5.1.
 
 Each engine SHALL follow a uniform structure:
 
