@@ -241,22 +241,30 @@ export class AppointmentService {
 @Injectable()
 export class SlotAvailabilityService {
   /**
-   * Slot availability = Clinic Working Hours ∩ Staff Availability
+   * Slot availability = Clinic Working Hours ∩ Staff Availability ∩ No Staff Conflicts
    * A slot is available if:
    * 1. The clinic is open during that time
-   * 2. At least one qualified staff member is available
-   * 3. No conflicting appointment exists for that staff member
+   * 2. At least one qualified staff member is available at that time
+   * 3. No conflicting appointment exists for that specific staff member
    */
-  async isSlotAvailable(start: Date, end: Date, clinicId: string): Promise<boolean> {
+  async isSlotAvailableForStaff(
+    staffId: string,
+    start: Date,
+    end: Date,
+    clinicId: string,
+  ): Promise<boolean> {
     // Check clinic working hours
     const clinic = await this.clinicRepo.findById(clinicId);
     const dayOfWeek = start.getDay();
     const clinicHours = clinic.workingHours.find(h => h.day === dayOfWeek);
 
     if (!clinicHours?.isOpen) return false;
+    if (!this.isWithinHours(start, end, clinicHours)) return false;
 
-    // Check for conflicts
-    const conflicts = await this.appointmentRepo.findConflicting(clinicId, start, end);
+    // Check staff-level conflicts (not clinic-wide)
+    const conflicts = await this.appointmentRepo.findConflictingForStaff(
+      staffId, start, end, clinicId,
+    );
     return conflicts.length === 0;
   }
 
@@ -272,12 +280,18 @@ export class SlotAvailabilityService {
 
     if (!clinicHours?.isOpen) return [];
 
-    // Generate all possible slots
+    // Get qualified staff for this service
+    const qualifiedStaff = await this.catalogService.getQualifiedStaff(serviceId, { clinicId });
+
+    // Generate all possible slots within clinic hours
     const slots = this.generateSlots(clinicHours.startTime, clinicHours.endTime, durationMinutes);
 
-    // Filter out booked slots
-    const booked = await this.appointmentRepo.findByDateRange(clinicId, date);
-    return slots.filter(slot => !this.hasConflict(slot, booked));
+    // A slot is available if at least one qualified staff member has no conflict
+    return slots.filter(slot =>
+      qualifiedStaff.some(staff =>
+        !this.hasStaffConflict(staff.id, slot, clinicId),
+      ),
+    );
   }
 }
 ```

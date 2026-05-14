@@ -204,18 +204,24 @@ export class LeadWebhookController {
   @UseGuards(ApiKeyGuard)
   async createFromWebhook(
     @Body() dto: WebhookLeadDto,
-    @Headers('x-clinic-id') clinicId: string,
-    @Headers('x-organization-id') organizationId: string,
+    @ApiKeyContext() apiKeyContext: { organizationId: string; clinicId: string },
   ): Promise<{ leadId: string }> {
+    // Organization and clinic are resolved from the validated API key, not from headers
     const lead = await this.leadService.create({
       ...dto,
       source: 'WEBHOOK',
-    }, { organizationId, clinicId, staffId: 'SYSTEM' });
+    }, {
+      organizationId: apiKeyContext.organizationId,
+      clinicId: apiKeyContext.clinicId,
+      staffId: 'SYSTEM',
+    });
 
     return { leadId: lead.id };
   }
 }
 ```
+
+The `ApiKeyGuard` validates the API key and resolves the associated organization and clinic. Org/clinic identity is never trusted from request headers.
 
 ---
 

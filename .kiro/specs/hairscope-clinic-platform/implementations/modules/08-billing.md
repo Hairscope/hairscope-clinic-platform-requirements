@@ -240,41 +240,56 @@ export class PaymentService {
 
 # 6. Event Handlers
 
+Billing starts after signed treatment approval. The `TreatmentPlanSigned` event is the primary trigger for invoice creation.
+
 ```typescript
 @Injectable()
 export class BillingEventHandler {
-  @OnEvent('SessionCompleted')
-  async handleSessionCompleted(event: SessionCompletedEvent): Promise<void> {
-    if (await this.idempotencyStore.isDuplicate(event.eventId)) return;
-
-    // Auto-create invoice for completed session
-    await this.invoiceService.createFromSession(event.payload.sessionId, {
-      staffId: event.payload.doctorId,
-      organizationId: event.payload.organizationId,
-      clinicId: event.payload.clinicId,
-    });
-
-    await this.idempotencyStore.markProcessed(event.eventId);
-  }
-
   @OnEvent('TreatmentPlanSigned')
   async handleTreatmentPlanSigned(event: TreatmentPlanSignedEvent): Promise<void> {
     if (await this.idempotencyStore.isDuplicate(event.eventId)) return;
 
-    // Auto-add treatment plan items to invoice
     const plan = await this.treatmentPlanRepo.findById(event.payload.planId);
-    const invoice = await this.invoiceRepo.findBySession(event.payload.sessionId);
+    const context = {
+      staffId: event.payload.signedBy,
+      organizationId: event.payload.organizationId,
+      clinicId: event.payload.clinicId,
+    };
 
-    if (invoice && invoice.status === 'DRAFT') {
-      for (const routine of plan.routines) {
-        await this.invoiceService.addLineItem(invoice.id, {
-          description: routine.itemName,
-          catalogItemId: routine.catalogItemId,
-          quantity: 1,
-          unitPrice: await this.getCatalogItemPrice(routine.catalogItemId),
-        }, { organizationId: plan.organizationId, clinicId: plan.clinicId });
-      }
-    }
+    // Create invoice atomically with line items from the signed treatment plan
+    const invoiceNumber = await this.invoiceService.generateInvoiceNumber(context);
+    const clinic = await this.clinicRepo.findById(context.clinicId, context);
+
+    const lineItems = await Promise.all(
+      plan.routines.map(async (routine) => ({
+        description: routine.itemName,
+        catalogItemId: routine.catalogItemId,
+        quantity: 1,
+        unitPrice: await this.getCatalogItemPrice(routine.catalogItemId),
+        total: await this.getCatalogItemPrice(routine.catalogItemId),
+      })),
+    );
+
+    const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
+
+    await this.invoiceRepo.create({
+      invoiceNumber,
+      patientId: plan.patientId,
+      sessionId: plan.sessionId,
+      treatmentPlanId: plan.id,
+      status: 'DRAFT',
+      lineItems,
+      subtotal,
+      tax: 0,
+      discount: 0,
+      total: subtotal,
+      amountPaid: 0,
+      balance: subtotal,
+      currency: clinic.currency,
+      organizationId: context.organizationId,
+      clinicId: context.clinicId,
+      createdBy: context.staffId,
+    });
 
     await this.idempotencyStore.markProcessed(event.eventId);
   }

@@ -60,7 +60,7 @@ export class AuditService {
 
   async append(
     action: string,
-    metadata: Record<string, any>,
+    metadata: Record<string, any> & { entityId?: string; entityType?: string },
     options?: { session?: ClientSession; context?: TenantContext },
   ): Promise<void> {
     const context = options?.context ?? this.request['identity'];
@@ -68,8 +68,8 @@ export class AuditService {
 
     await this.auditLogRepo.create({
       action,
-      entityId: metadata.entityId ?? metadata[Object.keys(metadata)[0]],
-      entityType: this.resolveEntityType(action),
+      entityId: metadata.entityId ?? null,
+      entityType: metadata.entityType ?? this.resolveEntityType(action),
       staffId: context.staffId,
       staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'SYSTEM',
       organizationId: context.organizationId,

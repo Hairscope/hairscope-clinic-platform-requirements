@@ -200,7 +200,26 @@ export interface CommunicationPolicyContract {
 }
 ```
 
-Worker Services access this contract via direct MongoDB queries (same database) or via an internal HTTP client if deployed separately.
+Worker Services access this contract via an internal HTTP client that calls the Communication Policy module's API. Workers SHALL NOT query the Communication Policy module's database collections directly — this preserves module encapsulation.
+
+```typescript
+// packages/shared/src/clients/communication-policy.client.ts
+@Injectable()
+export class CommunicationPolicyClient implements CommunicationPolicyContract {
+  constructor(private readonly httpService: HttpService) {}
+
+  async getActiveReminderRules(clinicId: string, triggerEvent: string): Promise<ReminderRule[]> {
+    const response = await firstValueFrom(
+      this.httpService.get(`/internal/communication-policy/reminder-rules`, {
+        params: { clinicId, triggerEvent },
+      }),
+    );
+    return response.data;
+  }
+}
+```
+
+The main API application exposes internal-only endpoints for worker service consumption. These endpoints are not exposed externally.
 
 ---
 
