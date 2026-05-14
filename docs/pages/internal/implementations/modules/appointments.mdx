@@ -241,19 +241,19 @@ export class AppointmentService {
 @Injectable()
 export class SlotAvailabilityService {
   /**
-   * Slot availability = Clinic Working Hours ∩ Staff Availability ∩ No Staff Conflicts
+   * Slot availability = Clinic Working Hours ∩ Staff Availability
    * A slot is available if:
-   * 1. The clinic is open during that time
-   * 2. At least one qualified staff member is available at that time
-   * 3. No conflicting appointment exists for that specific staff member
+   * 1. The clinic is open during that time (working hours)
+   * 2. At least one staff member capable of providing the service is available
+   * 3. That staff member has no conflicting appointment at that time
    */
-  async isSlotAvailableForStaff(
-    staffId: string,
+  async isSlotAvailable(
     start: Date,
     end: Date,
+    serviceId: string,
     clinicId: string,
   ): Promise<boolean> {
-    // Check clinic working hours
+    // 1. Check clinic working hours
     const clinic = await this.clinicRepo.findById(clinicId);
     const dayOfWeek = start.getDay();
     const clinicHours = clinic.workingHours.find(h => h.day === dayOfWeek);
@@ -261,11 +261,23 @@ export class SlotAvailabilityService {
     if (!clinicHours?.isOpen) return false;
     if (!this.isWithinHours(start, end, clinicHours)) return false;
 
-    // Check staff-level conflicts (not clinic-wide)
-    const conflicts = await this.appointmentRepo.findConflictingForStaff(
-      staffId, start, end, clinicId,
-    );
-    return conflicts.length === 0;
+    // 2. Check at least one qualified staff is available
+    const qualifiedStaff = await this.catalogService.getQualifiedStaff(serviceId, { clinicId });
+
+    for (const staff of qualifiedStaff) {
+      // Check staff availability schedule
+      const availability = await this.staffAvailabilityService.getForStaff(staff.id, { clinicId });
+      const daySchedule = availability?.schedule.find(s => s.day === dayOfWeek);
+      if (!daySchedule?.available) continue;
+
+      // Check no conflicting appointment for this staff member
+      const conflicts = await this.appointmentRepo.findConflictingForStaff(
+        staff.id, start, end, clinicId,
+      );
+      if (conflicts.length === 0) return true;
+    }
+
+    return false; // No qualified staff available
   }
 
   async getAvailableSlots(
@@ -289,7 +301,7 @@ export class SlotAvailabilityService {
     // A slot is available if at least one qualified staff member has no conflict
     return slots.filter(slot =>
       qualifiedStaff.some(staff =>
-        !this.hasStaffConflict(staff.id, slot, clinicId),
+        this.isStaffAvailableForSlot(staff, slot, dayOfWeek, clinicId),
       ),
     );
   }

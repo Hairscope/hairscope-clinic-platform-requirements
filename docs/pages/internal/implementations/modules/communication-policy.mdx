@@ -200,26 +200,33 @@ export interface CommunicationPolicyContract {
 }
 ```
 
-Worker Services access this contract via an internal HTTP client that calls the Communication Policy module's API. Workers SHALL NOT query the Communication Policy module's database collections directly — this preserves module encapsulation.
+Worker Services access this contract via an internal GraphQL client that queries the main API. Workers SHALL NOT query the Communication Policy module's database collections directly — this preserves module encapsulation.
 
 ```typescript
 // packages/shared/src/clients/communication-policy.client.ts
 @Injectable()
 export class CommunicationPolicyClient implements CommunicationPolicyContract {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly graphqlClient: InternalGraphQLClient) {}
 
   async getActiveReminderRules(clinicId: string, triggerEvent: string): Promise<ReminderRule[]> {
-    const response = await firstValueFrom(
-      this.httpService.get(`/internal/communication-policy/reminder-rules`, {
-        params: { clinicId, triggerEvent },
-      }),
-    );
-    return response.data;
+    const result = await this.graphqlClient.query({
+      query: GET_ACTIVE_REMINDER_RULES,
+      variables: { clinicId, triggerEvent },
+    });
+    return result.data.activeReminderRules;
+  }
+
+  async getChannelPolicy(recipientId: string, notificationType: string): Promise<ChannelPolicy> {
+    const result = await this.graphqlClient.query({
+      query: GET_CHANNEL_POLICY,
+      variables: { recipientId, notificationType },
+    });
+    return result.data.channelPolicy;
   }
 }
 ```
 
-The main API application exposes internal-only endpoints for worker service consumption. These endpoints are not exposed externally.
+The `InternalGraphQLClient` authenticates with a service-to-service token and calls the main API's GraphQL endpoint. This keeps one API surface (GraphQL) for all consumers.
 
 ---
 

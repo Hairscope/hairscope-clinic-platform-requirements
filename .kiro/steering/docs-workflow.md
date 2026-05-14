@@ -24,8 +24,10 @@ Cross-cutting files (`versions.json`, `theme.config.tsx`, `next.config.mjs`, `_m
 
 1. **NEVER push to `doc-deploy` without explicit user confirmation.** Always summarize changes and ask before merging.
 2. After making changes on a working branch, push to that branch first.
-3. Present a summary of what's ready to deploy.
-4. Wait for explicit "deploy", "confirm", or equivalent before merging to `doc-deploy`.
+3. **Update the group's changelog before deploying.** Every version bump must have a corresponding changelog entry.
+4. **Changelogs describe what changed between published versions only.** Do not include internal discussions, reverted drafts, or changes that were never deployed. If something was changed and then reverted before deployment, it never happened from the reader's perspective.
+5. Present a summary of what's ready to deploy.
+6. Wait for explicit "deploy", "confirm", or equivalent before merging to `doc-deploy`.
 
 ## Versioning Algorithm
 

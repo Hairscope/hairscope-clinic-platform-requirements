@@ -4,6 +4,28 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.1.3 — 2026-05-14
+
+### Fixed
+- Appointments: Slot availability checks clinic open hours + at least one qualified staff available (staff-level)
+- Appointments: Rescheduling cancels original and creates new appointment linked through `rescheduledFrom`
+- Billing: Invoice created atomically on TreatmentPlanSigned (not SessionCompleted)
+- Sessions: AI analysis provides clinical findings only (no recommendations); Recommendation Engine generates treatment plans
+- Sessions: Treatment plan routines are per-line-item, not plan-level
+- Communication Policy: Workers use internal GraphQL client to query main API, preserving module encapsulation
+- Audit: entityId passed explicitly in metadata, not inferred from key order
+
+---
+
+## v1.1.2 — 2026-05-14
+
+### Fixed
+- GraphQL: File uploads via GraphQL mutation (graphql-upload), not HTTP controller
+- File Storage: Upload flow uses stream from GraphQL Upload scalar
+- File downloads remain as HTTP signed URLs
+
+---
+
 ## v1.1.1 — 2026-05-14
 
 ### Fixed

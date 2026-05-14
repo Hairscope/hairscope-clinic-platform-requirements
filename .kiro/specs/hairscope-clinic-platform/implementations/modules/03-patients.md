@@ -85,10 +85,8 @@ export class PatientService {
       age = this.calculateAge(dto.dateOfBirth);
     }
 
-    // Global patient ID resolution
-    const globalPatientId = await this.resolveGlobalPatientId(
-      context.organizationId, dto.email, dto.phone,
-    );
+    // Global patient ID resolution (global lookup for Care App linking)
+    const globalPatientId = await this.resolveGlobalPatientId(dto.email, dto.phone);
 
     const session = await this.connection.startSession();
     session.startTransaction();
@@ -127,15 +125,10 @@ export class PatientService {
     return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
   }
 
-  private async resolveGlobalPatientId(
-    organizationId: string,
-    email: string,
-    phone?: string,
-  ): Promise<string> {
-    // Look for existing patient with same email or phone within the same organization
-    const existing = await this.patientRepo.findByEmailOrPhoneWithinOrganization(
-      organizationId, email, phone,
-    );
+  private async resolveGlobalPatientId(email: string, phone?: string): Promise<string> {
+    // Global lookup: find any patient across all orgs with same email or phone
+    // This enables the Care App to link the same physical person across clinics
+    const existing = await this.patientRepo.findByEmailOrPhoneGlobal(email, phone);
     if (existing?.globalPatientId) return existing.globalPatientId;
     return randomUUID();
   }
