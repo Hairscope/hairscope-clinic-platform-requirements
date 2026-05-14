@@ -184,31 +184,34 @@ async deletePrefix(prefix: string): Promise<void> {
 
 ---
 
-# 4. File Upload Controller
+# 4. File Upload (GraphQL Mutation)
 
-## 4.1 Multipart Upload
+## 4.1 Upload Resolver
+
+File uploads use the `graphql-upload` multipart request specification:
 
 ```typescript
-@Controller('files')
+import { GraphQLUpload, FileUpload } from 'graphql-upload';
+
+@Resolver()
 @UseGuards(AuthGuard, TenantGuard)
-export class FileUploadController {
+export class FileUploadResolver {
   constructor(private readonly fileService: FileService) {}
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
-    fileFilter: (req, file, cb) => {
-      const allowed = /^(image\/(jpeg|png|webp)|application\/pdf)$/;
-      cb(null, allowed.test(file.mimetype));
-    },
-  }))
-  async upload(
-    @UploadedFile() file: Express.Multer.File,
-    @Body('category') category: FileCategory,
-    @Body('entityId') entityId: string,
+  @Mutation(() => FileUploadResponse)
+  async uploadFile(
+    @Args({ name: 'file', type: () => GraphQLUpload }) file: FileUpload,
+    @Args('input') input: FileUploadInput,
     @CurrentUser() user: TenantContext,
   ): Promise<FileUploadResponse> {
-    return this.fileService.upload(file, category, entityId, user);
+    const { createReadStream, filename, mimetype } = await file;
+
+    // Validate file type
+    const allowed = /^(image\/(jpeg|png|webp)|application\/pdf)$/;
+    if (!allowed.test(mimetype)) throw new InvalidFileTypeError();
+
+    const stream = createReadStream();
+    return this.fileService.uploadFromStream(stream, filename, mimetype, input, user);
   }
 }
 ```
@@ -223,24 +226,26 @@ export class FileService {
     private readonly fileMetadataRepo: FileMetadataRepository,
   ) {}
 
-  async upload(
-    file: Express.Multer.File,
-    category: FileCategory,
-    entityId: string,
+  async uploadFromStream(
+    stream: ReadableStream,
+    originalName: string,
+    mimeType: string,
+    input: FileUploadInput,
     context: TenantContext,
   ): Promise<FileUploadResponse> {
-    const fileName = `${randomUUID()}-${file.originalname}`;
-    const filePath = `${context.organizationId}/${context.clinicId}/${category}/${entityId}/${fileName}`;
+    const fileName = `${randomUUID()}-${originalName}`;
+    const filePath = `${context.organizationId}/${context.clinicId}/${input.category}/${input.entityId}/${fileName}`;
 
-    await this.storageService.upload(filePath, file.buffer, file.mimetype);
+    // Stream to GCS
+    const size = await this.storageService.uploadStream(filePath, stream, mimeType);
 
     const metadata = await this.fileMetadataRepo.create({
       filePath,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-      category,
-      entityId,
+      originalName,
+      mimeType,
+      size,
+      category: input.category,
+      entityId: input.entityId,
       organizationId: context.organizationId,
       clinicId: context.clinicId,
       uploadedBy: context.staffId,
