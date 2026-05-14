@@ -7,11 +7,11 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 ## v1.1.0 — 2026-05-14
 
 ### Changed
-- Package manager switched from pnpm to Bun (Bun is now primary runtime AND package manager)
-- Monorepo uses Bun workspaces via `package.json` (no `pnpm-workspace.yaml`)
-- Dockerfiles updated to use `bun install --frozen-lockfile`
-- CI pipelines updated to use `oven-sh/setup-bun@v2`
-- pnpm retained as fallback only
+- Runtime updated to Node.js 24 LTS, TypeScript 6.x, NestJS 11.x, pnpm 11.x
+- Added Zod for schema validation alongside class-validator
+- Database infrastructure changed to MongoDB Atlas (managed)
+- All dependencies use exact versions (no caret ranges)
+- Removed Bun — Node.js is the sole runtime, pnpm is the sole package manager
 
 ---
 
