@@ -8,8 +8,8 @@
 
 Development environment requires:
 
-- Bun 1.x (or Node.js 20 LTS)
-- pnpm 9.x
+- Bun 1.x (primary runtime and package manager)
+- Node.js 20 LTS (fallback runtime only)
 - Docker + Docker Compose
 - MongoDB 7.x (via Docker)
 - Redis 7.x (via Docker)
@@ -20,25 +20,21 @@ Development environment requires:
 
 # 2. Workspace Configuration
 
-### pnpm-workspace.yaml
-
-```yaml
-packages:
-  - 'packages/*'
-```
-
 ### Root package.json
 
 ```json
 {
   "name": "hairscope-backend",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "pnpm --filter api dev",
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "test:e2e": "pnpm --filter tests e2e",
-    "lint": "pnpm -r lint",
+    "dev": "bun run --filter api dev",
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "test:e2e": "bun run --filter tests e2e",
+    "lint": "bun run --filter '*' lint",
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f docker/docker-compose.yml down"
   },
@@ -155,10 +151,10 @@ Each package extends the root config.
 
 ```text
 1. Clone repository
-2. pnpm install
+2. bun install
 3. docker compose up (MongoDB + Redis)
 4. Copy .env.example → .env (configure secrets)
-5. pnpm dev (starts API server with hot reload)
+5. bun dev (starts API server with hot reload)
 ```
 
 ---
