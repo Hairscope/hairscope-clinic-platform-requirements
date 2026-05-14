@@ -14,7 +14,7 @@ The binary SHALL be included in the Docker image for the Report Generation worke
 
 ```dockerfile
 # Dockerfile.worker-report
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 # Install Typst binary
 RUN curl -fsSL https://typst.community/typst-install/install.sh | sh

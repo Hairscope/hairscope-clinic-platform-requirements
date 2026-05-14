@@ -9,9 +9,9 @@
 Development environment requires:
 
 - Bun 1.x (primary runtime and package manager)
-- Node.js 20 LTS (fallback runtime only)
+- Node.js 24 LTS (fallback runtime only)
 - Docker + Docker Compose
-- MongoDB 7.x (via Docker)
+- MongoDB LTS (via Docker for local dev; MongoDB Atlas in production)
 - Redis 7.x (via Docker)
 - Typst CLI (installed locally or via Docker)
 - GCP service account key (for Cloud Storage)
@@ -49,11 +49,9 @@ Development environment requires:
 # 3. Docker Compose (Development)
 
 ```yaml
-version: '3.8'
-
 services:
   mongodb:
-    image: mongo:7
+    image: mongo:8
     ports:
       - '27017:27017'
     volumes:

@@ -115,11 +115,9 @@ CMD ["bun", "run", "dist/main.js"]
 
 ```yaml
 # docker/docker-compose.yml
-version: '3.8'
-
 services:
   mongodb:
-    image: mongo:7
+    image: mongo:8
     command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
@@ -202,13 +200,13 @@ If Bun compatibility issues arise, Dockerfiles SHALL swap the base image and pac
 
 ```dockerfile
 # Replace: FROM oven/bun:1 AS builder
-# With:    FROM node:20 AS builder
+# With:    FROM node:24 AS builder
 
 # Replace: RUN bun install --frozen-lockfile
 # With:    RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
 # Replace: FROM oven/bun:1-slim AS production
-# With:    FROM node:20-slim AS production
+# With:    FROM node:24-slim AS production
 
 # Replace: CMD ["bun", "run", "dist/main.js"]
 # With:    CMD ["node", "dist/main.js"]
@@ -245,7 +243,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mongodb:
-        image: mongo:7
+        image: mongo:8
         ports: ['27017:27017']
         options: --health-cmd "mongosh --eval 'db.runCommand({ping:1})'" --health-interval 10s
       redis:
@@ -334,8 +332,6 @@ jobs:
 
 ```yaml
 # /opt/hairscope/docker-compose.yml (on GCE instance)
-version: '3.8'
-
 services:
   api:
     image: gcr.io/${GCP_PROJECT}/hairscope-api:${IMAGE_TAG}
@@ -435,22 +431,21 @@ export class WorkerHealthController {
 
 # 6. Rollback Strategy
 
-## 6.1 Image Tags
+## 6.1 Rollback Procedure
 
-Every deployment SHALL be tagged with the Git SHA.
-
-Previous images SHALL be retained for rollback.
-
-## 6.2 Rollback Procedure
+Any previous version can be redeployed with a fresh build from the corresponding Git commit. Old Docker images are not retained.
 
 ```bash
-# Rollback to previous version
-export IMAGE_TAG=<previous-sha>
-docker compose pull
-docker compose up -d
+# Rollback: trigger a fresh build and deploy from the target commit
+# Option 1: Revert commit and push to main
+git revert <bad-commit-sha>
+git push origin main
+
+# Option 2: Manually trigger CI workflow on a specific SHA
+gh workflow run ci.yml --ref <target-sha>
 ```
 
-## 6.3 Database Migrations
+## 6.2 Database Migrations
 
 Migrations SHALL be forward-compatible.
 
