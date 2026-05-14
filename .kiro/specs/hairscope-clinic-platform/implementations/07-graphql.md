@@ -306,43 +306,61 @@ Subscriptions SHALL be used for:
 
 # 7. File Uploads
 
-## 7.1 Separate Endpoint
+## 7.1 GraphQL Upload Mutation
 
-File uploads SHALL NOT use GraphQL mutations.
-
-File uploads SHALL use a separate HTTP multipart endpoint:
+File uploads SHALL use GraphQL mutations with the multipart request specification (`graphql-upload`).
 
 ```typescript
-@Controller('files')
+import { GraphQLUpload, FileUpload } from 'graphql-upload';
+
+@Resolver()
 @UseGuards(AuthGuard, TenantGuard)
-export class FileUploadController {
+export class FileUploadResolver {
   constructor(private readonly fileService: FileService) {}
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
-  }))
-  async upload(
-    @UploadedFile() file: Express.Multer.File,
+  @Mutation(() => FileUploadResponse)
+  async uploadFile(
+    @Args({ name: 'file', type: () => GraphQLUpload }) file: FileUpload,
+    @Args('input') input: FileUploadInput,
     @CurrentUser() user: TenantContext,
-    @Body('category') category: string,
   ): Promise<FileUploadResponse> {
-    const result = await this.fileService.upload(file, category, user);
+    const { createReadStream, filename, mimetype } = await file;
+    const stream = createReadStream();
+
+    const result = await this.fileService.uploadFromStream(
+      stream, filename, mimetype, input, user,
+    );
+
     return { fileId: result.id, url: result.url };
   }
 }
 ```
 
-## 7.2 Response
+## 7.2 Input and Response Types
 
 ```typescript
-interface FileUploadResponse {
+@InputType()
+export class FileUploadInput {
+  @Field(() => FileCategory)
+  category: FileCategory;
+
+  @Field(() => ID, { nullable: true })
+  entityId?: string;
+}
+
+@ObjectType()
+export class FileUploadResponse {
+  @Field(() => ID)
   fileId: string;
+
+  @Field()
   url: string;
 }
 ```
 
-The returned `fileId` MAY be referenced in subsequent GraphQL mutations (e.g., attaching an image to a session).
+## 7.3 File Downloads
+
+File downloads SHALL NOT use GraphQL. Clients access files via signed URLs returned by queries.
 
 ---
 
