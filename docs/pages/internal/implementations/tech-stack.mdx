@@ -8,16 +8,10 @@
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Runtime | Bun (primary), Node.js (fallback) | Bun 1.x, Node.js 20 LTS |
-| Language | TypeScript | 5.x (strict mode) |
-| Framework | NestJS | 10.x |
-| Package Manager | Bun (primary), pnpm (fallback) | Bun 1.x, pnpm 9.x |
-
-Bun SHALL be the primary runtime AND package manager for development and production.
-
-Bun workspaces SHALL be used for monorepo package management.
-
-IF Bun compatibility issues arise with any dependency, Node.js 20 LTS SHALL be used as runtime fallback and pnpm as package manager fallback without code changes.
+| Runtime | Node.js | 24 LTS |
+| Language | TypeScript | 6.x (strict mode) |
+| Framework | NestJS | 11.x |
+| Package Manager | pnpm | 11.x (workspaces) |
 
 TypeScript SHALL be configured in strict mode across all packages.
 
@@ -31,6 +25,7 @@ TypeScript SHALL be configured in strict mode across all packages.
 | Database | `@nestjs/mongoose` + `mongoose` | MongoDB ODM |
 | Cache | `@nestjs/cache-manager` + `cache-manager-redis-yet` | Redis cache |
 | Validation | `class-validator` + `class-transformer` | Input validation |
+| Schema Validation | `zod` | Runtime schema validation |
 | Auth | `jsonwebtoken` + `argon2` | JWT + password hashing |
 | Events | `@nestjs/event-emitter` | In-process domain events |
 | Queue | `@nestjs/bullmq` + `bullmq` | Job queues for workers |
@@ -58,7 +53,7 @@ TypeScript SHALL be configured in strict mode across all packages.
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| Database | MongoDB 7.x | Primary persistence |
+| Database | MongoDB Atlas | Primary persistence (managed) |
 | Cache/Queue | Redis 7.x | Caching, BullMQ job queue, event streaming |
 | Object Storage | Google Cloud Storage | Files, images, PDFs |
 | Container | Docker | Deployment packaging |
@@ -69,13 +64,13 @@ TypeScript SHALL be configured in strict mode across all packages.
 
 # 5. Monorepo Structure
 
-The project SHALL use Bun workspaces:
+The project SHALL use pnpm workspaces:
 
 ```
 hairscope-backend/
-├── bunfig.toml
-├── package.json (root, workspaces defined here)
-├── bun.lock
+├── pnpm-workspace.yaml
+├── package.json (root)
+├── pnpm-lock.yaml
 ├── packages/
 │   ├── api/              → Main NestJS application (modular monolith)
 │   ├── worker-reminder/  → Reminder Service worker
@@ -96,23 +91,18 @@ hairscope-backend/
     └── workflows/        → CI/CD pipelines
 ```
 
-Workspace configuration in root `package.json`:
+Workspace configuration in `pnpm-workspace.yaml`:
 
-```json
-{
-  "workspaces": [
-    "packages/*"
-  ]
-}
+```yaml
+packages:
+  - 'packages/*'
 ```
 
 ---
 
 # 6. Version Constraints
 
-All dependencies SHALL use exact versions (no ranges) in production packages.
-
-Development dependencies MAY use caret ranges.
+All dependencies SHALL use exact versions (no ranges).
 
 Dependency updates SHALL be reviewed and tested before merging.
 
