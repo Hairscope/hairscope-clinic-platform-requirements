@@ -484,14 +484,10 @@ test:
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 24
-        cache: pnpm
-    - run: pnpm install --frozen-lockfile
-    - run: pnpm test:ci
-    - run: pnpm test:e2e
+    - uses: oven-sh/setup-bun@v2
+    - run: bun install --frozen-lockfile
+    - run: bun run test:ci
+    - run: bun run test:e2e
       env:
         API_URL: http://localhost:3000
 ```

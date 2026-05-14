@@ -10,22 +10,21 @@
 
 ```dockerfile
 # docker/Dockerfile.api
-FROM node:24-slim AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
-RUN npm install -g pnpm
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/api/ packages/api/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=api build
+RUN bun run --filter=shared build
+RUN bun run --filter=api build
 
 # Production image
-FROM node:24-slim AS production
+FROM oven/bun:1-slim AS production
 
 WORKDIR /app
 COPY --from=builder /app/packages/api/dist ./dist
@@ -36,7 +35,7 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:3000/health || exit 1
 
-CMD ["node", "dist/main.js"]
+CMD ["bun", "run", "dist/main.js"]
 ```
 
 ## 1.2 Worker Dockerfiles
@@ -45,21 +44,20 @@ Each worker SHALL have its own Dockerfile following the same pattern:
 
 ```dockerfile
 # docker/Dockerfile.worker-reminder
-FROM node:24-slim AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
-RUN npm install -g pnpm
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/worker-reminder/package.json packages/worker-reminder/
 COPY packages/shared/package.json packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/worker-reminder/ packages/worker-reminder/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=worker-reminder build
+RUN bun run --filter=shared build
+RUN bun run --filter=worker-reminder build
 
-FROM node:24-slim AS production
+FROM oven/bun:1-slim AS production
 
 WORKDIR /app
 COPY --from=builder /app/packages/worker-reminder/dist ./dist
@@ -70,28 +68,27 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:3001/health || exit 1
 
-CMD ["node", "dist/main.js"]
+CMD ["bun", "run", "dist/main.js"]
 ```
 
 ## 1.3 Report Worker (with Typst)
 
 ```dockerfile
 # docker/Dockerfile.worker-report
-FROM node:24-slim AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
-RUN npm install -g pnpm
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/worker-report/package.json packages/worker-report/
 COPY packages/shared/package.json packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/worker-report/ packages/worker-report/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=worker-report build
+RUN bun run --filter=shared build
+RUN bun run --filter=worker-report build
 
-FROM node:24-slim AS production
+FROM oven/bun:1-slim AS production
 
 # Install Typst
 RUN apt-get update && apt-get install -y curl && \
@@ -111,7 +108,7 @@ EXPOSE 3004
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:3004/health || exit 1
 
-CMD ["node", "dist/main.js"]
+CMD ["bun", "run", "dist/main.js"]
 ```
 
 ## 1.4 Docker Compose (Development)
@@ -199,9 +196,31 @@ volumes:
 
 ---
 
-# 2. GitHub Actions CI/CD
+# 2. Node.js Fallback
 
-## 2.1 Build and Test
+If Bun compatibility issues arise, Dockerfiles SHALL swap the base image and package manager:
+
+```dockerfile
+# Replace: FROM oven/bun:1 AS builder
+# With:    FROM node:20 AS builder
+
+# Replace: RUN bun install --frozen-lockfile
+# With:    RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+# Replace: FROM oven/bun:1-slim AS production
+# With:    FROM node:20-slim AS production
+
+# Replace: CMD ["bun", "run", "dist/main.js"]
+# With:    CMD ["node", "dist/main.js"]
+```
+
+No application code changes are required for the fallback.
+
+---
+
+# 3. GitHub Actions CI/CD
+
+## 3.1 Build and Test
 
 ```yaml
 # .github/workflows/ci.yml
@@ -218,13 +237,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
 
   test:
     runs-on: ubuntu-latest
@@ -239,13 +254,9 @@ jobs:
         options: --health-cmd "redis-cli ping" --health-interval 10s
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test:ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run test:ci
         env:
           MONGODB_URI: mongodb://localhost:27017/hairscope-test?replicaSet=rs0
           REDIS_URL: redis://localhost:6379
@@ -271,7 +282,7 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
-## 2.2 Deploy
+## 3.2 Deploy
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -307,9 +318,9 @@ jobs:
 
 ---
 
-# 3. GCP Compute Engine
+# 4. GCP Compute Engine
 
-## 3.1 Server Setup
+## 4.1 Server Setup
 
 | Resource | Specification |
 |----------|--------------|
@@ -319,7 +330,7 @@ jobs:
 | Region | Based on clinic locations |
 | Firewall | HTTP (80), HTTPS (443), SSH (22) |
 
-## 3.2 Production Docker Compose
+## 4.2 Production Docker Compose
 
 ```yaml
 # /opt/hairscope/docker-compose.yml (on GCE instance)
@@ -369,9 +380,9 @@ MongoDB and Redis SHALL be managed services (MongoDB Atlas, Redis Cloud) in prod
 
 ---
 
-# 4. Health Checks
+# 5. Health Checks
 
-## 4.1 API Health Endpoint
+## 5.1 API Health Endpoint
 
 ```typescript
 @Controller('health')
@@ -406,7 +417,7 @@ export class HealthController {
 }
 ```
 
-## 4.2 Worker Health Endpoints
+## 5.2 Worker Health Endpoints
 
 Each worker SHALL expose a `/health` endpoint:
 
@@ -422,15 +433,15 @@ export class WorkerHealthController {
 
 ---
 
-# 5. Rollback Strategy
+# 6. Rollback Strategy
 
-## 5.1 Image Tags
+## 6.1 Image Tags
 
 Every deployment SHALL be tagged with the Git SHA.
 
 Previous images SHALL be retained for rollback.
 
-## 5.2 Rollback Procedure
+## 6.2 Rollback Procedure
 
 ```bash
 # Rollback to previous version
@@ -439,7 +450,7 @@ docker compose pull
 docker compose up -d
 ```
 
-## 5.3 Database Migrations
+## 6.3 Database Migrations
 
 Migrations SHALL be forward-compatible.
 
@@ -449,7 +460,7 @@ New fields SHALL be nullable or have defaults to support running old code agains
 
 ---
 
-# 6. Environment Promotion
+# 7. Environment Promotion
 
 ```text
 develop → staging → production
@@ -462,7 +473,7 @@ develop → staging → production
 
 ---
 
-# 7. Secrets Management
+# 8. Secrets Management
 
 Secrets SHALL be stored in GitHub Actions secrets and injected as environment variables.
 
