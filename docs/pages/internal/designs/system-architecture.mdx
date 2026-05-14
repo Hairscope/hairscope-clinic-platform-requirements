@@ -226,9 +226,9 @@ Responsibilities:
 Contains:
 
 - GraphQL resolvers
+- GraphQL file upload mutations
 - HTTP endpoints
 - webhook endpoints
-- upload endpoints
 
 API layer SHALL NOT contain business logic.
 
@@ -395,7 +395,7 @@ Clients
 |                    API Layer                         |
 |------------------------------------------------------|
 | GraphQL API                                          |
-| HTTP Endpoints (uploads, webhooks)                   |
+| HTTP Endpoints (downloads, webhooks)                 |
 | Authentication                                       |
 | Authorization                                        |
 | Validation                                           |
