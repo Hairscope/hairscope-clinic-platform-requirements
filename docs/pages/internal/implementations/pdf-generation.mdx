@@ -14,7 +14,7 @@ The binary SHALL be included in the Docker image for the Report Generation worke
 
 ```dockerfile
 # Dockerfile.worker-report
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 # Install Typst binary
 RUN curl -fsSL https://typst.community/typst-install/install.sh | sh
@@ -22,8 +22,8 @@ ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /app
 COPY . .
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-RUN pnpm build --filter=worker-report
+RUN bun install --frozen-lockfile
+RUN bun run build --filter=worker-report
 
 CMD ["node", "packages/worker-report/dist/main.js"]
 ```

@@ -4,14 +4,28 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.1.1 — 2026-05-14
+
+### Fixed
+- Database: Added `updatedBy` and `status` to base schema fields
+- Database: Patient email/phone uniqueness enforced at application level, not database unique index
+- Database: Added base repository pattern that module repositories extend
+- Database: Added backup strategy (MongoDB Atlas PITR) and rollback strategy sections
+- Database: Application rollback via fresh build from git (no old image retention)
+- Authentication: Clarified refresh token rotation detection mechanism (hash mismatch, not stored old tokens)
+- Authentication: Added `usedBy` field to PasswordResetTokenSchema
+- Deployment: Rollback via fresh build from git commit, removed image retention
+- Nextra: Enabled copy button on code blocks
+
+---
+
 ## v1.1.0 — 2026-05-14
 
 ### Changed
-- Runtime updated to Node.js 24 LTS, TypeScript 6.x, NestJS 11.x, pnpm 11.x
-- Added Zod for schema validation alongside class-validator
-- Database infrastructure changed to MongoDB Atlas (managed)
-- All dependencies use exact versions (no caret ranges)
-- Removed Bun — Node.js is the sole runtime, pnpm is the sole package manager
+- Runtime versions updated: Node.js 24 LTS (fallback), TypeScript 6.x, NestJS 11.x, pnpm 11.x (fallback)
+- Added Zod for runtime schema validation
+- MongoDB infrastructure updated to MongoDB Atlas (managed)
+- All dependencies use exact versions (removed caret range exception for dev dependencies)
 
 ---
 
@@ -24,7 +38,7 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ### Key Implementation Decisions
 - TypeScript + NestJS modular monolith with Bun workspaces
-- Bun runtime (Node.js 20 LTS fallback)
+- Bun runtime (Node.js 24 LTS fallback)
 - MongoDB + Mongoose with replica set for transactions
 - Redis for caching, BullMQ job queues, and event streaming
 - Transactional Outbox + Redis Streams for event-driven architecture

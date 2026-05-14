@@ -8,10 +8,16 @@
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Runtime | Node.js | 24 LTS |
+| Runtime | Bun (primary), Node.js (fallback) | Bun 1.x, Node.js 24 LTS |
 | Language | TypeScript | 6.x (strict mode) |
 | Framework | NestJS | 11.x |
-| Package Manager | pnpm | 11.x (workspaces) |
+| Package Manager | Bun (primary), pnpm (fallback) | Bun 1.x, pnpm 11.x |
+
+Bun SHALL be the primary runtime AND package manager for development and production.
+
+Bun workspaces SHALL be used for monorepo package management.
+
+IF Bun compatibility issues arise with any dependency, Node.js 24 LTS SHALL be used as runtime fallback and pnpm as package manager fallback without code changes.
 
 TypeScript SHALL be configured in strict mode across all packages.
 
@@ -24,8 +30,7 @@ TypeScript SHALL be configured in strict mode across all packages.
 | GraphQL | `@nestjs/graphql` + `@apollo/server` | API layer |
 | Database | `@nestjs/mongoose` + `mongoose` | MongoDB ODM |
 | Cache | `@nestjs/cache-manager` + `cache-manager-redis-yet` | Redis cache |
-| Validation | `class-validator` + `class-transformer` | Input validation |
-| Schema Validation | `zod` | Runtime schema validation |
+| Validation | `class-validator` + `class-transformer` + `zod` | Input validation |
 | Auth | `jsonwebtoken` + `argon2` | JWT + password hashing |
 | Events | `@nestjs/event-emitter` | In-process domain events |
 | Queue | `@nestjs/bullmq` + `bullmq` | Job queues for workers |
@@ -53,7 +58,7 @@ TypeScript SHALL be configured in strict mode across all packages.
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| Database | MongoDB Atlas | Primary persistence (managed) |
+| Database | MongoDB LTS (MongoDB Atlas) | Primary persistence (managed) |
 | Cache/Queue | Redis 7.x | Caching, BullMQ job queue, event streaming |
 | Object Storage | Google Cloud Storage | Files, images, PDFs |
 | Container | Docker | Deployment packaging |
@@ -64,13 +69,13 @@ TypeScript SHALL be configured in strict mode across all packages.
 
 # 5. Monorepo Structure
 
-The project SHALL use pnpm workspaces:
+The project SHALL use Bun workspaces:
 
 ```
 hairscope-backend/
-├── pnpm-workspace.yaml
-├── package.json (root)
-├── pnpm-lock.yaml
+├── bunfig.toml
+├── package.json (root, workspaces defined here)
+├── bun.lock
 ├── packages/
 │   ├── api/              → Main NestJS application (modular monolith)
 │   ├── worker-reminder/  → Reminder Service worker
@@ -91,11 +96,14 @@ hairscope-backend/
     └── workflows/        → CI/CD pipelines
 ```
 
-Workspace configuration in `pnpm-workspace.yaml`:
+Workspace configuration in root `package.json`:
 
-```yaml
-packages:
-  - 'packages/*'
+```json
+{
+  "workspaces": [
+    "packages/*"
+  ]
+}
 ```
 
 ---

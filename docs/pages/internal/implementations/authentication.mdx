@@ -56,9 +56,11 @@ The platform SHALL issue a new access token on every successful refresh without 
 
 ## 2.3 Refresh Token Rotation
 
-Each refresh call SHALL issue a new refresh token and invalidate the previous one.
+Each refresh call SHALL issue a new refresh token and replace the stored hash on the AuthSession.
 
-If a previously-invalidated refresh token is presented, the platform SHALL revoke the entire AuthSession (potential token theft).
+Only the latest refresh token is valid. The AuthSession stores a single `refreshTokenHash` — the current one.
+
+If a refresh token is presented that does not match the current stored hash (indicating a previously-rotated token is being reused), the platform SHALL revoke the entire AuthSession (potential token theft).
 
 ---
 
@@ -159,7 +161,7 @@ export class AuthService {
   async login(dto: LoginDto, meta: RequestMeta): Promise<TokenPair> {
     const staff = await this.staffRepo.findByEmail(dto.email);
     if (!staff || staff.status !== 'ACTIVE') {
-      await this.auditService.append('LOGIN_FAILED', { email: dto.email });
+      await this.auditService.append('ACCOUNT_DEACTIVATED', { email: dto.email });
       throw new InvalidCredentialsError();
     }
 
@@ -253,7 +255,7 @@ async refresh(currentRefreshToken: string): Promise<TokenPair> {
 
 ## 6.3 Stolen Token Detection
 
-If a refresh token that has already been rotated is presented:
+If a refresh token that has already been rotated is presented (i.e., it does not match the current `refreshTokenHash` on the AuthSession):
 
 1. The platform SHALL revoke the entire AuthSession
 2. The platform SHALL emit a `SECURITY_TOKEN_REUSE` audit event
@@ -327,6 +329,7 @@ const PasswordResetTokenSchema = new Schema({
   tokenHash: { type: String, required: true, unique: true },
   expiresAt: { type: Date, required: true },
   usedAt: { type: Date },
+  usedBy: { type: Schema.Types.ObjectId },
   createdAt: { type: Date, default: Date.now },
 });
 
