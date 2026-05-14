@@ -30,6 +30,8 @@ export default function VersionDropdown() {
 
   return (
     <select
+      key={activeGroup}
+      value="current"
       onChange={(e) => {
         if (e.target.value !== 'current') {
           window.open(
@@ -38,7 +40,6 @@ export default function VersionDropdown() {
           )
         }
       }}
-      defaultValue="current"
       style={{
         padding: '4px 8px',
         borderRadius: '6px',
