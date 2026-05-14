@@ -123,9 +123,11 @@ export class AppointmentService {
   }
 
   async reschedule(appointmentId: string, dto: RescheduleDto, context: TenantContext): Promise<Appointment> {
-    const appointment = await this.appointmentRepo.findById(appointmentId, context);
-    if (!appointment) throw new NotFoundError('Appointment');
-    if (!['SCHEDULED', 'CONFIRMED'].includes(appointment.status)) {
+    // Rescheduling cancels the original Appointment and creates a new Appointment linked through rescheduledFrom.
+
+    const original = await this.appointmentRepo.findById(appointmentId, context);
+    if (!original) throw new NotFoundError('Appointment');
+    if (!['SCHEDULED', 'CONFIRMED'].includes(original.status)) {
       throw new InvalidStateError('Cannot reschedule');
     }
 
@@ -139,20 +141,40 @@ export class AppointmentService {
     session.startTransaction();
 
     try {
-      const updated = await this.appointmentRepo.update(appointmentId, {
-        slotStart: dto.newSlotStart,
-        slotEnd: dto.newSlotEnd,
-        rescheduledFrom: appointmentId,
+      // 1. Cancel the original appointment
+      await this.appointmentRepo.update(appointmentId, {
+        status: 'CANCELLED',
+        cancelledAt: new Date(),
+        cancelledBy: context.staffId,
+        cancellationReason: 'RESCHEDULED',
       }, context, { session });
 
+      // 2. Create new appointment linked to the original
+      const newAppointment = await this.appointmentRepo.create({
+        patientId: original.patientId,
+        leadId: original.leadId,
+        serviceId: original.serviceId,
+        assignedTo: original.assignedTo,
+        status: 'SCHEDULED',
+        slotStart: dto.newSlotStart,
+        slotEnd: dto.newSlotEnd,
+        rescheduledFrom: original.id,
+        organizationId: context.organizationId,
+        clinicId: context.clinicId,
+        createdBy: context.staffId,
+      }, { session });
+
+      // 3. Emit AppointmentRescheduled event
       await this.outboxRepo.insert({
         eventType: 'AppointmentRescheduled',
-        aggregateId: appointmentId,
+        aggregateId: newAppointment.id,
         aggregateType: 'Appointment',
         payload: {
-          appointmentId,
-          previousStartTime: appointment.slotStart,
+          newAppointmentId: newAppointment.id,
+          cancelledAppointmentId: original.id,
+          previousStartTime: original.slotStart,
           newStartTime: dto.newSlotStart,
+          patientId: original.patientId,
           clinicId: context.clinicId,
           organizationId: context.organizationId,
           clinicTimezone: await this.getClinicTimezone(context.clinicId),
@@ -160,7 +182,7 @@ export class AppointmentService {
       }, { session });
 
       await session.commitTransaction();
-      return updated;
+      return newAppointment;
     } catch (error) {
       await session.abortTransaction();
       throw error;
