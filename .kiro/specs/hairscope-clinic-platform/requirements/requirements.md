@@ -36,7 +36,7 @@ These invariants must hold at all times across the entire system. Any operation 
 | GI-9 | Audit log entries are immutable and are never reassigned, transferred, or deleted. |
 | GI-10 | All timestamps stored in the system are in UTC. |
 | GI-11 | No module may directly call another module's internal resolver or service. Cross-module communication uses domain events only. |
-| GI-12 | All API operations are GraphQL. There are no REST endpoints except for file uploads and webhook ingestion. |
+| GI-12 | All API operations are GraphQL (including file uploads). HTTP endpoints are used only for file downloads (signed URLs) and webhook ingestion. |
 | GI-13 | Subscription plan status is provided by an external system. The platform enforces plan gates but does not manage billing. |
 
 ---
@@ -154,9 +154,11 @@ All platform API operations use GraphQL unless explicitly noted.
 
 | Operation | Protocol | Reason |
 |-----------|----------|--------|
-| File uploads (images, PDFs) | HTTP multipart | GraphQL does not natively support binary uploads |
+| File downloads | HTTP (signed URLs) | GraphQL responses are JSON — binary streaming requires HTTP |
 | Webhook lead ingestion | HTTP POST | External campaign systems send standard HTTP webhooks |
 | Video/virtual consultation sessions | WebRTC or equivalent | Real-time video requires a dedicated signaling and media protocol |
+
+File uploads SHALL use GraphQL mutations with the multipart request specification (`graphql-upload`).
 
 ### 7.2 GraphQL Operation Naming
 
