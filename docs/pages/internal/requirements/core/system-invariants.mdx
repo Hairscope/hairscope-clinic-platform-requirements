@@ -64,7 +64,7 @@
 
 | ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Invariant | Enforced By |
 |:------------|-----------|-------------|
-| GI-29 | All API operations are GraphQL except file uploads (HTTP multipart), webhook ingestion (HTTP POST), and video/virtual consultation sessions (WebRTC or equivalent real-time protocol). | Architecture |
+| GI-29 | All API operations are GraphQL (including file uploads). HTTP endpoints are used only for file downloads (signed URLs), webhook ingestion (HTTP POST), and video/virtual consultation sessions (WebRTC or equivalent real-time protocol). | Architecture |
 | GI-30 | No module may directly call another module's internal resolver, service, or repository. | Architecture + code review |
 | GI-31 | All cross-module communication uses domain events via the event bus. | Architecture |
 | GI-32 | GraphQL mutations are atomic. Partial success is not permitted. | Resolver transaction wrapping |

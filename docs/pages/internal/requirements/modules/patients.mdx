@@ -132,7 +132,7 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL accept `image/jpeg`, `image/png`, and `application/pdf` files as medical document uploads via the file upload endpoint (see `shared/api-contracts.md` Section 8).
+1. THE Platform SHALL accept `image/jpeg`, `image/png`, and `application/pdf` files as medical document uploads via the `uploadFile` GraphQL mutation (see `shared/api-contracts.md` Section 8).
 2. IF a file upload exceeds 10 MB, THE Platform SHALL reject the upload.
 3. WHEN a document is uploaded, THE Platform SHALL require a `title` field and accept an optional `description` field.
 4. THE Platform SHALL store uploaded documents associated with the Patient's profile and display them on the PatientPage.

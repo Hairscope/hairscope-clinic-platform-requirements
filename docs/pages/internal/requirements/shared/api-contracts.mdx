@@ -6,12 +6,13 @@
 
 ## 1. API Technology
 
-All platform API operations use **GraphQL** unless explicitly noted below.
+All platform API operations use **GraphQL** (including file uploads) unless explicitly noted below.
 
 | Operation | Protocol | Reason |
 |-----------|----------|--------|
 | All queries, mutations, subscriptions | GraphQL over HTTP/WebSocket | Primary API |
-| File uploads (images, PDFs) | HTTP multipart (`multipart/form-data`) | GraphQL does not natively support binary uploads |
+| File uploads (images, PDFs) | GraphQL mutation (multipart request spec) | Uploads via `graphql-upload` |
+| File downloads | HTTP (signed URLs) | GraphQL responses are JSON — binary streaming requires HTTP |
 | Webhook lead ingestion | HTTP POST (`application/json`) | External campaign systems use standard HTTP |
 
 ---
@@ -125,21 +126,42 @@ All subscriptions are scoped to the authenticated user's Clinic. Cross-clinic su
 
 ## 8. File Upload Contract
 
-### Endpoint
-```
-POST /upload
-Content-Type: multipart/form-data
-Authorization: Bearer <jwt>
+### GraphQL Mutation
+
+File uploads SHALL use a GraphQL mutation with the multipart request specification (`graphql-upload`).
+
+```graphql
+mutation UploadFile($file: Upload!, $input: FileUploadInput!) {
+  uploadFile(file: $file, input: $input) {
+    fileId
+    url
+  }
+}
+
+input FileUploadInput {
+  type: FileType!
+  clinicId: ID!
+  associatedId: ID
+}
+
+enum FileType {
+  GLOBAL_IMAGE
+  TRICHOSCOPY_IMAGE
+  MEDICAL_DOCUMENT
+  CLINIC_LOGO
+  PRODUCT_IMAGE
+  SERVICE_IMAGE
+}
 ```
 
 ### Request Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `file` | Binary | Yes | File content |
-| `type` | String | Yes | `GLOBAL_IMAGE`, `TRICHOSCOPY_IMAGE`, `MEDICAL_DOCUMENT`, `CLINIC_LOGO`, `PRODUCT_IMAGE`, `SERVICE_IMAGE` |
-| `clinicId` | UUID | Yes | Target Clinic |
-| `associatedId` | UUID | Conditional | Session ID (for images), Patient ID (for documents) |
+| `file` | Upload (scalar) | Yes | File content via multipart |
+| `type` | FileType | Yes | `GLOBAL_IMAGE`, `TRICHOSCOPY_IMAGE`, `MEDICAL_DOCUMENT`, `CLINIC_LOGO`, `PRODUCT_IMAGE`, `SERVICE_IMAGE` |
+| `clinicId` | ID | Yes | Target Clinic |
+| `associatedId` | ID | Conditional | Session ID (for images), Patient ID (for documents) |
 
 ### Constraints
 
