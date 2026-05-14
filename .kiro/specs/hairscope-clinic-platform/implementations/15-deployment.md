@@ -13,15 +13,15 @@
 FROM oven/bun:1 AS builder
 
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/api/ packages/api/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=api build
+RUN bun run --filter=shared build
+RUN bun run --filter=api build
 
 # Production image
 FROM oven/bun:1-slim AS production
@@ -47,15 +47,15 @@ Each worker SHALL have its own Dockerfile following the same pattern:
 FROM oven/bun:1 AS builder
 
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/worker-reminder/package.json packages/worker-reminder/
 COPY packages/shared/package.json packages/shared/
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/worker-reminder/ packages/worker-reminder/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=worker-reminder build
+RUN bun run --filter=shared build
+RUN bun run --filter=worker-reminder build
 
 FROM oven/bun:1-slim AS production
 
@@ -78,15 +78,15 @@ CMD ["bun", "run", "dist/main.js"]
 FROM oven/bun:1 AS builder
 
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY packages/worker-report/package.json packages/worker-report/
 COPY packages/shared/package.json packages/shared/
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY packages/shared/ packages/shared/
 COPY packages/worker-report/ packages/worker-report/
-RUN pnpm --filter=shared build
-RUN pnpm --filter=worker-report build
+RUN bun run --filter=shared build
+RUN bun run --filter=worker-report build
 
 FROM oven/bun:1-slim AS production
 
@@ -198,9 +198,15 @@ volumes:
 
 # 2. Node.js Fallback
 
-If Bun compatibility issues arise, Dockerfiles SHALL swap the base image:
+If Bun compatibility issues arise, Dockerfiles SHALL swap the base image and package manager:
 
 ```dockerfile
+# Replace: FROM oven/bun:1 AS builder
+# With:    FROM node:20 AS builder
+
+# Replace: RUN bun install --frozen-lockfile
+# With:    RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
 # Replace: FROM oven/bun:1-slim AS production
 # With:    FROM node:20-slim AS production
 
@@ -208,7 +214,7 @@ If Bun compatibility issues arise, Dockerfiles SHALL swap the base image:
 # With:    CMD ["node", "dist/main.js"]
 ```
 
-No code changes are required for the fallback.
+No application code changes are required for the fallback.
 
 ---
 
@@ -231,12 +237,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with: { version: 9 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
 
   test:
     runs-on: ubuntu-latest
@@ -251,12 +254,9 @@ jobs:
         options: --health-cmd "redis-cli ping" --health-interval 10s
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with: { version: 9 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test:ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run test:ci
         env:
           MONGODB_URI: mongodb://localhost:27017/hairscope-test?replicaSet=rs0
           REDIS_URL: redis://localhost:6379

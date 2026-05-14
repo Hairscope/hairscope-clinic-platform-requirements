@@ -22,8 +22,8 @@ ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /app
 COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm build --filter=worker-report
+RUN bun install --frozen-lockfile
+RUN bun run build --filter=worker-report
 
 CMD ["node", "packages/worker-report/dist/main.js"]
 ```

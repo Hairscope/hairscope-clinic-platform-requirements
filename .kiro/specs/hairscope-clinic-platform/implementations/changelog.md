@@ -12,7 +12,7 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 - Architecture aligned with designs v1.0.0 and requirements v1.1.1
 
 ### Key Implementation Decisions
-- TypeScript + NestJS modular monolith with pnpm workspaces
+- TypeScript + NestJS modular monolith with Bun workspaces
 - Bun runtime (Node.js 20 LTS fallback)
 - MongoDB + Mongoose with replica set for transactions
 - Redis for caching, BullMQ job queues, and event streaming

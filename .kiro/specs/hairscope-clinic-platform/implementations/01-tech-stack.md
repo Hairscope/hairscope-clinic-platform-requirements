@@ -11,11 +11,13 @@
 | Runtime | Bun (primary), Node.js (fallback) | Bun 1.x, Node.js 20 LTS |
 | Language | TypeScript | 5.x (strict mode) |
 | Framework | NestJS | 10.x |
-| Package Manager | pnpm | 9.x (workspaces) |
+| Package Manager | Bun (primary), pnpm (fallback) | Bun 1.x, pnpm 9.x |
 
-Bun SHALL be the primary runtime for development and production.
+Bun SHALL be the primary runtime AND package manager for development and production.
 
-IF Bun compatibility issues arise with any dependency, Node.js 20 LTS SHALL be used as fallback without code changes.
+Bun workspaces SHALL be used for monorepo package management.
+
+IF Bun compatibility issues arise with any dependency, Node.js 20 LTS SHALL be used as runtime fallback and pnpm as package manager fallback without code changes.
 
 TypeScript SHALL be configured in strict mode across all packages.
 
@@ -67,12 +69,13 @@ TypeScript SHALL be configured in strict mode across all packages.
 
 # 5. Monorepo Structure
 
-The project SHALL use pnpm workspaces:
+The project SHALL use Bun workspaces:
 
 ```
 hairscope-backend/
-├── pnpm-workspace.yaml
-├── package.json (root)
+├── bunfig.toml
+├── package.json (root, workspaces defined here)
+├── bun.lock
 ├── packages/
 │   ├── api/              → Main NestJS application (modular monolith)
 │   ├── worker-reminder/  → Reminder Service worker
@@ -91,6 +94,16 @@ hairscope-backend/
 │   └── e2e/              → Playwright E2E tests
 └── .github/
     └── workflows/        → CI/CD pipelines
+```
+
+Workspace configuration in root `package.json`:
+
+```json
+{
+  "workspaces": [
+    "packages/*"
+  ]
+}
 ```
 
 ---
