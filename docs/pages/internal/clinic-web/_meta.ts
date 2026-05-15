@@ -1,7 +1,8 @@
 export default {
   index: 'Master Clinic Web',
   changelog: 'Changelog',
-  design: 'Design',
+  design: 'Design System',
+  'design-architecture': 'Design Architecture',
   'tech-stack': 'Tech Stack',
   'project-setup': 'Project Setup',
   authentication: 'Authentication',

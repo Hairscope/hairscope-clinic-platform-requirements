@@ -1,315 +1,292 @@
-# Clinic Web App — Design
+# Clinic Web App — Design System
 
-> Covers: Frontend architecture, component hierarchy, data flow patterns, module boundaries, and interaction with the backend GraphQL API.
+> Covers: Visual language, color palette, typography, spacing, components, and design guidelines for the Hairscope Clinic Platform UI.
 
 ---
 
-# 1. Architecture Overview
+# 1. Visual Identity
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│                    Next.js App (Bun)                     │
-├─────────────────────────────────────────────────────────┤
-│  App Router                                             │
-│  ├── Server Components (SSR, data fetching)             │
-│  ├── Client Components (interactivity, subscriptions)   │
-│  └── Server Actions (auth, mutations via cookies)       │
-├─────────────────────────────────────────────────────────┤
-│  State Layer                                            │
-│  ├── Apollo Client Cache (server data)                  │
-│  └── Zustand Stores (UI state)                          │
-├─────────────────────────────────────────────────────────┤
-│  GraphQL Layer                                          │
-│  ├── Apollo HTTP Link (queries, mutations, uploads)     │
-│  ├── Apollo WS Link (subscriptions)                     │
-│  └── Error Link (401 → refresh → retry)                 │
-├─────────────────────────────────────────────────────────┤
-│  Auth Layer                                             │
-│  ├── Middleware (route protection)                      │
-│  ├── Server Actions (login, refresh, logout)            │
-│  └── httpOnly Cookies (token storage)                   │
-└─────────────────────────────────────────────────────────┘
-            │
-            │ HTTPS / WSS
-            ▼
-┌─────────────────────────────────────────────────────────┐
-│              Hairscope Backend (GraphQL API)             │
-└─────────────────────────────────────────────────────────┘
+Hairscope Clinic Platform is a clinical-grade SaaS for hair treatment clinics. The visual language is built on a **deep teal-forest canvas** with warm skin and hair tone accents.
+
+**Key Characteristics:**
+- Dark teal canvas (`#064348`) with semi-transparent white cards (`rgba(255,255,255,0.2)`)
+- Teal primary action (`#19878e`) on buttons, links, interactive elements
+- Warm skin/hair tone gradients for clinical report surfaces
+- Hair score color coding: green → yellow → orange → red (healthy → critical)
+- Open Sans 400/600 — single family, no display/body split
+- 15px border radius — rounded, approachable
+- Depth through translucency, not shadows
+
+---
+
+# 2. Colors
+
+## 2.1 Primary Brand
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `primary-light` | `#19878e` | Buttons, links, active states, focus rings |
+| `primary` | `#184f54` | Primary surfaces, card headers |
+| `primary-dark` | `#064348` | Page background, deepest surfaces |
+| `secondary` | `#0b2327` | Sidebar, overlays |
+
+## 2.2 Neutral
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `black` | `#222222` | Text on light surfaces |
+| `white` | `#fafafa` | Text on dark surfaces, card content |
+
+## 2.3 Skin & Hair Tones (Clinical Reference)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `light-skin-1` | `#f7e6df` | Warm background accents |
+| `light-skin-2` | `#f7d8c4` | Gradient start, report headers |
+| `dark-skin` | `#dfac98` | Mid-tone clinical reference |
+| `light-hair` | `#957c65` | Hair color reference |
+| `light-hair-2` | `#9c754e` | Secondary hair tone |
+| `dark-hair` | `#3a2c24` | Dark hair reference |
+
+## 2.4 Text
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `text-primary` | `#696969` | Body text, labels |
+| `text-secondary` | `#d5bfb6` | Placeholder, muted labels |
+
+## 2.5 Hair Score Status
+
+| Token | Value | Score Range | Meaning |
+|-------|-------|-------------|---------|
+| `green` | `#87ff5b` | 75–100% | Healthy / Good density |
+| `yellow` | `#ffcf20` | 50–74% | Moderate / Early thinning |
+| `orange` | `#ff9320` | 25–49% | Concerning / Significant loss |
+| `red` | `#ea3700` | 0–24% | Critical / Severe loss |
+
+## 2.6 Gradients
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `gradient-1` | `linear-gradient(180deg, #f7d8c4 0%, #67b5d6 100%)` | Hero sections, report headers |
+| `box-bg` | `linear-gradient(180deg, rgba(3,146,150,0.2) 0%, rgba(255,255,255,0.2) 100%)` | Card backgrounds |
+
+---
+
+# 3. Typography
+
+Font: **Open Sans** (single family)
+
+| Role | Size (desktop) | Size (mobile) | Weight | Usage |
+|------|---------------|--------------|--------|-------|
+| h1 | 48px | 44px | 400 | Page titles |
+| h2 | 36px | 32px | 400 | Section headings |
+| h3 | 24px | 20px | 400 | Card titles |
+| h4 | 20px | 16px | 400 | Panel titles |
+| h5 | 16px | 14px | 600 | List labels, emphasized text |
+| h6 | 12px | 10px | 400 | Micro-labels, captions |
+| Body | 18px | 16px | 400 | Running text |
+| Small | 14px | 13px | 400 | Meta text, dates |
+| Caption | 12px | 11px | 500 | Badges, tags |
+
+Line height: 1.5em for body.
+
+---
+
+# 4. Spacing & Layout
+
+## 4.1 Layout Constants
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| Header Height | 60px | Top navigation bar |
+| Border Radius | 15px | Default card/button radius |
+| Sidebar Width | 100px | Left icon-only navigation |
+
+## 4.2 Spacing Scale (4px base)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| xxs | 4px | Micro gaps, icon padding |
+| xs | 8px | Tight component spacing |
+| sm | 12px | Form field gaps |
+| md | 16px | Default component padding |
+| lg | 24px | Card internal padding |
+| xl | 32px | Section internal padding |
+| xxl | 48px | Between major components |
+| section | 80px | Between page sections |
+
+## 4.3 Breakpoints
+
+| Name | Value | Key Changes |
+|------|-------|-------------|
+| sm | 640px | Mobile — single column, reduced type |
+| md | 768px | Tablet — 2-column layouts |
+| lg | 1024px | Desktop — full sidebar + content |
+| xl | 1280px | Large desktop |
+
+---
+
+# 5. Elevation & Depth
+
+Depth comes from translucency and surface contrast, not shadows.
+
+| Level | Treatment | Usage |
+|-------|-----------|-------|
+| Background | `#064348` solid | Page floor |
+| Card surface | `rgba(255,255,255,0.2)` + backdrop-filter blur | Cards, panels |
+| Elevated card | `rgba(255,255,255,0.3)` + stronger blur | Modals, dropdowns |
+| Dark overlay | `rgba(0,0,0,0.5)` | Modal backdrops |
+| Hairline | `rgba(255,255,255,0.1)` | Card borders, dividers |
+
+---
+
+# 6. Shapes
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| xs | 4px | Small badges |
+| sm | 8px | Buttons, inputs |
+| md | 12px | Feature cards |
+| lg | 15px | Default — most cards |
+| xl | 20px | Hero containers, large modals |
+| pill | 9999px | Status badges, tags |
+| full | 50% | Avatars, circular buttons |
+
+---
+
+# 7. Components
+
+## 7.1 Navigation
+
+**Sidebar** — 100px wide, icon-only left nav. Background `#0b2327`. Active state: `#19878e` accent. Collapses to bottom tab bar on mobile.
+
+**Top Nav** — 60px tall header. Background `#184f54`. Logo left, patient name center (on patient pages), avatar + notifications right.
+
+## 7.2 Buttons
+
+| Variant | Background | Text | Border | Usage |
+|---------|-----------|------|--------|-------|
+| Primary | `#19878e` | `#fafafa` | none | Main actions |
+| Secondary | `rgba(255,255,255,0.15)` | `#fafafa` | `rgba(255,255,255,0.3)` | Secondary actions |
+| Ghost | transparent | `#fafafa` | none | Tertiary, inline links |
+| Icon (circular) | `rgba(255,255,255,0.15)` | `#fafafa` | none | Camera, zoom, tools |
+| Danger | `#ea3700` | `#fafafa` | none | Delete, critical actions |
+
+All buttons: 15px radius, 12px × 24px padding, 40px height, Open Sans 14px/600.
+
+## 7.3 Cards
+
+**Patient Card** — Semi-transparent white surface, 15px radius, 24px padding. Avatar, name, last session date, quick actions.
+
+**Session Card** — Session summary. Date, status badge, hair score indicator, frontal image thumbnail.
+
+**Hair Analysis Card** — Dark surface (`#184f54`), 15px radius. Trichoscopy image, hair count, density, thickness, color indicator.
+
+**Stat Card** — Dashboard KPI. Semi-transparent white, 15px radius. Metric value (h3), label (h6), trend indicator.
+
+## 7.4 Status Badges
+
+Pill-shaped badges colored by status:
+
+| Status | Color | Text |
+|--------|-------|------|
+| ACTIVE / NEW | `#19878e` | White |
+| COMPLETED | `#87ff5b` | Dark |
+| PROGRESS / CONTACTED | `#ffcf20` | Dark |
+| CANCELLED / LOST | `#ea3700` | White |
+| PENDING / QUALIFIED | `#ff9320` | Dark |
+
+Session lifecycle:
+| Status | Color | Text |
+|--------|-------|------|
+| DRAFT | `#d5bfb6` | Dark |
+| SAVED | `#ffcf20` | Dark |
+| COMPLETED | `#87ff5b` | Dark |
+
+## 7.5 Clinical Components
+
+**Trichoscopy Image** — Zoom/pan viewer with annotation overlay. Follicles as circles, strands as 3-point rectangles. Brightness/contrast controls.
+
+**Head Diagram** — 4 views (Front, Left, Right, Back). Single position marker per image.
+
+**Hair Graph** — Treatment progress (Recharts). Plots hairCount, thickness, coverage over COMPLETED sessions. Color-coded using hair score palette.
+
+---
+
+# 8. Do's and Don'ts
+
+## Do
+
+- Use dark teal canvas as the page floor
+- Use `#19878e` for all primary interactive elements
+- Use semi-transparent white cards over the dark background
+- Use hair score colors (green/yellow/orange/red) consistently for clinical metrics
+- Use 15px border radius as default
+- Show actual product chrome in onboarding surfaces
+
+## Don't
+
+- Don't use pure white or light gray as page background
+- Don't use hair score colors for non-clinical status indicators
+- Don't add heavy drop shadows — depth comes from translucency
+- Don't use skin/hair tone colors for UI elements — they are clinical reference tones
+- Don't use gradients as generic backgrounds — reserve for report headers and hero sections
+
+---
+
+# 9. Tailwind Configuration
+
+These design tokens SHALL be mapped to the Tailwind config:
+
+```typescript
+// tailwind.config.ts
+const config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          light: '#19878e',
+          DEFAULT: '#184f54',
+          dark: '#064348',
+          secondary: '#0b2327',
+        },
+        skin: {
+          1: '#f7e6df',
+          2: '#f7d8c4',
+          dark: '#dfac98',
+        },
+        hair: {
+          light: '#957c65',
+          light2: '#9c754e',
+          dark: '#3a2c24',
+        },
+        score: {
+          green: '#87ff5b',
+          yellow: '#ffcf20',
+          orange: '#ff9320',
+          red: '#ea3700',
+        },
+        surface: {
+          card: 'rgba(255, 255, 255, 0.2)',
+          elevated: 'rgba(255, 255, 255, 0.3)',
+          overlay: 'rgba(0, 0, 0, 0.5)',
+          border: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      fontFamily: {
+        sans: ['Open Sans', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '15px',
+      },
+      spacing: {
+        header: '60px',
+        sidebar: '100px',
+      },
+    },
+  },
+};
 ```
-
----
-
-# 2. Design Principles
-
-## DP-1 Server-First Rendering
-
-Pages SHALL render on the server by default (Server Components).
-
-Client Components SHALL be used only when interactivity, subscriptions, or browser APIs are required.
-
-## DP-2 Colocation
-
-Components, hooks, and GraphQL operations SHALL be colocated with the module they belong to.
-
-Shared components live in `components/ui/` and `components/shared/`.
-
-## DP-3 Thin Client
-
-Business logic lives in the backend. The frontend is a presentation layer.
-
-The frontend SHALL NOT:
-- Compute access decisions (server does this)
-- Enforce business invariants (server does this)
-- Store sensitive data in client state
-
-The frontend MAY:
-- Validate form inputs before submission (UX optimization)
-- Optimistically update the UI (with server reconciliation)
-
-## DP-4 Module Isolation
-
-Each feature module (patients, appointments, leads, etc.) SHALL be self-contained:
-- Own page routes
-- Own components
-- Own GraphQL operations
-- Own hooks
-
-Cross-module dependencies SHALL go through shared types or the GraphQL schema.
-
-## DP-5 Progressive Enhancement
-
-Core functionality SHALL work without JavaScript where possible (Server Components + Server Actions).
-
-Enhanced interactivity (real-time updates, drag-and-drop, camera) requires Client Components.
-
----
-
-# 3. Component Architecture
-
-## 3.1 Component Hierarchy
-
-```text
-Layout (Server Component)
-├── Sidebar (Client Component — interactive navigation)
-├── Header (Client Component — user menu, notifications)
-└── Page Content (Server Component — data fetching)
-    └── Module Components (mix of Server + Client)
-        ├── List/Table (Server Component — initial data)
-        ├── Filters (Client Component — interactive)
-        ├── Forms (Client Component — input handling)
-        └── Modals/Dialogs (Client Component — overlay)
-```
-
-## 3.2 Component Categories
-
-| Category | Location | Rendering | Examples |
-|----------|----------|-----------|----------|
-| UI primitives | `components/ui/` | Client | Button, Input, Dialog, Select (shadcn/ui) |
-| Shared | `components/shared/` | Mixed | DataTable, PageHeader, EmptyState, LoadingSpinner |
-| Module | `components/modules/{name}/` | Mixed | PatientCard, AppointmentCalendar, LeadKanban |
-| Layout | `app/(dashboard)/layout.tsx` | Server + Client | Sidebar, Header, MainContent |
-
-## 3.3 Server vs Client Decision
-
-| Use Server Component when | Use Client Component when |
-|--------------------------|--------------------------|
-| Fetching data for initial render | Handling user interactions (clicks, inputs) |
-| Rendering static content | Using React hooks (useState, useEffect) |
-| Accessing backend directly | Subscribing to real-time updates |
-| No browser APIs needed | Using browser APIs (camera, clipboard) |
-| SEO-relevant content | Animations and transitions |
-
----
-
-# 4. Data Flow
-
-## 4.1 Read Flow (Queries)
-
-```text
-Page (Server Component)
-  → fetch() to GraphQL API (server-side, with cookie)
-  → Render initial HTML
-  → Hydrate on client
-  → Apollo Client takes over for subsequent queries
-  → Cache-and-network policy for fresh data
-```
-
-## 4.2 Write Flow (Mutations)
-
-```text
-User Action (form submit, button click)
-  → Client Component calls Apollo mutation
-  → Apollo sends to backend GraphQL API
-  → Backend validates, persists, emits events
-  → Apollo updates cache (optimistic or refetch)
-  → UI reflects new state
-```
-
-## 4.3 Real-Time Flow (Subscriptions)
-
-```text
-Client Component mounts
-  → Apollo subscribes via WebSocket
-  → Backend emits event (e.g., AppointmentStatusChanged)
-  → Apollo receives update
-  → Cache updated automatically
-  → Component re-renders with new data
-```
-
-## 4.4 Auth Flow
-
-```text
-Login Form (Client Component)
-  → Calls Server Action (loginAction)
-  → Server Action calls backend mutation
-  → Backend returns tokens
-  → Server Action sets httpOnly cookies
-  → Redirect to dashboard
-
-Subsequent Requests:
-  → Middleware checks cookie presence
-  → Apollo HTTP Link sends cookie automatically (credentials: include)
-  → Backend validates JWT from cookie
-  → On 401: Error Link triggers refresh Server Action → retry
-```
-
----
-
-# 5. Module Structure
-
-Each business module follows this pattern:
-
-```text
-src/
-├── app/(dashboard)/{module}/
-│   ├── page.tsx                    → List page (Server Component)
-│   ├── [id]/page.tsx               → Detail page (Server Component)
-│   └── loading.tsx                 → Loading skeleton
-├── components/modules/{module}/
-│   ├── {Module}List.tsx            → List/table component
-│   ├── {Module}Detail.tsx          → Detail view
-│   ├── {Module}Form.tsx            → Create/edit form
-│   ├── {Module}Card.tsx            → Card for grid views
-│   └── {Module}Filters.tsx         → Filter controls
-├── graphql/
-│   ├── queries/{module}.graphql    → Query operations
-│   ├── mutations/{module}.graphql  → Mutation operations
-│   └── subscriptions/{module}.graphql → Subscription operations
-└── hooks/
-    └── use-{module}.ts             → Custom hooks wrapping Apollo
-```
-
----
-
-# 6. Styling Architecture
-
-## 6.1 Tailwind Layers
-
-```text
-Base Layer (Tailwind defaults + custom fonts/colors)
-  → Component Layer (shadcn/ui components)
-    → Utility Layer (page-specific overrides)
-```
-
-## 6.2 Design Tokens
-
-Design tokens SHALL be defined in `tailwind.config.ts`:
-
-- Colors: brand palette, semantic colors (success, warning, error)
-- Typography: font family, sizes, weights
-- Spacing: consistent scale
-- Shadows: elevation levels
-- Border radius: consistent rounding
-
-## 6.3 Dark Mode
-
-Dark mode SHALL be supported via Tailwind's `class` strategy.
-
-The UI store persists the user's theme preference.
-
----
-
-# 7. Error Handling
-
-## 7.1 GraphQL Errors
-
-Apollo error link SHALL:
-1. Intercept `UNAUTHENTICATED` → trigger refresh
-2. Intercept `FORBIDDEN` → show access denied UI
-3. Intercept `VALIDATION_ERROR` → map to form field errors
-4. Intercept `INTERNAL_ERROR` → show generic error toast
-
-## 7.2 Error Boundaries
-
-Each module page SHALL have an `error.tsx` boundary that:
-- Catches rendering errors
-- Shows a user-friendly error message
-- Provides a retry action
-- Logs the error for debugging
-
-## 7.3 Loading States
-
-Each module page SHALL have a `loading.tsx` that shows:
-- Skeleton UI matching the expected content shape
-- No layout shift when content loads
-
----
-
-# 8. Internationalization
-
-## 8.1 Strategy
-
-- `next-intl` for message translation
-- Locale detected from: user preference (Zustand) → browser → default (EN)
-- Translation files in `public/locales/{locale}/`
-- Server Components use `getTranslations()`
-- Client Components use `useTranslations()`
-
-## 8.2 Supported Locales
-
-EN, ES, IT, NL, FR, RU, AR, DE (matching backend clinic language setting)
-
-## 8.3 RTL Support
-
-Arabic (AR) requires RTL layout. Tailwind's `rtl:` variant SHALL be used for directional styles.
-
----
-
-# 9. Accessibility
-
-## 9.1 Standards
-
-The app SHALL conform to WCAG 2.1 Level AA.
-
-## 9.2 Implementation
-
-- shadcn/ui components are built on Radix (accessible by default)
-- All interactive elements SHALL have visible focus indicators
-- All images SHALL have alt text
-- Color contrast SHALL meet AA ratio (4.5:1 for text)
-- Keyboard navigation SHALL work for all workflows
-- Screen reader announcements for dynamic content (aria-live)
-
----
-
-# 10. Performance
-
-## 10.1 Targets
-
-| Metric | Target |
-|--------|--------|
-| First Contentful Paint | < 1.5s |
-| Largest Contentful Paint | < 2.5s |
-| Time to Interactive | < 3s |
-| Cumulative Layout Shift | < 0.1 |
-
-## 10.2 Strategies
-
-- Server Components for initial render (no client JS bundle)
-- Code splitting per route (automatic with App Router)
-- Image optimization via `next/image`
-- Apollo cache to avoid redundant network requests
-- Lazy loading for heavy components (calendar, rich text editor, camera)
-- Prefetching for likely navigation targets
 
 ---
