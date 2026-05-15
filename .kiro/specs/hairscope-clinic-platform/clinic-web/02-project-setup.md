@@ -6,8 +6,7 @@
 
 # 1. Prerequisites
 
-- Bun 1.x (primary runtime and package manager)
-- Node.js 24 LTS (fallback)
+- Bun 1.x (runtime and package manager)
 - Backend API running locally (port 4000)
 
 ---

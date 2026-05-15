@@ -10,8 +10,8 @@
 |-----------|-----------|---------|
 | Framework | Next.js (App Router) | 16.x |
 | Language | TypeScript | 6.x (strict mode) |
-| Runtime | Node.js | 24 LTS |
-| Package Manager | Bun (primary), pnpm (fallback) | Bun 1.x, pnpm 11.x |
+| Runtime | Bun | 1.x |
+| Package Manager | Bun | 1.x |
 
 Next.js 16 with App Router and Server Actions SHALL be used.
 
