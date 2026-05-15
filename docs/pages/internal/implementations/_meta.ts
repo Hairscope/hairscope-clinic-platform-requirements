@@ -1,5 +1,6 @@
 export default {
   index: 'Master Implementations',
+  tasks: 'Implementation Tasks',
   changelog: 'Changelog',
   'tech-stack': 'Tech Stack',
   'project-setup': 'Project Setup',
