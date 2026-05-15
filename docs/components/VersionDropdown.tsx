@@ -5,6 +5,7 @@ const groupMap: Record<string, string> = {
   '/internal/requirements': 'requirements',
   '/internal/designs': 'design',
   '/internal/implementations': 'implementations',
+  '/internal/clinic-web': 'clinic-web',
   '/guides': 'guides',
   '/features': 'features',
   '/developer': 'developer'

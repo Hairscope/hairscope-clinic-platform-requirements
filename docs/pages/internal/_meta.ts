@@ -2,5 +2,6 @@ export default {
   index: 'Team Docs',
   requirements: 'Requirements',
   designs: 'Designs',
-  implementations: 'Implementations'
+  implementations: 'Implementations',
+  'clinic-web': 'Clinic Web App'
 }
