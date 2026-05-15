@@ -4,6 +4,14 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.1.5 — 2026-05-16
+
+### Added
+- Implementation Tasks page listing all executed tasks across all 9 backend modules
+- Complete task breakdown with subtasks for: Infrastructure, Auth & IAM, Organization, Patients, Sessions, Leads, Appointments, Catalog, Billing
+
+---
+
 ## v1.1.3 — 2026-05-14
 
 ### Fixed
