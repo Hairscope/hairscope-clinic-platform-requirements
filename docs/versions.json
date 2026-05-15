@@ -9,8 +9,9 @@
       ]
     },
     "guides": {
-      "current": "0.0.1",
+      "current": "0.0.2",
       "versions": [
+        { "version": "0.0.2", "date": "2026-05-15", "tag": "guides-v0.0.2" },
         { "version": "0.0.1", "date": "2026-05-13", "tag": "guides-v0.0.1" }
       ]
     },

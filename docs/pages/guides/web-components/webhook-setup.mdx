@@ -1,0 +1,227 @@
+# Webhook Integration Guide — Sending Lead Data to Your CRM
+
+> Receive lead data from the Hairscope Selfie Analysis widget directly into your CRM or backend system using the built-in webhook feature.
+
+## What Is a Webhook?
+
+A webhook is a way for Hairscope to automatically send lead data to a URL you control — the moment a user submits the lead form. Think of it as Hairscope "calling" your CRM with the lead's details, so you don't have to manually export or sync anything.
+
+```text
+User fills form → Hairscope collects data → Hairscope POSTs to your URL → Your CRM receives it
+```
+
+## Prerequisites
+
+- The Hairscope widget already embedded on your website (see [Embed Selfie Analysis](/guides/web-components/embed-selfie-analysis))
+- A valid Hairscope API Key configured via `data-key`
+- A publicly accessible HTTPS URL on your server or CRM that can receive `POST` requests
+- Basic access to your website's HTML/JavaScript to update the `config` object
+
+> **Note:** The webhook URL must be reachable from the internet. `localhost` URLs will not work in production.
+
+## How It Works
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        User Journey                             │
+│                                                                 │
+│  1. User opens the Selfie Analysis on your website              │
+│  2. User completes the Selfie Analysis flow                     │
+│  3. User fills in the lead form (name, email, phone, etc.)      │
+│  4. User clicks Submit                                          │
+│                                                                 │
+│  ──────────────────────────────────────────────────────────     │
+│                                                                 │
+│  5. Hairscope validates the form fields                         │
+│  6. Hairscope sends a POST request to your webhook URL          │
+│  7. Your server/CRM receives the lead payload                   │
+│  8. Hairscope continues saving the lead to its own database     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+> **Important:** Steps 6 and 8 happen in parallel. The webhook is "fire and forget" — Hairscope does not wait for your server to respond before continuing.
+
+## Step 1 — Create a Webhook Endpoint
+
+You need a URL on your server that accepts `HTTP POST` requests with a JSON body.
+
+### Node.js (Express)
+
+```javascript
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+app.post('/webhook/hairscope-lead', (req, res) => {
+  const lead = req.body;
+  console.log('New lead received:', lead);
+  // Add your CRM logic here
+  res.status(200).json({ received: true });
+});
+
+app.listen(3000);
+```
+
+### PHP
+
+```php
+<?php
+$payload = json_decode(file_get_contents('php://input'), true);
+// Add your CRM logic here
+http_response_code(200);
+echo json_encode(['received' => true]);
+?>
+```
+
+### Python (Flask)
+
+```python
+from flask import Flask, request, jsonify
+app = Flask(__name__)
+
+@app.route('/webhook/hairscope-lead', methods=['POST'])
+def receive_lead():
+    lead = request.get_json()
+    print('New lead:', lead)
+    return jsonify({'received': True}), 200
+```
+
+## Step 2 — Add the Webhook URL to Your Config
+
+```html
+<script>
+  const comp = document.getElementById('Hairscope-comp');
+  comp.config = {
+    leadDataApi: 'https://your-domain.com/webhook/hairscope-lead',
+    // ... your other config options
+  };
+</script>
+```
+
+That's it. The widget will now POST lead data to your URL every time a user submits the form.
+
+## Step 3 — Understand the Payload
+
+When a user submits the lead form, your endpoint receives:
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+44 1234567890",
+  "gender": "male",
+  "age": "30",
+  "clinic": "London North"
+}
+```
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| `firstName` | string | User's first name |
+| `lastName` | string | User's last name |
+| `name` | string | Full name (firstName + lastName combined) |
+| `email` | string | User's email address |
+| `phone` | string | User's phone number (with country code) |
+| `gender` | string | Selected gender value |
+| `age` | string | User's age (sent as a string) |
+| `clinic` | string | Selected clinic/center (empty string if not configured) |
+
+> The `clinic` field is only populated if you have configured `centers` in your form config.
+
+## Step 4 — Test Your Integration
+
+**Option A — Use webhook.site**
+
+Go to [https://webhook.site](https://webhook.site), copy the unique URL, and paste it as your `leadDataApi` temporarily. Submit the form and see the payload in real time.
+
+**Option B — Use ngrok for local testing**
+
+```bash
+ngrok http 3000
+```
+
+Use the generated `https://` URL as your `leadDataApi` for testing.
+
+## Step 5 — Map Fields to Your CRM
+
+```javascript
+app.post('/webhook/hairscope-lead', async (req, res) => {
+  const { firstName, lastName, email, phone, gender, age, clinic } = req.body;
+
+  await myCRM.createLead({
+    first_name: firstName,
+    last_name: lastName,
+    email_address: email,
+    mobile_number: phone,
+    custom_fields: {
+      gender,
+      age,
+      preferred_clinic: clinic,
+      source: 'Hairscope Widget',
+    }
+  });
+
+  res.status(200).json({ ok: true });
+});
+```
+
+## Alternative: Client-Side Event (No Server Required)
+
+If you don't have a server, listen for the `lead-form-submit` window event instead:
+
+```javascript
+window.addEventListener('lead-form-submit', (e) => {
+  const { firstName, lastName, email, phone, gender, age, center } = e.detail.formData;
+  // Push to your CRM's JavaScript SDK, analytics, etc.
+  console.log('Lead submitted:', e.detail.formData);
+});
+```
+
+> Use the **webhook** when you need reliable server-side delivery. Use the **client-side event** when pushing to a JS SDK or tag manager.
+
+## Limitations
+
+| Limitation | Detail |
+|:-----------|:-------|
+| **Trigger** | Fires only on lead form submission |
+| **No authentication** | No signature or secret header — protect with IP allowlisting or a secret token in the URL |
+| **Fire and forget** | No retries if your server is down |
+| **No response handling** | Hairscope ignores your server's response |
+| **HTTPS only** | Must use `https://` |
+| **One URL only** | Single `leadDataApi` URL — fan out from your endpoint if needed |
+| **No analysis data** | Only lead form fields — use the `result-data` event for analysis results |
+
+## Need Analysis Results Too?
+
+The webhook only sends lead form data. To capture analysis results, listen for the `result-data` event:
+
+```javascript
+window.addEventListener('result-data', (e) => {
+  fetch('https://your-domain.com/webhook/hairscope-analysis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(e.detail),
+  });
+});
+```
+
+## Troubleshooting
+
+| Issue | Fix |
+|:------|:----|
+| Webhook not triggering | Verify `leadDataApi` is set before form submission. Check browser Network tab. |
+| CORS error | Add `Access-Control-Allow-Origin` and `Access-Control-Allow-Headers` to your endpoint. |
+| Clinic field empty | Only populated if `centers` is configured in your form config. |
+
+## Enterprise Recommendations
+
+For production deployments, introduce a middleware layer between the widget and your CRM for retry handling, logging, deduplication, and multi-CRM support. See the [GoHighLevel CRM Integration](/guides/web-components/gohighlevel-crm) guide for a concrete example.
+
+## Support
+
+- **Website:** https://hairscope.ai
+- **Support Portal:** https://hairscope.ai/support
+- **Email:** support@hairscope.ai
