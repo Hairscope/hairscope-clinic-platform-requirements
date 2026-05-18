@@ -9,6 +9,8 @@ export default {
   authentication: 'Authentication',
   authorization: 'Authorization',
   graphql: 'GraphQL',
+  'api-workflow': 'API Workflow',
+  'collection-schemas': 'Collection Schemas',
   'event-system': 'Event System',
   'worker-services': 'Worker Services',
   'file-storage': 'File Storage',

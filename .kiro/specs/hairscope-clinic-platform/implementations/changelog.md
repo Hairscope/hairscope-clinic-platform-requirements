@@ -4,6 +4,14 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.2.0 — 2026-05-18
+
+### Added
+- **API Workflow** (`17-api-workflow.md`): Complete frontend API consumption map — 29 queries + 54 mutations = 83 APIs organized by user journey phases (unauthenticated → dashboard → core workflows → settings → session)
+- **Collection Schemas** (`18-collection-schemas.md`): Full MongoDB schema definitions for all 21 collections across 9 modules + infrastructure, including field types, indexes, constraints, and embedded sub-documents
+
+---
+
 ## v1.1.5 — 2026-05-16
 
 ### Added
