@@ -458,13 +458,16 @@ New fields SHALL be nullable or have defaults to support running old code agains
 # 7. Environment Promotion
 
 ```text
-develop → staging → production
+dev → staging → main (production)
 ```
 
-| Environment | Trigger | Approval |
-|-------------|---------|----------|
-| Staging | Push to `develop` | Automatic |
-| Production | Push to `main` | Manual approval |
+| Environment | Branch | Trigger | Approval |
+|-------------|--------|---------|----------|
+| Development | `dev` | Push/merge to `dev` | Automatic |
+| Staging | `staging` | Merge from `dev` to `staging` | Automatic |
+| Production | `main` | Merge from `staging` to `main` | Manual approval |
+
+See **19-versioning.md** for full branch strategy, version bumps, and release flow.
 
 ---
 

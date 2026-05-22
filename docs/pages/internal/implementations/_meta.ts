@@ -19,6 +19,7 @@ export default {
   'push-notifications': 'Push Notifications',
   testing: 'Testing',
   deployment: 'Deployment',
+  versioning: 'Versioning',
   'environment-config': 'Environment Config',
   modules: 'Module Implementations'
 }
