@@ -31,34 +31,68 @@ packages/api/src/modules/leads/
 # 2. Lead Schema
 
 ```typescript
+const LeadActionSchema = new Schema({
+  actionType: {
+    type: String,
+    enum: ['WHATSAPP', 'EMAIL', 'FACEBOOK_MESSAGE', 'PHONE_CALL', 'IN_PERSON_MEETING', 'OTHER'],
+    required: true,
+  },
+  content: { type: String, required: true },
+  statusChange: { type: String, enum: ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'LOST'] },
+  createdBy: { type: Schema.Types.ObjectId, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const LeadSchema = new Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true },
+  firstName: { type: String },
+  lastName: { type: String },
+  email: { type: String },
   phone: { type: String },
-  gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
+  age: { type: Number },
+  genderAssignedAtBirth: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
   source: { type: String, enum: ['MANUAL', 'WEBHOOK', 'SELFIE_ANALYSIS'], required: true },
+  sourceDetail: { type: String },
   status: {
     type: String,
     enum: ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'LOST'],
     default: 'NEW',
   },
+  priority: {
+    type: String,
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
+    default: 'MEDIUM',
+  },
+  tags: [{ type: String }],
   assignedTo: { type: Schema.Types.ObjectId, index: true },
-  notes: { type: String },
+  suggestedClinicId: { type: Schema.Types.ObjectId },
+  actions: [LeadActionSchema],
   lostReason: { type: String },
   convertedToPatientId: { type: Schema.Types.ObjectId },
   convertedAt: { type: Date },
   selfieAnalysisData: { type: Schema.Types.Mixed },
+  selfieAnalysisReport: { type: String },
   organizationId: { type: Schema.Types.ObjectId, required: true, index: true },
-  clinicId: { type: Schema.Types.ObjectId, required: true, index: true },
+  clinicId: { type: Schema.Types.ObjectId, index: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   createdBy: { type: Schema.Types.ObjectId },
+  updatedBy: { type: Schema.Types.ObjectId },
+  status: { type: String, default: 'ACTIVE' },
 });
 
 LeadSchema.index({ clinicId: 1, assignedTo: 1, status: 1 });
 LeadSchema.index({ clinicId: 1, email: 1 });
+LeadSchema.index({ organizationId: 1, clinicId: 1 });
 ```
+
+### Key Schema Notes
+
+- `firstName` or `lastName` — at least one required (validated at application level, not DB constraint)
+- `clinicId` — nullable for UnassignedLeads (leads pending Org Admin assignment)
+- `suggestedClinicId` — used in `MANUAL_ASSIGN` mode to store the source-determined clinic as a suggestion
+- `actions` — embedded array of LeadActions, ordered newest-first at query time
+- `selfieAnalysisReport` — URL to the generated PDF (nullable if capture failed)
+- Duplicate emails/phones are allowed across Lead records
 
 ---
 
@@ -195,7 +229,70 @@ export class LeadDistributionService {
 
 ---
 
-# 5. Webhook Lead Creation
+# 5. Lead Actions
+
+```typescript
+@Injectable()
+export class LeadActionService {
+  async addAction(
+    leadId: string,
+    dto: AddLeadActionDto,
+    context: TenantContext,
+  ): Promise<Lead> {
+    const lead = await this.leadRepo.findById(leadId, context);
+    if (!lead) throw new NotFoundError('Lead');
+
+    const action = {
+      actionType: dto.actionType,
+      content: dto.content,
+      statusChange: dto.statusChange ?? null,
+      createdBy: context.staffId,
+      createdAt: new Date(),
+    };
+
+    // If statusChange is provided, update lead status
+    const update: any = { $push: { actions: action } };
+    if (dto.statusChange) {
+      update.$set = { status: dto.statusChange };
+    }
+
+    const updated = await this.leadRepo.updateRaw(leadId, update, context);
+
+    await this.auditService.append('LEAD_ACTION_ADDED', {
+      leadId,
+      actionType: dto.actionType,
+      statusChange: dto.statusChange,
+    });
+
+    return updated;
+  }
+
+  async getActions(leadId: string, context: TenantContext): Promise<LeadAction[]> {
+    const lead = await this.leadRepo.findById(leadId, context);
+    if (!lead) throw new NotFoundError('Lead');
+
+    // Return actions sorted newest-first
+    return (lead.actions ?? []).sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+}
+```
+
+### Action Types
+
+| Value | Description |
+|-------|-------------|
+| `WHATSAPP` | WhatsApp message sent/received |
+| `EMAIL` | Email sent/received |
+| `FACEBOOK_MESSAGE` | Facebook/Instagram DM |
+| `PHONE_CALL` | Phone call made/received |
+| `IN_PERSON_MEETING` | Walk-in or scheduled meeting |
+| `OTHER` | Any other interaction |
+
+---
+
+# 6. Webhook Lead Creation
 
 ```typescript
 @Controller('webhooks')
@@ -219,7 +316,7 @@ export class LeadWebhookController {
 
 ---
 
-# 6. Module Registration
+# 7. Module Registration
 
 ```typescript
 @Module({
@@ -230,6 +327,7 @@ export class LeadWebhookController {
   ],
   providers: [
     LeadService,
+    LeadActionService,
     LeadDistributionService,
     LeadRepository,
     LeadResolver,
