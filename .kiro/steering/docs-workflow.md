@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: "Documentation workflow rules for the Hairscope platform - branch discipline, deployment, versioning, and Nextra sync"
 ---
 
 # Documentation Workflow Rules
