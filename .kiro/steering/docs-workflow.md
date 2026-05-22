@@ -53,6 +53,16 @@ Source `.md` files live in `.kiro/specs/hairscope-clinic-platform/{group}/`. The
 
 **Always sync source → Nextra after editing source files.**
 
+## Spec-First Rule
+
+**NEVER write directly to `docs/pages/` files.** All content MUST be authored in the spec source first:
+
+1. Write/edit the `.md` file in `.kiro/specs/hairscope-clinic-platform/{group}/`
+2. Copy the source file to `docs/pages/internal/{group}/` as `.mdx`
+3. Update `_meta.ts` if adding a new page
+
+The spec source is the single source of truth. Nextra `.mdx` files are derived copies.
+
 ## Before Editing Requirements
 
 Always read design documents first as they may be more updated.
