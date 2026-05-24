@@ -4,7 +4,7 @@
 
 ---
 
-## Module 1: Apollo Client Setup with Auth Link Chain
+## Section 1: Apollo Client Setup with Auth Link Chain
 
 **Branch:** `feature/auth-iam`
 
@@ -40,7 +40,7 @@
 
 ---
 
-## Module 2: Auth Store and Route Protection
+## Section 2: Auth Store and Route Protection
 
 **Branch:** `feature/auth-iam`
 
@@ -74,7 +74,7 @@
 
 ---
 
-## Module 3: Login Page
+## Section 3: Login Page
 
 **Branch:** `feature/auth-iam`
 
@@ -94,7 +94,7 @@
 
 ---
 
-## Module 4: Password Reset Pages
+## Section 4: Password Reset Pages
 
 **Branch:** `feature/auth-iam`
 
@@ -127,7 +127,7 @@
 
 ---
 
-## Module 5: Invite Acceptance Page
+## Section 5: Invite Acceptance Page
 
 **Branch:** `feature/auth-iam`
 
@@ -155,7 +155,7 @@
 
 ---
 
-## Module 6: Staff Management Page
+## Section 6: Staff Management Page
 
 **Branch:** `feature/auth-iam`
 
@@ -214,7 +214,7 @@
 
 ---
 
-## Module 7: Role Management Page
+## Section 7: Role Management Page
 
 **Branch:** `feature/auth-iam`
 
@@ -265,7 +265,7 @@
 
 ---
 
-## Module 8: Integration
+## Section 8: Integration
 
 **Branch:** `feature/auth-iam`
 
@@ -305,4 +305,5 @@
 - [x] 39.5 Test: invite acceptance page handles tokens
 - [x] 39.6 Test: protected routes require authentication
 - [x] 39.7 Create `tests/e2e/IAM_INTEGRATION_TEST_PLAN.md` documenting manual test flows
+
 
