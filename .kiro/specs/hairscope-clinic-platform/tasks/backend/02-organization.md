@@ -1,0 +1,36 @@
+# Module 2: Organization — Backend Tasks
+
+**Branch:** `feature/organization-module`
+
+### Task 1: Organization Schema and Repository
+- [x] 1.1 Expand Organization schema with full fields
+- [x] 1.2–1.3 Create repository and unit tests
+
+### Task 2: Clinic Schema and Repository
+- [x] 2.1 Expand Clinic schema with full fields
+- [x] 2.2–2.3 Create repository and unit tests
+- [x] 2.4 Write property test: org isolation
+
+### Task 3: Staff Availability Schema and Repository
+- [x] 3.1–3.3 Create schema, repository, and unit tests
+
+### Task 4: Organization Service
+- [x] 4.1–4.4 Create service with settings management and unit tests
+
+### Task 5: Clinic Service
+- [x] 5.1–5.5 Create service with CRUD, currency enforcement, deactivation
+- [x] 5.6–5.8 Write unit tests
+- [x] 5.9 Write property test: last clinic guard
+
+### Task 6: Staff Availability Service
+- [x] 6.1–6.4 Create service with validation and unit tests
+
+### Task 7: Visibility Mode Service
+- [x] 7.1–7.4 Create service with org override logic and unit tests
+- [x] 7.5 Write property test: org RESTRICTED overrides clinic OPEN
+
+### Task 8: Organization Resolvers
+- [x] 8.1–8.7 Create resolvers, DTOs, ObjectTypes, integration tests
+
+### Task 9: Organization Module Registration
+- [x] 9.1–9.4 Create module, wire into AppModule, barrel export

@@ -1,0 +1,107 @@
+# Module 1: Auth & IAM — Backend Tasks
+
+**Branch:** `feature/auth-iam`
+
+### Task 1: IAM Error Codes and Domain Errors
+- [x] 1.1 Add 18 IAM-specific error codes
+- [x] 1.2 Create 14 domain error subclasses
+- [x] 1.3 Write unit tests
+
+### Task 2: AuthSession Schema and Repository
+- [x] 2.1–2.2 Create AuthSession schema and repository
+- [x] 2.3 Write unit tests
+- [x] 2.4 Write property test: revokeAllForStaff leaves no ACTIVE sessions
+
+### Task 3: PasswordResetToken Schema and Repository
+- [x] 3.1–3.3 Create schema, repository, and unit tests
+
+### Task 4: Password Hashing Utilities
+- [x] 4.1 Create hashPassword/verifyPassword with argon2id
+- [x] 4.2–4.3 Write unit and property tests
+
+### Task 5: JWT Service
+- [x] 5.1–5.3 Create JwtService with RS256 sign/verify
+- [x] 5.4–5.5 Write unit tests including algorithm enforcement
+
+### Task 6: Auth Service - Login
+- [x] 6.1–6.4 Implement login with audit, failure cases, no user enumeration
+- [x] 6.5–6.6 Write unit tests
+- [x] 6.7 Write property test: never returns tokens for non-ACTIVE staff
+
+### Task 7: Auth Service - Refresh
+- [x] 7.1–7.4 Implement refresh with token rotation, stolen token detection, staff status check
+- [x] 7.5–7.7 Write unit tests
+- [x] 7.8 Write property test: old refresh token invalid after rotation
+
+### Task 8: Auth Service - Logout
+- [x] 8.1–8.5 Implement logout with single-session revocation, unit tests
+
+### Task 9: Auth Service - Password Reset
+- [x] 9.1–9.3 Implement requestPasswordReset and resetPassword
+- [x] 9.4–9.5 Write unit tests
+- [x] 9.6 Write property test: all sessions revoked after reset
+
+### Task 10: Auth Resolver
+- [x] 10.1–10.4 Create GraphQL resolver with HTTP-only cookies, DTOs
+- [x] 10.5–10.6 Write integration tests
+
+### Task 11: Auth Module Registration
+- [x] 11.1–11.3 Create AuthModule with exports and barrel
+
+### Task 12: Staff Schema and Repository
+- [x] 12.1–12.3 Create Staff schema and repository
+- [x] 12.4 Write property test: tenant scoping
+
+### Task 13: Role Schema and Repository
+- [x] 13.1–13.3 Create Role schema and repository with unit tests
+
+### Task 14: InviteToken Schema and Repository
+- [x] 14.1–14.3 Create InviteToken schema and repository with unit tests
+
+### Task 15: Password Policy Service
+- [x] 15.1–15.2 Create PasswordPolicyService with validation rules
+- [x] 15.3 Write property test: validation correctness
+
+### Task 16: Invite Service
+- [x] 16.1–16.5 Implement sendInvite, acceptInvite, resendInvite, cancelInvite
+- [x] 16.6–16.8 Write unit tests
+- [x] 16.9–16.10 Write property tests: PENDING_REGISTRATION status, 7-day expiry
+
+### Task 17: Staff Service
+- [x] 17.1–17.4 Implement staff CRUD, deactivation, reactivation
+- [x] 17.5–17.7 Write unit tests
+
+### Task 18: Last Admin Guard
+- [x] 18.1–18.3 Create LastAdminGuard with unit tests
+- [x] 18.4 Write property test: blocked when count is 1
+
+### Task 19: Role Service
+- [x] 19.1–19.4 Implement role CRUD with system role protection, OrgAdmin scope violation
+- [x] 19.5–19.7 Write unit tests
+
+### Task 20: Access Resolution Engine
+- [x] 20.1–20.6 Implement permission resolution, OrgAdmin restrictions, dual-role, deny-by-default
+- [x] 20.7–20.9 Write unit tests
+- [x] 20.10–20.11 Write property tests: always returns ALLOWED/DENIED, effective permissions = union
+
+### Task 21: Plan Gate Service
+- [x] 21.1–21.3 Create stub PlanGateService with unit tests
+
+### Task 22: Visibility Interceptor
+- [x] 22.1–22.3 Create VisibilityInterceptor with unit tests
+
+### Task 23: IAM Resolvers
+- [x] 23.1–23.6 Create Staff, Role, Invite resolvers with DTOs and `@RequirePermission`
+- [x] 23.7–23.8 Write integration tests
+
+### Task 24: Self-Registration
+- [x] 24.1–24.4 Create RegistrationService and resolver
+- [x] 24.5 Write unit tests
+- [x] 24.6 Write property test: creates exactly 1 org + 1 clinic + 1 staff
+
+### Task 25: IAM Module Registration
+- [x] 25.1–25.4 Create IamModule, wire into AppModule, barrel export
+
+### Task 26: Seed Data
+- [x] 26.1–26.3 Create system roles seed (OrgAdmin, ClinicAdmin) + default roles (Doctor, Receptionist, Nurse, Sales, Marketing, Frontdesk)
+- [x] 26.4 Write unit tests verifying idempotency

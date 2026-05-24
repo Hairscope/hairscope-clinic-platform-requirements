@@ -1,4 +1,5 @@
 export default {
-  tasks: 'Implementation Tasks',
-  'iam-module-tasks': 'IAM Module (Kiro Spec)',
+  tasks: 'Overview',
+  '01-iam': 'Module 1: IAM',
+  '01-iam-kiro-spec': 'Module 1: IAM (Kiro Spec)',
 }
