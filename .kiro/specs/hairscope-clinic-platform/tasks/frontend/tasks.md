@@ -50,11 +50,11 @@
 ### Task 7: Auth Hook
 - [x] 7.1 Create `src/hooks/useAuth.ts` with useQuery(ME) on mount
 - [x] 7.2 Set status to loading/authenticated/unauthenticated based on query result
-- [x] 7.3 Return { staff, status, isAuthenticated, isLoading }
+- [x] 7.3 Return `{ staff, status, isAuthenticated, isLoading }`
 
 ### Task 8: Permission Hook
 - [x] 8.1 Create `src/hooks/usePermission.ts` wrapping auth store hasPermission
-- [x] 8.2 Return { hasPermission, can } for inline permission checks
+- [x] 8.2 Return `{ hasPermission, can }` for inline permission checks
 
 ### Task 9: Next.js Middleware
 - [x] 9.1 Create `src/middleware.ts` with public routes (/login, /forgot-password, /reset-password, /invite/accept)
@@ -174,7 +174,7 @@
 - [x] 22.3 Cursor-based pagination (loadMore via fetchMore)
 - [x] 22.4 300ms debounced search
 - [x] 22.5 Status filter state
-- [x] 22.6 Return { staff, loading, error, hasNextPage, loadMore, setSearch, setStatusFilter, refetch }
+- [x] 22.6 Return `{ staff, loading, error, hasNextPage, loadMore, setSearch, setStatusFilter, refetch }`
 
 ### Task 23: Staff Table
 - [x] 23.1 Create `src/components/modules/iam/StaffTable.tsx`
@@ -305,3 +305,4 @@
 - [x] 39.5 Test: invite acceptance page handles tokens
 - [x] 39.6 Test: protected routes require authentication
 - [x] 39.7 Create `tests/e2e/IAM_INTEGRATION_TEST_PLAN.md` documenting manual test flows
+
