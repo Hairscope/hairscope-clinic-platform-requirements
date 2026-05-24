@@ -4,7 +4,7 @@
 
 ---
 
-## Module 1: Infrastructure Setup
+## Module 0: Infrastructure Setup
 
 **Branch:** `feature/infra-setup`
 
@@ -97,7 +97,7 @@
 
 ---
 
-## Module 2: Auth & IAM
+## Module 1: Auth & IAM
 
 **Branch:** `feature/auth-iam`
 
@@ -207,7 +207,7 @@
 
 ---
 
-## Module 3: Organization
+## Module 2: Organization
 
 **Branch:** `feature/organization-module`
 
@@ -246,7 +246,7 @@
 
 ---
 
-## Module 4: Patients
+## Module 3: Patients
 
 **Branch:** `feature/patients-module`
 
@@ -284,7 +284,7 @@
 
 ---
 
-## Module 5: Sessions
+## Module 4: Sessions
 
 **Branch:** `feature/sessions-module`
 
@@ -317,7 +317,7 @@
 
 ---
 
-## Module 6: Leads
+## Module 5: Leads
 
 **Branch:** `feature/leads-module`
 
@@ -343,7 +343,7 @@
 
 ---
 
-## Module 7: Appointments
+## Module 6: Appointments
 
 **Branch:** `feature/appointments-module`
 
@@ -372,7 +372,7 @@
 
 ---
 
-## Module 8: Catalog
+## Module 7: Catalog
 
 **Branch:** `feature/catalog-module`
 
@@ -396,7 +396,7 @@
 
 ---
 
-## Module 9: Billing
+## Module 8: Billing
 
 **Branch:** `feature/billing-module`
 
@@ -421,3 +421,4 @@
 
 ### Task 7: Billing Module Registration
 - [x] 7.1–7.4 Create module, wire into AppModule, barrel export
+
