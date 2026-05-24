@@ -4,6 +4,15 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.2.1 — 2026-05-24
+
+### Changed
+- **Tasks moved out** — Backend and frontend task lists moved from `implementations/` to new top-level `tasks/` directory (`tasks/backend/tasks.md`, `tasks/frontend/tasks.md`)
+- **Added** frontend IAM module Kiro spec tasks (`tasks/frontend/iam-module-tasks.md`)
+- **Removed** `tasks.md` and `frontend-tasks.md` from implementations (now in `tasks/`)
+
+---
+
 ## v1.2.0 — 2026-05-18
 
 ### Added

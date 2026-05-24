@@ -4,6 +4,18 @@ All notable changes to the Hairscope Clinic Platform requirements are documented
 
 ---
 
+## v1.2.0 — 2026-05-24
+
+### Changed
+- **Unified module numbering** — All module files renumbered to match across requirements, designs, and implementations (0=Infra, 1=IAM, 2=Org, 3=Patients, 4=Sessions, 5=Leads, 6=Appointments, 7=Catalog, 8=Billing, 9=Communication, 10=Audit)
+- **Removed** `products.md` (redundant — merged into catalog)
+- **Moved** IAM and Organization requirements from `core/` to `modules/` with proper numbering
+- **Moved** notification-engine and audit-compliance from `core/` to `modules/09-communication.md` and `modules/10-audit.md`
+- **Deleted** `reminder-engine.md` (merged into communication)
+- **Deleted** `communication-policy.md` (replaced by `09-communication.md`)
+
+---
+
 ## v1.1.1 — 2026-05-13
 
 ### Added
