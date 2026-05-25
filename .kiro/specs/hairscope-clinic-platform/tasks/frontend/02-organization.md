@@ -170,3 +170,34 @@
 - [ ] 22.4 Call SELF_REGISTER mutation
 - [ ] 22.5 On success: show confirmation message with email check instruction
 - [ ] 22.6 Link from login page to register page
+
+---
+
+## Section 6: Communication Settings (Settings Sub-Page)
+
+**Branch:** `feature/organization`
+
+### Task 23: Communication Service
+- [ ] 23.1 Create `src/services/communication.service.ts`
+- [ ] 23.2 Add GET_NOTIFICATION_TEMPLATES query (list all templates)
+- [ ] 23.3 Add CREATE_NOTIFICATION_TEMPLATE, UPDATE_NOTIFICATION_TEMPLATE, DELETE_NOTIFICATION_TEMPLATE mutations
+- [ ] 23.4 Add GET_CHANNEL_PREFERENCES, UPDATE_CHANNEL_PREFERENCES queries/mutations
+- [ ] 23.5 Add GET_QUIET_HOURS, UPDATE_QUIET_HOURS queries/mutations
+- [ ] 23.6 Add GET_DELIVERY_RECORDS query (pagination, filters)
+
+### Task 24: Communication Hooks
+- [ ] 24.1 Create `src/hooks/useNotificationTemplates.ts` (list, CRUD)
+- [ ] 24.2 Create `src/hooks/useDeliveryRecords.ts` (pagination, filters)
+- [ ] 24.3 Create `src/hooks/useCommunicationSettings.ts` (channel prefs, quiet hours)
+
+### Task 25: Communication Settings Page
+- [ ] 25.1 Create `src/app/(dashboard)/settings/communication/page.tsx`
+- [ ] 25.2 Tab navigation: Templates, Delivery Log, Channels, Quiet Hours
+- [ ] 25.3 Wrap in PermissionGate module="organization" action="edit"
+
+### Task 26: Communication Components
+- [ ] 26.1 Create `src/components/modules/communication/NotificationTemplateList.tsx`
+- [ ] 26.2 Create `src/components/modules/communication/NotificationTemplateForm.tsx`
+- [ ] 26.3 Create `src/components/modules/communication/DeliveryRecordsTable.tsx`
+- [ ] 26.4 Create `src/components/modules/communication/ChannelPreferencesEditor.tsx`
+- [ ] 26.5 Create `src/components/modules/communication/QuietHoursEditor.tsx`

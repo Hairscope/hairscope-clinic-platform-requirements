@@ -15,4 +15,3 @@
 | 6 | [Appointments](./06-appointments.md) | `feature/appointments` | Not started |
 | 7 | [Catalog](./07-catalog.md) | `feature/catalog` | Not started |
 | 8 | [Billing](./08-billing.md) | `feature/billing` | Not started |
-| 9 | [Communication](./09-communication.md) | `feature/communication` | Not started |

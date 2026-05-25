@@ -8,5 +8,4 @@ export default {
   '06-appointments': 'Module 6: Appointments',
   '07-catalog': 'Module 7: Catalog',
   '08-billing': 'Module 8: Billing',
-  '09-communication': 'Module 9: Communication',
 }
