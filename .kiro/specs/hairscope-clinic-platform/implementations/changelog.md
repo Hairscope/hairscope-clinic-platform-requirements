@@ -4,6 +4,26 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.3.0 — 2026-06-09
+
+### Changed
+- **Sessions Module** (`modules/04-sessions.md`): Complete rewrite based on finalized schema design
+  - 7 collections: sessions, sessionquestionnaires, sessionimages, globalanalysisdata, rootpoints, hairstrands, reportdata
+  - Trichoscopy AI stored as individual rootpoints + hairstrands (not aggregated analysis docs)
+  - Global AI analysis stores structured values only (no LLM text blobs)
+  - Staff overrides via soft-delete on points + overrides array on global analysis
+  - Report versioning via GCS path convention (no DB history array)
+  - Frontend computes metrics from raw annotation points
+  - Questionnaires stored as one doc per question (not inline on session)
+- **Collection Schemas** (`18-collection-schemas.md`): Module 4 section reworked with all 7 new session collections, replacing the previous 2-collection design (sessions + imagedatas)
+  - Added: sessionquestionnaires, sessionimages, globalanalysisdata, rootpoints, hairstrands, reportdata
+  - Removed: imagedatas (replaced by sessionimages), trichoscopyanalyses, annotations, sessionreports, globalimageanalyses (old planned collections)
+  - Field `model` renamed to `aiModel` across schemas (avoids Mongoose Document.model conflict)
+  - Added `status: ACTIVE` to clinicclosures collection
+  - Marked implemented vs planned collections with ✅ / 🔲 badges
+
+---
+
 ## v1.2.1 — 2026-05-24
 
 ### Changed

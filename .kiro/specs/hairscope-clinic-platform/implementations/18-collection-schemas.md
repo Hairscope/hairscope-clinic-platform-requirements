@@ -1,17 +1,29 @@
 # MongoDB Collection Schemas
 
 > Complete field definitions for every collection in the Hairscope platform.
-> All collections include base fields unless noted otherwise.
+> Collections marked with ✅ are **implemented** in the current backend.
+> Collections marked with 🔲 are **planned** (not yet implemented).
 
 ---
 
-## Base Schema Fields (inherited by all tenant-scoped collections)
+## Base Schema Fields (inherited by all tenant-scoped collections) ✅
+
+```typescript
+// packages/api/src/common/database/base.schema.ts
+export const BaseSchemaFields = {
+  organizationId: { type: Schema.Types.ObjectId, required: true, index: true },
+  clinicId: { type: Schema.Types.ObjectId, index: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+  createdBy: { type: Schema.Types.ObjectId },
+  updatedBy: { type: Schema.Types.ObjectId },
+};
+```
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `organizationId` | ObjectId | ✅ | ✅ | — | Tenant isolation |
 | `clinicId` | ObjectId | — | ✅ | — | Clinic scope |
-| `status` | String | — | — | — | Entity status |
 | `createdAt` | Date | — | — | `Date.now` | Creation timestamp |
 | `updatedAt` | Date | — | — | `Date.now` | Last update timestamp |
 | `createdBy` | ObjectId | — | — | — | Staff who created |
@@ -19,153 +31,226 @@
 
 ---
 
-## Module 1: IAM
+## Module 1: IAM ✅
 
-### Collection: `staff`
+### Collection: `staffs` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `firstName` | String | — | — | — | Staff first name |
 | `lastName` | String | — | — | — | Staff last name |
-| `email` | String | ✅ | ✅ (unique compound) | — | Login email (immutable after invite) |
+| `email` | String | ✅ | ✅ (unique compound) | — | Login email |
 | `phone` | String | — | — | — | Contact phone |
 | `passwordHash` | String | — | — | — | Argon2 hashed password |
+| `avatarUrl` | String | — | — | — | GCS file path for avatar |
+| `biography` | String | — | — | — | Short bio |
 | `specialization` | String | — | — | — | e.g., "Trichology" |
 | `experience` | String | — | — | — | e.g., "8 years" |
-| `status` | String (enum) | — | — | `PENDING_REGISTRATION` | `ACTIVE`, `INACTIVE`, `PENDING_REGISTRATION` |
-| `roles` | ObjectId[] | — | — | — | References to Role collection |
-| `organizationId` | ObjectId | ✅ | ✅ | — | Parent organization |
-| `clinicId` | ObjectId | ✅ | ✅ | — | Assigned clinic |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | Inviting admin |
+| `userType` | String (enum) | ✅ | ✅ | `CLINIC_STAFF` | `CLINIC_STAFF`, `PLATFORM_SUPPORT`, `PLATFORM_ADMIN` |
+| `status` | String (enum) | — | ✅ | `PENDING_REGISTRATION` | `ACTIVE`, `INACTIVE`, `PENDING_REGISTRATION` |
+| `roles` | ObjectId[] | — | — | — | References to `roles` collection |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ organizationId: 1, clinicId: 1, email: 1 }` — **unique**
+- `{ status: 1 }`
+- `{ userType: 1 }`
 
 ---
 
-### Collection: `roles`
+### Collection: `roles` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `name` | String | ✅ | — | — | Role name (e.g., "Doctor", "ClinicAdmin") |
+| `description` | String | — | — | — | Role description |
 | `permissions` | Array | — | — | — | Permission grants |
 | `permissions[].module` | String | ✅ | — | — | Module name (patients, leads, etc.) |
-| `permissions[].actions` | String[] | — | — | — | `view`, `create`, `edit`, `delete` |
+| `permissions[].actions` | String[] | — | — | — | `VIEW`, `CREATE`, `EDIT`, `DELETE` |
 | `isSystem` | Boolean | — | — | `false` | System roles can't be deleted |
 | `isDefault` | Boolean | — | — | `false` | Auto-assigned to new staff |
-| `organizationId` | ObjectId | ✅ | — | — | Parent organization |
-| `clinicId` | ObjectId | ✅ | — | — | Parent clinic |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
+| `status` | String (enum) | ✅ | — | `ACTIVE` | `ACTIVE` |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ organizationId: 1, clinicId: 1, name: 1 }` — **unique**
 
 ---
 
-### Collection: `invitetokens`
+### Collection: `invitetokens` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
-| `staffId` | ObjectId | ✅ | — | — | Staff being invited |
+| `staffId` | ObjectId | ✅ | ✅ | — | Staff being invited |
 | `tokenHash` | String | ✅ | ✅ (unique) | — | Argon2 hash of invite token |
 | `expiresAt` | Date | ✅ | ✅ (TTL) | — | Token expiry (7 days) |
 | `usedAt` | Date | — | — | — | When invite was accepted |
 | `revokedAt` | Date | — | — | — | When invite was cancelled |
-| `organizationId` | ObjectId | ✅ | — | — | — |
-| `clinicId` | ObjectId | ✅ | — | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ expiresAt: 1 }` — TTL index (auto-delete expired tokens)
 
 ---
 
-## Module 2: Organization
+## Module 2: Organization ✅
 
-### Collection: `organizations`
+### Collection: `organizations` ✅
+
+Does NOT extend BaseDocument — it IS the top of the tenant hierarchy.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `name` | String | ✅ | — | — | Organization name |
+| `logoUrl` | String | — | — | — | GCS file path for logo |
+| `subscriptionAccountId` | String | — | — | — | External subscription API ID |
+| `status` | String (enum) | ✅ | — | `ACTIVE` | `ACTIVE`, `INACTIVE` |
 | `currency` | String | — | — | — | ISO 4217 currency code |
-| `currencyPolicy` | String (enum) | — | — | `ALLOW_CLINIC_CURRENCY` | `ENFORCE_SINGLE_CURRENCY`, `ALLOW_CLINIC_CURRENCY` |
-| `recordVisibilityMode` | String (enum) | — | — | `OPEN` | `OPEN`, `RESTRICTED` |
-| `trialStartedAt` | Date | — | — | — | Trial start date |
-| `trialEndsAt` | Date | — | — | — | Trial end date |
-| `subscriptionPlan` | String | — | — | `TRIAL` | Current plan |
-| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `SUSPENDED` |
+| `email` | String | — | — | — | Organization email |
+| `phone` | String | — | — | — | Organization phone |
+| `website` | String | — | — | — | Organization website |
+| `timezone` | String | — | — | — | IANA timezone |
+| `billingAddress.street` | String | — | — | — | Street address |
+| `billingAddress.city` | String | — | — | — | City |
+| `billingAddress.state` | String | — | — | — | State/Province |
+| `billingAddress.country` | String | — | — | — | Country |
+| `billingAddress.postalCode` | String | — | — | — | Postal code |
+| `billingAddress.full` | String | — | — | — | Full address string |
+| `currencyEnforcementPolicy` | String (enum) | — | — | `STRICT` | `STRICT`, `FLEXIBLE` |
+| `recordVisibilityMode` | String (enum) | — | — | `CLINIC_ONLY` | `CLINIC_ONLY`, `ORGANIZATION_WIDE` |
+| `leadAssignmentMode` | String (enum) | — | — | `MANUAL` | `MANUAL`, `ROUND_ROBIN` |
+| `termsEnforcementPolicy` | String (enum) | — | — | `ORGANIZATION_WIDE` | `ORGANIZATION_WIDE`, `CLINIC_SPECIFIC` |
+| `termsType` | String (enum) | — | — | `NONE` | `NONE`, `URL`, `CONTENT` |
+| `termsContent` | String | — | — | — | Rich text T&C content |
+| `termsUrl` | String | — | — | — | External T&C URL |
 | `createdAt` | Date | — | — | `Date.now` | — |
 | `updatedAt` | Date | — | — | `Date.now` | — |
+| `createdBy` | ObjectId | — | — | — | — |
+| `updatedBy` | ObjectId | — | — | — | — |
 
 ---
 
-### Collection: `clinics`
+### Collection: `clinics` ✅
+
+Does NOT extend BaseDocument — it has `organizationId` but no `clinicId` (it IS the clinic).
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `name` | String | ✅ | — | — | Clinic name |
-| `website` | String | — | — | — | Clinic website URL |
+| `logoUrl` | String | — | — | — | GCS file path for logo |
 | `address.street` | String | — | — | — | Street address |
 | `address.city` | String | — | — | — | City |
 | `address.state` | String | — | — | — | State/Province |
 | `address.country` | String | — | — | — | Country |
 | `address.postalCode` | String | — | — | — | Postal code |
 | `address.full` | String | ✅ | — | — | Full address string |
+| `address.latitude` | Number | — | — | — | Geocoded latitude |
+| `address.longitude` | Number | — | — | — | Geocoded longitude |
 | `email` | String | — | — | — | Clinic email |
 | `phone` | String | — | — | — | Clinic phone |
-| `logo` | String | — | — | — | GCS file path |
-| `timezone` | String | ✅ | — | — | IANA timezone |
-| `language` | String | — | — | `EN` | Default language |
+| `website` | String | — | — | — | Clinic website URL |
+| `timezone` | String | — | — | — | IANA timezone |
+| `language` | String | — | — | — | Default language code |
 | `currency` | String | — | — | — | ISO 4217 |
 | `workingHours` | Array | — | — | — | Weekly schedule |
-| `workingHours[].day` | Number | — | — | — | 0=Sunday, 6=Saturday |
+| `workingHours[].day` | String (enum) | ✅ | — | — | `MONDAY`–`SUNDAY` |
 | `workingHours[].startTime` | String | — | — | — | "HH:mm" format |
 | `workingHours[].endTime` | String | — | — | — | "HH:mm" format |
-| `workingHours[].isOpen` | Boolean | — | — | `true` | Is clinic open this day |
-| `servicesOffered` | ObjectId[] | — | — | — | Catalog item references |
-| `termsAndConditions` | String | — | — | — | T&C text |
-| `reportHeader.logo` | String | — | — | — | Report logo URL |
-| `reportHeader.clinicName` | String | — | — | — | Name on reports |
-| `reportHeader.address` | String | — | — | — | Address on reports |
-| `reportHeader.phone` | String | — | — | — | Phone on reports |
-| `reportHeader.email` | String | — | — | — | Email on reports |
-| `recordVisibilityMode` | String (enum) | — | — | `OPEN` | `OPEN`, `RESTRICTED` |
-| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `INACTIVE` |
+| `workingHours[].closed` | Boolean | — | — | `false` | Is clinic closed this day |
+| `termsType` | String (enum) | — | — | `NONE` | `NONE`, `URL`, `CONTENT` |
+| `termsContent` | String | — | — | — | Rich text T&C content |
+| `termsUrl` | String | — | — | — | External T&C URL |
+| `recordVisibilityMode` | String (enum) | ✅ | — | `OPEN` | `OPEN`, `RESTRICTED` |
+| `status` | String (enum) | ✅ | — | `ACTIVE` | `ACTIVE`, `INACTIVE` |
 | `organizationId` | ObjectId | ✅ | ✅ | — | Parent organization |
 | `createdAt` | Date | — | — | `Date.now` | — |
 | `updatedAt` | Date | — | — | `Date.now` | — |
 | `createdBy` | ObjectId | — | — | — | — |
+| `updatedBy` | ObjectId | — | — | — | — |
 
 **Indexes:**
-- `{ organizationId: 1, name: 1 }`
+- `{ organizationId: 1, name: 1 }` — **unique**
 
 ---
 
-### Collection: `staffavailabilities`
+### Collection: `clinicclosures` ✅
+
+Tracks specific dates when a clinic is closed (holidays, events, etc.). Used by the slot availability service to block bookings on closed dates.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `date` | Date | ✅ | ✅ | — | The closed date |
+| `reason` | String | — | — | — | Reason for closure (e.g., "Christmas") |
+| `recurring` | Boolean | — | — | `false` | Repeats annually (match month+day) |
+| `status` | String (enum) | ✅ | — | `ACTIVE` | `ACTIVE` (extensible for future approval workflows) |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ clinicId: 1, date: 1 }` — **unique**
+- `{ clinicId: 1, date: 1, recurring: 1 }` — range queries with recurring filter
+
+---
+
+### Collection: `staffavailabilities` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `staffId` | ObjectId | ✅ | ✅ | — | Staff member |
-| `clinicId` | ObjectId | ✅ | ✅ | — | Clinic |
-| `organizationId` | ObjectId | ✅ | — | — | Organization |
-| `schedule` | Array | — | — | — | Weekly availability |
-| `schedule[].day` | Number | — | — | — | 0=Sunday, 6=Saturday |
-| `schedule[].startTime` | String | — | — | — | "HH:mm" |
-| `schedule[].endTime` | String | — | — | — | "HH:mm" |
-| `schedule[].available` | Boolean | — | — | `true` | Available this day |
-| `updatedAt` | Date | — | — | `Date.now` | — |
+| `schedule` | Array | — | — | `[]` | Weekly availability |
+| `schedule[].day` | String (enum) | ✅ | — | — | `MONDAY`–`SUNDAY` |
+| `schedule[].startTime` | String | ✅ | — | — | "HH:mm" |
+| `schedule[].endTime` | String | ✅ | — | — | "HH:mm" |
+| `schedule[].available` | Boolean | ✅ | — | `false` | Available this day |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ staffId: 1, clinicId: 1 }` — **unique**
 
 ---
 
-## Module 3: Patients
+## Module: Auth ✅
 
-### Collection: `patients`
+### Collection: `authsessions` ✅
+
+Tracks active authentication sessions for staff. Does NOT use typical BaseDocument lifecycle (never updated for content changes).
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `staffId` | ObjectId | ✅ | ✅ | — | Staff member |
+| `status` | String (enum) | ✅ | — | `ACTIVE` | `ACTIVE`, `REVOKED` |
+| `refreshTokenHash` | String | ✅ | ✅ | — | Hashed refresh token |
+| `userAgent` | String | — | — | — | Client user agent |
+| `ipAddress` | String | — | — | — | Client IP |
+| `lastActivityAt` | Date | — | — | `Date.now` | Updated on token refresh |
+| `revokedAt` | Date | — | — | — | When session was revoked |
+| `revokedReason` | String (enum) | — | — | — | `LOGOUT`, `TOKEN_REFRESH`, `PASSWORD_RESET`, `DEACTIVATION`, `SECURITY_TOKEN_REUSE` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ staffId: 1, status: 1 }`
+- `{ revokedAt: 1 }` — TTL index (auto-delete revoked sessions after 30 days, partial filter: `status: 'REVOKED'`)
+
+---
+
+### Collection: `passwordresettokens` ✅
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `staffId` | ObjectId | ✅ | ✅ | — | Staff requesting reset |
+| `tokenHash` | String | ✅ | ✅ (unique) | — | Hashed reset token |
+| `expiresAt` | Date | ✅ | ✅ (TTL) | — | 24-hour expiry |
+| `usedAt` | Date | — | — | `null` | When token was consumed |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ expiresAt: 1 }` — TTL index (auto-delete expired tokens)
+- `{ staffId: 1, usedAt: 1 }` — query unused tokens by staff
+
+---
+
+## Module 3: Patients ✅
+
+### Collection: `patients` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -177,14 +262,10 @@
 | `age` | Number | — | — | — | Calculated from DOB |
 | `genderAssignedAtBirth` | String (enum) | ✅ | — | — | `MALE`, `FEMALE`, `OTHER` |
 | `externalPatientId` | String | — | — | — | External system ID |
-| `globalPatientId` | String | — | ✅ | — | Cross-org patient identity (UUID) |
+| `globalPatientId` | String | — | ✅ | — | Cross-org patient identity |
 | `convertedFromLeadId` | ObjectId | — | — | — | Lead that was converted |
 | `isErased` | Boolean | — | — | `false` | GDPR erasure flag |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ clinicId: 1, email: 1 }` — **unique**
@@ -193,129 +274,293 @@
 
 ---
 
-### Collection: `medicaldocuments`
+### Collection: `medicaldocuments` ✅
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `patientId` | ObjectId | ✅ | ✅ | — | Owner patient |
-| `fileName` | String | ✅ | — | — | Original file name |
-| `filePath` | String | ✅ | — | — | GCS storage path |
-| `mimeType` | String | ✅ | — | — | File MIME type |
+| `title` | String | ✅ | — | — | Document title |
+| `description` | String | — | — | — | Document description |
+| `fileUrl` | String | ✅ | — | — | GCS storage path |
+| `fileType` | String (enum) | — | — | — | `JPEG`, `PNG`, `PDF` |
 | `fileSize` | Number | — | — | — | Size in bytes |
-| `type` | String | — | — | — | Document category |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `uploadedBy` | ObjectId | ✅ | — | — | Staff who uploaded |
-| `createdAt` | Date | — | — | `Date.now` | — |
+| + BaseSchemaFields |
 
 ---
 
-## Module 4: Sessions
+## Module 4: Sessions ✅ (Schema Rework)
 
-### Collection: `sessions`
+### Collection: `sessions` ✅
+
+Tracks session lifecycle and metadata. Questionnaires, images, AI analysis, and reports live in separate collections.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `patientId` | ObjectId | ✅ | ✅ | — | Patient this session belongs to |
-| `sessionType` | String (enum) | ✅ | — | — | `HAIR_ANALYSIS`, `SELFIE_ANALYSIS` |
-| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SAVED`, `COMPLETED` |
-| `doctorId` | ObjectId | ✅ | — | — | Doctor who created |
-| `assignedTo` | ObjectId | ✅ | ✅ | — | Currently assigned staff |
-| `observations` | String | — | — | — | Doctor's notes |
-| `images` | Array | — | — | — | Session images |
-| `images[].filePath` | String | ✅ | — | — | GCS path |
-| `images[].region` | String | — | — | — | Body region |
-| `images[].caption` | String | — | — | — | Image caption |
-| `images[].uploadedAt` | Date | — | — | `Date.now` | — |
-| `aiAnalysis.status` | String (enum) | — | — | — | `PENDING`, `COMPLETED`, `FAILED` |
-| `aiAnalysis.findings` | String[] | — | — | — | AI findings list |
-| `aiAnalysis.severity` | String | — | — | — | Severity level |
-| `aiAnalysis.confidence` | Number | — | — | — | Confidence score (0-1) |
-| `aiAnalysis.completedAt` | Date | — | — | — | When AI finished |
-| `aiAnalysis.failedAt` | Date | — | — | — | When AI failed |
-| `aiAnalysis.failureReason` | String | — | — | — | Failure description |
-| `reportUrl` | String | — | — | — | Generated report URL |
+| `sessionType` | String (enum) | ✅ | — | — | `HAIR_ANALYSIS`, `SKIN_TREATMENT`, `HAIR_REMOVAL`, `SCALP_TREATMENT`, `LASER_TREATMENT`, `CONSULTATION` |
+| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SAVED`, `COMPLETED`, `DELETED` |
+| `assignedTo` | ObjectId | — | — | — | Staff member assigned |
+| `appointmentId` | ObjectId | — | — | — | Linked appointment (optional) |
+| `doctorsNote` | String | — | — | `''` | Doctor's observations |
+| `rootCause` | String | — | — | — | Determined root cause |
+| `stressScore` | Number | — | — | — | Computed stress score |
+| `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `aiAnalysisCompletedAt` | Date | — | — | — | When AI finished |
 | `savedAt` | Date | — | — | — | When moved to SAVED |
 | `completedAt` | Date | — | — | — | When completed |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| `deletedAt` | Date | — | — | — | When soft-deleted |
+| + BaseSchemaFields |
 
 **Indexes:**
-- `{ patientId: 1, sessionType: 1, status: 1 }` — one DRAFT per type check
-- `{ clinicId: 1, status: 1 }`
+- `{ patientId: 1, clinicId: 1, sessionType: 1, status: 1 }` — partial unique on `status: 'DRAFT'`
+- `{ clinicId: 1, organizationId: 1, status: 1 }`
+- `{ patientId: 1, status: 1 }`
 
 ---
 
-### Collection: `treatmentplans`
+### Collection: `sessionquestionnaires` 🔲
+
+One document per question-answer per session.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `questionId` | String | ✅ | — | — | Question identifier |
+| `patientAnswer` | String | ✅ | — | — | Patient's answer |
+| `questionType` | String | — | — | — | Question category/type |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionId: 1, questionId: 1 }` — unique per session per question
+
+---
+
+### Collection: `sessionimages` 🔲
+
+Stores all captured images — both global and trichoscopy. Per-image AI status tracked here.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient (denormalized) |
+| `sequence` | Number | — | — | `0` | Capture order |
+| `imageType` | String (enum) | ✅ | ✅ | — | `GLOBAL`, `TRICHOSCOPY` |
+| `imageUrl` | String | ✅ | — | — | GCS storage path |
+| `globalPosition` | String (enum) | — | — | — | For GLOBAL images |
+| `headDiagram` | String (enum) | — | — | — | For TRICHOSCOPY: `TOP`, `BACK`, `LEFT`, `RIGHT` |
+| `trichoscopyLabel` | String | — | — | — | User-defined label |
+| `trichoscopyNote` | String | — | — | — | Per-image observation |
+| `trichoscopyPositionX` | Number | — | — | — | X% on head diagram |
+| `trichoscopyPositionY` | Number | — | — | — | Y% on head diagram |
+| `widthInMm` | Number | — | — | — | Physical width in mm |
+| `heightInMm` | Number | — | — | — | Physical height in mm |
+| `brightness` | Number | — | — | `50` | 0-100 brightness |
+| `contrast` | Number | — | — | `50` | 0-100 contrast |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `aiAnalysisCompletedAt` | Date | — | — | — | When AI finished |
+| `failureReason` | String | — | — | — | Error if AI failed |
+| `retriesRemaining` | Number | — | — | `3` | Auto-retry counter |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionId: 1, imageType: 1, sequence: 1 }`
+- `{ patientId: 1, imageType: 1, createdAt: -1 }`
+
+---
+
+### Collection: `globalanalysisdata` 🔲
+
+One document per global image. Structured AI results (no raw LLM text). Overrides array for doctor corrections.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `sessionImageId` | ObjectId | ✅ | ✅ (unique) | — | Reference to `sessionimages._id` |
+| `model` | String | — | — | — | AI model identifier |
+| `hairlossScale` | String | — | — | — | e.g., "Norwood", "Ludwig" |
+| `hairlossStage` | String | — | — | — | e.g., "Stage 3" |
+| `hairCoverage` | Number | — | — | — | Coverage % |
+| `volumeRetained` | Number | — | — | — | Volume retained % |
+| `highDensityZonePercent` | Number | — | — | — | High density % |
+| `midiumDensityZonePercent` | Number | — | — | — | Medium density % |
+| `lowDensityZonePercent` | Number | — | — | — | Low density % |
+| `heatmapImagePath` | String | — | — | — | GCS path to heatmap image |
+| `overrides[]` | Array | — | — | — | Staff override audit trail |
+| `overrides[].field` | String | ✅ | — | — | Field path overridden |
+| `overrides[].previousValue` | Mixed | — | — | — | Before |
+| `overrides[].newValue` | Mixed | ✅ | — | — | After |
+| `overrides[].reason` | String | — | — | — | Reason |
+| `overrides[].overriddenBy` | ObjectId | ✅ | — | — | Staff |
+| `overrides[].overriddenAt` | Date | ✅ | — | — | When |
+| `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `aiAnalysisCompletedAt` | Date | — | — | — | When finished |
+| `failureReason` | String | — | — | — | Error |
+| `retriesRemaining` | Number | — | — | `3` | Retries |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionImageId: 1 }` — **unique**
+- `{ sessionId: 1, aiAnalysisStatus: 1 }`
+
+---
+
+### Collection: `rootpoints` 🔲
+
+One document per detected/added follicle point. Soft-deleted points preserved for AI training.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
 | `patientId` | ObjectId | ✅ | — | — | Patient |
-| `diagnosis` | String | ✅ | — | — | Diagnosis text |
-| `goals` | String[] | — | — | — | Treatment goals |
-| `lineItems` | Array | — | — | — | Treatment items |
-| `lineItems[].catalogItemId` | ObjectId | ✅ | — | — | Catalog reference |
-| `lineItems[].itemName` | String | ✅ | — | — | Item name snapshot |
-| `lineItems[].type` | String (enum) | — | — | — | `SERVICE`, `MEDICATION`, `COSMETIC`, `SUPPLEMENT` |
-| `lineItems[].routine.dosage` | String | — | — | — | e.g., "5mg" |
-| `lineItems[].routine.frequency` | String | — | — | — | e.g., "daily" |
-| `lineItems[].routine.duration` | String | — | — | — | e.g., "6 months" |
-| `lineItems[].routine.timeSlots` | String[] | — | — | — | e.g., ["morning", "evening"] |
-| `lineItems[].routine.instructions` | String | — | — | — | Usage instructions |
-| `kits` | Array | — | — | — | Treatment kits used |
-| `kits[].kitId` | ObjectId | — | — | — | Kit reference |
-| `kits[].name` | String | — | — | — | Kit name |
-| `kits[].items` | ObjectId[] | — | — | — | Kit item references |
-| `nextReviewDate` | Date | — | — | — | Next review appointment |
-| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SIGNED` |
-| `signedAt` | Date | — | — | — | Signature timestamp |
-| `signedBy` | ObjectId | — | — | — | Signing doctor |
-| `pdfUrl` | String | — | — | — | Generated PDF URL |
-| `editHistory` | Array | — | — | — | Change tracking |
-| `editHistory[].field` | String | — | — | — | Changed field |
-| `editHistory[].previousValue` | String | — | — | — | Old value |
-| `editHistory[].newValue` | String | — | — | — | New value |
-| `editHistory[].editedAt` | Date | — | — | — | When changed |
-| `editHistory[].editedBy` | ObjectId | — | — | — | Who changed |
-| `organizationId` | ObjectId | ✅ | — | — | — |
-| `clinicId` | ObjectId | ✅ | — | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
+| `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` |
+| `model` | String | — | — | — | AI model identifier |
+| `x` | Number | ✅ | — | — | X coordinate (0-1) |
+| `y` | Number | ✅ | — | — | Y coordinate (0-1) |
+| `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionImageId: 1, status: 1 }`
+- `{ sessionId: 1, status: 1 }`
 
 ---
 
-### Collection: `prescriptions`
+### Collection: `hairstrands` 🔲
+
+One document per detected/added hair strand. Two-point representation (root + end).
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
 | `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
 | `patientId` | ObjectId | ✅ | — | — | Patient |
-| `treatmentPlanId` | ObjectId | — | — | — | Linked treatment plan |
-| `items` | Array | — | — | — | Prescription items |
-| `items[].catalogItemId` | ObjectId | ✅ | — | — | Medication/supplement |
-| `items[].name` | String | ✅ | — | — | Item name |
-| `items[].dosage` | String | — | — | — | Dosage |
-| `items[].frequency` | String | — | — | — | Frequency |
-| `items[].duration` | String | — | — | — | Duration |
-| `items[].instructions` | String | — | — | — | Instructions |
-| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SIGNED` |
-| `signedAt` | Date | — | — | — | — |
-| `signedBy` | ObjectId | — | — | — | — |
-| `pdfUrl` | String | — | — | — | Generated PDF |
-| `organizationId` | ObjectId | ✅ | — | — | — |
-| `clinicId` | ObjectId | ✅ | — | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
+| `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` |
+| `model` | String | — | — | — | AI model identifier |
+| `p1x` | Number | ✅ | — | — | Root X (0-1) |
+| `p1y` | Number | ✅ | — | — | Root Y (0-1) |
+| `p2x` | Number | ✅ | — | — | End X (0-1) |
+| `p2y` | Number | ✅ | — | — | End Y (0-1) |
+| `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionImageId: 1, status: 1 }`
+- `{ sessionId: 1, status: 1 }`
 
 ---
 
-## Module 5: Leads
+### Collection: `reportdata` 🔲
 
-### Collection: `leads`
+One document per session. Tracks report version and latest PDF URL. Old versions accessible via GCS path convention.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ (unique) | — | Parent session (1:1) |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `reportUrl` | String | — | — | — | GCS path to latest PDF |
+| `reportVersion` | Number | — | — | `0` | Increments on regeneration |
+| `reportGeneratedAt` | Date | — | — | — | When last generated |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionId: 1 }` — **unique**
+
+**PDF Path Convention:** `{orgId}/{clinicId}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf`
+
+---
+
+## Module 7: Catalog ✅
+
+### Collection: `products` ✅
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `name` | String | ✅ | text | — | Product/service name |
+| `description` | String | — | — | `''` | Description |
+| `imageUrl` | String | — | — | `''` | Product image GCS path |
+| `price` | Number | — | — | `null` | Unit price |
+| `currency` | String | — | — | `''` | ISO 4217 |
+| `purchaseLink` | String | — | — | `null` | External purchase URL |
+| `productType` | String (enum) | ✅ | ✅ | — | `SERVICE`, `MEDICINE`, `COSMETIC`, `SUPPLEMENT` |
+| `isActive` | Boolean | — | — | `true` | Soft delete flag |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ clinicId: 1, productType: 1, isActive: 1 }`
+- `{ clinicId: 1, name: 'text', description: 'text' }`
+- `{ organizationId: 1, clinicId: 1 }`
+
+---
+
+## Module: Audit ✅
+
+### Collection: `auditlogs` ✅
+
+Does NOT extend BaseDocument — append-only, never updated.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `organizationId` | ObjectId | — | ✅ | — | Organization scope |
+| `clinicId` | ObjectId | — | — | — | Clinic scope (null for org-level) |
+| `action` | String | ✅ | — | — | Action performed (e.g., `STAFF_CREATED`) |
+| `entityType` | String | ✅ | — | — | Entity type (e.g., `Staff`, `Session`) |
+| `entityId` | String | ✅ | ✅ | — | Entity ID |
+| `staffId` | ObjectId | — | ✅ | — | Who performed the action |
+| `ipAddress` | String | — | — | — | Client IP |
+| `userAgent` | String | — | — | — | Client user agent |
+| `metadata` | Mixed | — | — | — | Additional context (before/after snapshots) |
+| `createdAt` | Date | — | — | `Date.now` | — |
+
+**Indexes:**
+- `{ organizationId: 1, clinicId: 1, createdAt: -1 }`
+- `{ organizationId: 1, action: 1 }`
+- `{ entityId: 1 }`
+- `{ staffId: 1 }`
+
+---
+
+## Module: Outbox ✅
+
+### Collection: `outboxevents` ✅
+
+Does NOT extend BaseDocument — transactional outbox pattern for event delivery.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `aggregateType` | String | ✅ | — | — | e.g., `Session`, `Staff` |
+| `aggregateId` | String | ✅ | — | — | Entity ID that owns the event |
+| `eventType` | String | ✅ | — | — | e.g., `SessionSaved`, `StaffCreated` |
+| `payload` | Mixed | ✅ | — | `{}` | Event payload |
+| `status` | String (enum) | ✅ | ✅ | `PENDING` | `PENDING`, `PROCESSING`, `PUBLISHED`, `FAILED` |
+| `attempts` | Number | ✅ | — | `0` | Delivery attempts |
+| `lastAttemptAt` | Date | — | — | — | Last attempt timestamp |
+| `nextRetryAt` | Date | — | — | — | Next retry timestamp |
+| `error` | String | — | — | — | Last error message |
+| `createdAt` | Date | — | — | `Date.now` | — |
+
+**Indexes:**
+- `{ status: 1, createdAt: 1 }` — polling for pending events
+- `{ aggregateType: 1, aggregateId: 1 }` — query events by aggregate
+
+---
+---
+
+## 🔲 PLANNED COLLECTIONS (Not Yet Implemented)
+
+The following collections are designed but not yet built in the backend.
+
+---
+
+## Module 5: Leads 🔲
+
+### Collection: `leads` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -329,14 +574,10 @@
 | `assignedTo` | ObjectId | — | ✅ | — | Assigned staff member |
 | `notes` | String | — | — | — | Lead notes |
 | `lostReason` | String | — | — | — | Why lead was lost |
-| `convertedToPatientId` | ObjectId | — | — | — | Patient created from this lead |
+| `convertedToPatientId` | ObjectId | — | — | — | Patient created from lead |
 | `convertedAt` | Date | — | — | — | Conversion timestamp |
 | `selfieAnalysisData` | Mixed | — | — | — | Selfie analysis payload |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ clinicId: 1, assignedTo: 1, status: 1 }`
@@ -344,9 +585,9 @@
 
 ---
 
-## Module 6: Appointments
+## Module 6: Appointments 🔲
 
-### Collection: `appointments`
+### Collection: `appointments` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -361,13 +602,9 @@
 | `cancelledAt` | Date | — | — | — | Cancellation timestamp |
 | `cancelledBy` | ObjectId | — | — | — | Who cancelled |
 | `cancellationReason` | String | — | — | — | Reason for cancellation |
-| `rescheduledFrom` | ObjectId | — | — | — | Original appointment (if rescheduled) |
+| `rescheduledFrom` | ObjectId | — | — | — | Original appointment |
 | `notes` | String | — | — | — | Appointment notes |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ clinicId: 1, slotStart: 1, slotEnd: 1 }` — slot availability
@@ -376,67 +613,9 @@
 
 ---
 
-## Module 7: Catalog
+## Module 8: Billing 🔲
 
-### Collection: `catalogitems`
-
-| Field | Type | Required | Indexed | Default | Description |
-|-------|------|----------|---------|---------|-------------|
-| `name` | String | ✅ | text | — | Item name |
-| `description` | String | — | — | — | Item description |
-| `type` | String (enum) | ✅ | ✅ | — | `SERVICE`, `MEDICATION`, `COSMETIC`, `SUPPLEMENT` |
-| `price` | Number | ✅ | — | — | Unit price |
-| `currency` | String | ✅ | — | — | ISO 4217 (inherited from clinic) |
-| `durationMinutes` | Number | — | — | — | For SERVICE type only |
-| `dosageOptions` | String[] | — | — | — | Available dosages |
-| `frequencyOptions` | String[] | — | — | — | Available frequencies |
-| `durationOptions` | String[] | — | — | — | Available durations |
-| `timeSlotOptions` | String[] | — | — | — | e.g., "morning", "evening" |
-| `instructions` | String | — | — | — | Default instructions |
-| `qualifiedStaff` | ObjectId[] | — | — | — | Staff qualified to provide this |
-| `isActive` | Boolean | — | — | `true` | Soft delete flag |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
-
-**Indexes:**
-- `{ clinicId: 1, type: 1, isActive: 1 }`
-- `{ clinicId: 1, name: 'text' }`
-
----
-
-### Collection: `treatmentkits`
-
-| Field | Type | Required | Indexed | Default | Description |
-|-------|------|----------|---------|---------|-------------|
-| `name` | String | ✅ | — | — | Kit name |
-| `description` | String | — | — | — | Kit description |
-| `items` | Array | — | — | — | Kit items with routines |
-| `items[].catalogItemId` | ObjectId | ✅ | — | — | Catalog item reference |
-| `items[].dosage` | String | — | — | — | Default dosage for this kit |
-| `items[].frequency` | String | — | — | — | Default frequency |
-| `items[].duration` | String | — | — | — | Default duration |
-| `items[].timeSlots` | String[] | — | — | — | Default time slots |
-| `items[].instructions` | String | — | — | — | Default instructions |
-| `totalPrice` | Number | — | — | — | Sum of item prices |
-| `discountedPrice` | Number | — | — | — | Kit discount price |
-| `isActive` | Boolean | — | — | `true` | Soft delete flag |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
-
-**Indexes:**
-- `{ clinicId: 1, isActive: 1 }`
-
----
-
-## Module 8: Billing
-
-### Collection: `invoices`
+### Collection: `invoices` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -460,11 +639,7 @@
 | `dueDate` | Date | — | — | — | Payment due date |
 | `finalizedAt` | Date | — | — | — | When finalized |
 | `pdfUrl` | String | — | — | — | Generated PDF URL |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | ✅ | ✅ | — | — |
-| `createdAt` | Date | — | — | `Date.now` | — |
-| `updatedAt` | Date | — | — | `Date.now` | — |
-| `createdBy` | ObjectId | — | — | — | — |
+| + BaseSchemaFields |
 
 **Indexes:**
 - `{ clinicId: 1, patientId: 1, status: 1 }`
@@ -472,7 +647,7 @@
 
 ---
 
-### Collection: `payments`
+### Collection: `payments` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -481,120 +656,64 @@
 | `method` | String (enum) | ✅ | — | — | `CASH`, `CARD`, `BANK_TRANSFER`, `OTHER` |
 | `reference` | String | — | — | — | Transaction reference |
 | `paidAt` | Date | — | — | `Date.now` | Payment timestamp |
-| `organizationId` | ObjectId | ✅ | — | — | — |
-| `clinicId` | ObjectId | ✅ | — | — | — |
-| `recordedBy` | ObjectId | ✅ | — | — | Staff who recorded |
-| `createdAt` | Date | — | — | `Date.now` | — |
+| + BaseSchemaFields |
 
 ---
 
-## Module 9: Audit
+## Module: Treatment Plans 🔲
 
-### Collection: `auditlogs`
+### Collection: `treatmentplans` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
-| `action` | String | ✅ | ✅ | — | Audit action (e.g., `PATIENT_CREATED`) |
-| `entityId` | String | — | ✅ | — | Affected entity ID |
-| `entityType` | String | — | ✅ | — | Entity type (Patient, Session, etc.) |
-| `staffId` | ObjectId | ✅ | ✅ | — | Actor staff ID |
-| `staffName` | String | ✅ | — | — | Immutable name snapshot |
-| `organizationId` | ObjectId | ✅ | ✅ | — | — |
-| `clinicId` | ObjectId | — | ✅ | — | null for org-level actions |
-| `metadata` | Mixed | — | — | — | Action-specific data (before/after) |
-| `ipAddress` | String | — | — | — | Request IP |
-| `userAgent` | String | — | — | — | Request user agent |
-| `timestamp` | Date | — | ✅ | `Date.now` | When action occurred |
-
-**Indexes:**
-- `{ organizationId: 1, timestamp: -1 }` — primary query
-- `{ organizationId: 1, action: 1, timestamp: -1 }` — filter by action
-- `{ entityId: 1, entityType: 1, timestamp: -1 }` — entity history
-- `{ staffId: 1, timestamp: -1 }` — staff activity
-
-**Rules:**
-- Append-only (no update/delete operations)
-- `staffName` is a snapshot — never updated even if staff name changes
-- No TTL — retained indefinitely
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | — | — | Patient |
+| `diagnosis` | String | ✅ | — | — | Diagnosis text |
+| `goals` | String[] | — | — | — | Treatment goals |
+| `lineItems` | Array | — | — | — | Treatment items |
+| `lineItems[].catalogItemId` | ObjectId | ✅ | — | — | Catalog reference |
+| `lineItems[].itemName` | String | ✅ | — | — | Item name snapshot |
+| `lineItems[].type` | String (enum) | — | — | — | `SERVICE`, `MEDICATION`, `COSMETIC`, `SUPPLEMENT` |
+| `lineItems[].routine.dosage` | String | — | — | — | e.g., "5mg" |
+| `lineItems[].routine.frequency` | String | — | — | — | e.g., "daily" |
+| `lineItems[].routine.duration` | String | — | — | — | e.g., "6 months" |
+| `lineItems[].routine.timeSlots` | String[] | — | — | — | e.g., ["morning", "evening"] |
+| `lineItems[].routine.instructions` | String | — | — | — | Usage instructions |
+| `kits` | Array | — | — | — | Treatment kits used |
+| `kits[].kitId` | ObjectId | — | — | — | Kit reference |
+| `kits[].name` | String | — | — | — | Kit name |
+| `kits[].items` | ObjectId[] | — | — | — | Kit item references |
+| `nextReviewDate` | Date | — | — | — | Next review date |
+| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SIGNED` |
+| `signedAt` | Date | — | — | — | Signature timestamp |
+| `signedBy` | ObjectId | — | — | — | Signing doctor |
+| `pdfUrl` | String | — | — | — | Generated PDF URL |
+| `editHistory` | Array | — | — | — | Change tracking |
+| `editHistory[].field` | String | — | — | — | Changed field |
+| `editHistory[].previousValue` | String | — | — | — | Old value |
+| `editHistory[].newValue` | String | — | — | — | New value |
+| `editHistory[].editedAt` | Date | — | — | — | When changed |
+| `editHistory[].editedBy` | ObjectId | — | — | — | Who changed |
+| + BaseSchemaFields |
 
 ---
 
-## Infrastructure Collections
-
-### Collection: `authsessions`
+### Collection: `prescriptions` 🔲
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
-| `staffId` | ObjectId | ✅ | ✅ | — | Session owner |
-| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `REVOKED` |
-| `refreshTokenHash` | String | — | — | — | Hashed refresh token |
-| `userAgent` | String | — | — | — | Browser/device info |
-| `ipAddress` | String | — | — | — | Login IP |
-| `lastActivityAt` | Date | — | — | `Date.now` | Last token refresh |
-| `revokedAt` | Date | — | — | — | When revoked |
-| `revokedReason` | String (enum) | — | — | — | `LOGOUT`, `DEACTIVATION`, `PASSWORD_CHANGE` |
-| `createdAt` | Date | — | — | `Date.now` | — |
-
-**Indexes:**
-- `{ staffId: 1, status: 1 }`
-
----
-
-### Collection: `outboxevents`
-
-| Field | Type | Required | Indexed | Default | Description |
-|-------|------|----------|---------|---------|-------------|
-| `eventType` | String | ✅ | — | — | Event name |
-| `aggregateId` | String | ✅ | — | — | Source entity ID |
-| `aggregateType` | String | ✅ | — | — | Source entity type |
-| `payload` | Mixed | ✅ | — | — | Event data |
-| `status` | String (enum) | — | ✅ | `PENDING` | `PENDING`, `DISPATCHED`, `FAILED` |
-| `dispatchedAt` | Date | — | — | — | When dispatched |
-| `failedAt` | Date | — | — | — | When failed |
-| `retryCount` | Number | — | — | `0` | Retry attempts |
-| `createdAt` | Date | — | ✅ | `Date.now` | — |
-
-**Indexes:**
-- `{ status: 1, createdAt: 1 }` — dispatcher polling
-
----
-
-### Collection: `idempotencykeys`
-
-| Field | Type | Required | Indexed | Default | Description |
-|-------|------|----------|---------|---------|-------------|
-| `key` | String | ✅ | ✅ (unique) | — | Idempotency key |
-| `processedAt` | Date | — | — | `Date.now` | When processed |
-| `expiresAt` | Date | — | ✅ (TTL) | — | Auto-cleanup (24h) |
-
-**Indexes:**
-- `{ key: 1 }` — **unique**
-- `{ expiresAt: 1 }` — TTL index
-
----
-
-## Summary: All Collections
-
-| # | Collection | Module | Documents |
-|---|-----------|--------|-----------|
-| 1 | `staff` | IAM | Staff members |
-| 2 | `roles` | IAM | Permission roles |
-| 3 | `invitetokens` | IAM | Invite tokens |
-| 4 | `organizations` | Organization | Organizations |
-| 5 | `clinics` | Organization | Clinics |
-| 6 | `staffavailabilities` | Organization | Staff schedules |
-| 7 | `patients` | Patients | Patient records |
-| 8 | `medicaldocuments` | Patients | Uploaded documents |
-| 9 | `sessions` | Sessions | Trichoscopy sessions |
-| 10 | `treatmentplans` | Sessions | Treatment plans |
-| 11 | `prescriptions` | Sessions | Prescriptions |
-| 12 | `leads` | Leads | Lead records |
-| 13 | `appointments` | Appointments | Appointments |
-| 14 | `catalogitems` | Catalog | Services/products |
-| 15 | `treatmentkits` | Catalog | Treatment kits |
-| 16 | `invoices` | Billing | Invoices |
-| 17 | `payments` | Billing | Payment records |
-| 18 | `auditlogs` | Audit | Audit trail |
-| 19 | `authsessions` | Auth | Login sessions |
-| 20 | `outboxevents` | Infrastructure | Event outbox |
-| 21 | `idempotencykeys` | Infrastructure | Dedup keys |
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | — | — | Patient |
+| `treatmentPlanId` | ObjectId | — | — | — | Linked treatment plan |
+| `items` | Array | — | — | — | Prescription items |
+| `items[].catalogItemId` | ObjectId | ✅ | — | — | Medication/supplement |
+| `items[].name` | String | ✅ | — | — | Item name |
+| `items[].dosage` | String | — | — | — | Dosage |
+| `items[].frequency` | String | — | — | — | Frequency |
+| `items[].duration` | String | — | — | — | Duration |
+| `items[].instructions` | String | — | — | — | Instructions |
+| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SIGNED` |
+| `signedAt` | Date | — | — | — | — |
+| `signedBy` | ObjectId | — | — | — | — |
+| `pdfUrl` | String | — | — | — | Generated PDF |
+| + BaseSchemaFields |
