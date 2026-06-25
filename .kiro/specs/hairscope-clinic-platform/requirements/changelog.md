@@ -27,6 +27,16 @@ All notable changes to the Hairscope Clinic Platform requirements are documented
 
 ---
 
+## v1.1.2 — 2026-05-14
+
+### Changed
+- **GI-12 / API contracts** — All API operations are GraphQL, including file uploads. File uploads use GraphQL mutations with the multipart request specification; HTTP endpoints are reserved for file downloads (signed URLs) and webhook ingestion.
+
+### Fixed
+- Removed the incorrect claim that GraphQL cannot support binary file uploads.
+
+---
+
 ## v1.1.1 — 2026-05-13
 
 ### Added
