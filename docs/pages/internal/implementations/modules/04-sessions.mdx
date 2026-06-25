@@ -82,6 +82,9 @@ Tracks session lifecycle, metadata, doctor's observation note, and questionnaire
 | `stressScore` | Number | — | — | — | Computed stress score (from questionnaire) |
 | `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
 | `aiAnalysisCompletedAt` | Date | — | — | — | When AI finished for this session |
+| `thumbnailUrl` | String | — | — | `''` | Thumbnail (primary image) for session lists |
+| `imageCount` | Number | — | — | `0` | Cached count of images on the session |
+| `sequence` | Number | — | — | `0` | Ordering within the patient's session history |
 | `savedAt` | Date | — | — | — | When moved to SAVED |
 | `completedAt` | Date | — | — | — | When completed |
 | `deletedAt` | Date | — | — | — | When soft-deleted |
@@ -155,7 +158,7 @@ One document per global image. Stores the AI analysis result (hair loss scale, s
 | `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
 | `patientId` | ObjectId | ✅ | ✅ | — | Patient (denormalized) |
 | `sessionImageId` | ObjectId | ✅ | ✅ (unique) | — | Reference to `sessionimages._id` (1:1) |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `hairlossScale` | String | — | — | — | e.g., "Norwood", "Ludwig" |
 | `hairlossStage` | String | — | — | — | e.g., "Stage 3", "Type II" |
 | `hairCoverage` | Number | — | — | — | Overall hair coverage % |
@@ -195,7 +198,7 @@ One document per detected/added follicle point. Stored from root detection AI mo
 | `patientId` | ObjectId | ✅ | — | — | Patient |
 | `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
 | `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` (future: `GLOBAL`) |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `x` | Number | ✅ | — | — | X coordinate (normalized 0-1) |
 | `y` | Number | ✅ | — | — | Y coordinate (normalized 0-1) |
 | `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
@@ -218,7 +221,7 @@ One document per detected/added hair strand. Stored from strand detection AI mod
 | `patientId` | ObjectId | ✅ | — | — | Patient |
 | `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
 | `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` (future: `GLOBAL`) |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `p1x` | Number | ✅ | — | — | Root point X (normalized 0-1) |
 | `p1y` | Number | ✅ | — | — | Root point Y (normalized 0-1) |
 | `p2x` | Number | ✅ | — | — | End point X (normalized 0-1) |
@@ -328,6 +331,8 @@ async save(sessionId: string, context: TenantContext): Promise<Session> {
 
 # 4. AI Analysis Flow
 
+> **Deferred (models not ready):** Disease detection and any free-text/LLM "analysis blob" are intentionally **out of scope for now** because those AI models are not yet ready. The current pipeline stores only structured values (global analysis fields) and raw annotation points (`rootpoints`/`hairstrands`). Disease detection and narrative text may be added later as additional `aiModel` outputs without changing the session lifecycle.
+
 ## 4.1 Global Image Analysis
 
 ```text
@@ -374,17 +379,22 @@ SessionSaved event
 
 ---
 
-# 7. Frontend Metrics (Computed Client-Side)
+# 7. Metric Computation (Backend for PDF, Frontend for Screen)
 
-The frontend computes all metrics from raw points already loaded for annotation rendering:
+Hair metrics are derived from the raw `rootpoints` / `hairstrands` / `globalanalysisdata` documents. They are computed in two places from the same formulas, so both views always agree:
+
+- **On-screen (non-PDF) display** — the **frontend** computes metrics directly from the raw points it already loads for annotation rendering. No extra backend round-trip is needed.
+- **Clinical report PDF** — the **backend** (Report Generation worker) computes the same metrics server-side from the raw points and renders them into the Typst PDF. The frontend never computes anything that ends up in the PDF; it simply fetches and displays the backend-generated PDF from GCS.
+
+Shared formulas:
 
 - **Hair count** = `count(rootpoints WHERE status=ACTIVE AND sessionImageId=X)`
 - **Strand count** = `count(hairstrands WHERE status=ACTIVE AND sessionImageId=X)`
 - **Average thickness** = computed from strand lengths
-- **Density** = hairCount / calibrated area (from widthInMm × heightInMm)
+- **Density** = hairCount / calibrated area (from `widthInMm` × `heightInMm`)
 - **Coverage** = from `globalanalysisdata.hairCoverage`
 
-No backend aggregation needed for these — the data is always queried for the annotation view anyway.
+> **AI result mutability:** All AI-produced data is editable by staff, because AI accuracy is not 100%. Trichoscopy points/strands are corrected via soft-delete (`status: DELETED`) plus new `source: HUMAN` additions; global analysis values are corrected via the `overrides[]` array on `globalanalysisdata`. Recomputed metrics (and any regenerated report) reflect the corrected data. This mirrors the editability already allowed for questionnaire answers, recommendations, and doctor's notes.
 
 ---
 

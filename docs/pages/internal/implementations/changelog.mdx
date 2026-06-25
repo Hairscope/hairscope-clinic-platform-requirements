@@ -4,6 +4,27 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.4.0 — 2026-06-25
+
+### Changed
+- **Collection Schemas** (`18-collection-schemas.md`) synced to the actual backend code:
+  - Renamed `model` → `aiModel` across `rootpoints`, `hairstrands`, and `globalanalysisdata` (avoids Mongoose `Document.model` conflict).
+  - Marked the session sub-collections (`sessionquestionnaires`, `sessionimages`, `globalanalysisdata`, `rootpoints`, `hairstrands`, `reportdata`) as ✅ implemented.
+  - Added `thumbnailUrl`, `imageCount`, and `sequence` to the `sessions` collection.
+  - Added the `treatmentRecommendationMode` (`STAGE_SCALE` / `HAIRSCORE`) field to `organizations`.
+  - Added the new `customtreatmentdata` collection (per-org, per-language treatment descriptions matched by hairloss stage / hair-score range).
+- **Sessions Module** (`modules/04-sessions.md`):
+  - `model` → `aiModel` rename applied; added `thumbnailUrl`/`imageCount`/`sequence`.
+  - Clarified metric computation: backend computes metrics for the report PDF, frontend computes the same for on-screen display; the report is a backend-generated PDF fetched from GCS.
+  - Documented that **all AI-produced data is editable** by staff (points/strands via soft-delete + `HUMAN` additions, global values via `overrides[]`).
+  - Noted disease detection and free-text/LLM analysis are **deferred** (models not ready).
+- **Organization Module** (`modules/02-organization.md`) enums aligned to code: `currencyEnforcementPolicy` `STRICT`/`FLEXIBLE`; org-level `recordVisibilityMode` `CLINIC_ONLY`/`ORGANIZATION_WIDE` (distinct from clinic-level `OPEN`/`RESTRICTED`); `leadAssignmentMode` `MANUAL`/`ROUND_ROBIN`; added `treatmentRecommendationMode`. Unified `workingHours`/`staffAvailability` `day` to the `MONDAY`–`SUNDAY` enum with `closed`. Noted org/clinic entities currently live in the `iam` module and `CustomTreatmentData` exists (no `report-template` yet).
+- **Billing Module** (`modules/08-billing.md`) updated to the agreed model (module not yet coded): invoice lifecycle `DRAFT → ISSUED → PAID → REFUNDED / PARTIALLY_REFUNDED` plus `CANCELLED`; manual **"Generate Invoice"** trigger (not automatic, not on `TreatmentPlanSigned`); payment **method** captured as a free-text label (`CASH`/`CARD`/`BANK_TRANSFER`/`OTHER`) with **no** card or bank-account details stored; wrong invoices are `CANCELLED` and regenerated.
+- **Catalog Module** (`modules/07-catalog.md`) annotated: current code implements a simpler `products` collection; the CatalogItem/Treatment-Kit/Routine model is the target (details deferred to the catalog rework).
+- **Appointments Module** (`modules/06-appointments.md`) slot-availability snippets updated from `workingHours.isOpen` to the code's `closed` flag.
+
+---
+
 ## v1.3.0 — 2026-06-09
 
 ### Changed

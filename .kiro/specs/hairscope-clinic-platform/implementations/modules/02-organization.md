@@ -36,24 +36,54 @@ packages/api/src/modules/organization/
     └── set-staff-availability.input.ts
 ```
 
+> **Implementation note (current code):** Organization, Clinic, ClinicClosure, StaffAvailability, Role, Staff, InviteToken, and `CustomTreatmentData` entities are currently colocated under the `iam` module in the backend (`packages/api/src/modules/iam/entities/`) rather than a standalone `organization` module folder. `CustomTreatmentData` holds per-organization, per-language treatment descriptions matched by hairloss stage (or hair-score range) and is used during report/recommendation generation (see `18-collection-schemas.md`). A dedicated `report-template` entity is **not** implemented yet.
+
 ---
 
 # 2. Organization Schema
 
 ```typescript
+// enums match the backend implementation
+enum OrganizationStatus { ACTIVE = 'ACTIVE', INACTIVE = 'INACTIVE' }
+enum CurrencyEnforcementPolicy { STRICT = 'STRICT', FLEXIBLE = 'FLEXIBLE' }
+// Org-level visibility = cross-clinic data sharing (distinct from the clinic-level OPEN/RESTRICTED assignment mode)
+enum RecordVisibilityMode { CLINIC_ONLY = 'CLINIC_ONLY', ORGANIZATION_WIDE = 'ORGANIZATION_WIDE' }
+enum LeadAssignmentMode { MANUAL = 'MANUAL', ROUND_ROBIN = 'ROUND_ROBIN' }
+enum TermsEnforcementPolicy { ORGANIZATION_WIDE = 'ORGANIZATION_WIDE', CLINIC_SPECIFIC = 'CLINIC_SPECIFIC' }
+enum TermsType { NONE = 'NONE', URL = 'URL', CONTENT = 'CONTENT' }
+
 const OrganizationSchema = new Schema({
   name: { type: String, required: true },
+  logoUrl: { type: String },
+  subscriptionAccountId: { type: String }, // external billing system reference
+  status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' },
   currency: { type: String }, // ISO 4217
-  currencyPolicy: { type: String, enum: ['ENFORCE_SINGLE_CURRENCY', 'ALLOW_CLINIC_CURRENCY'], default: 'ALLOW_CLINIC_CURRENCY' },
-  recordVisibilityMode: { type: String, enum: ['OPEN', 'RESTRICTED'], default: 'OPEN' },
-  trialStartedAt: { type: Date },
-  trialEndsAt: { type: Date },
-  subscriptionPlan: { type: String, default: 'TRIAL' },
-  status: { type: String, enum: ['ACTIVE', 'SUSPENDED'], default: 'ACTIVE' },
+  email: { type: String },
+  phone: { type: String },
+  website: { type: String },
+  timezone: { type: String }, // IANA
+  billingAddress: {
+    street: String, city: String, state: String, country: String, postalCode: String, full: String,
+  },
+  currencyEnforcementPolicy: { type: String, enum: ['STRICT', 'FLEXIBLE'], default: 'STRICT' },
+  recordVisibilityMode: { type: String, enum: ['CLINIC_ONLY', 'ORGANIZATION_WIDE'], default: 'CLINIC_ONLY' },
+  leadAssignmentMode: { type: String, enum: ['MANUAL', 'ROUND_ROBIN'], default: 'MANUAL' },
+  termsEnforcementPolicy: { type: String, enum: ['ORGANIZATION_WIDE', 'CLINIC_SPECIFIC'], default: 'ORGANIZATION_WIDE' },
+  termsType: { type: String, enum: ['NONE', 'URL', 'CONTENT'], default: 'NONE' },
+  termsContent: { type: String },
+  termsUrl: { type: String },
+  // strategy for matching CustomTreatmentData when generating reports/recommendations
+  treatmentRecommendationMode: { type: String, enum: ['STAGE_SCALE', 'HAIRSCORE'], default: 'STAGE_SCALE' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  createdBy: { type: Schema.Types.ObjectId },
+  updatedBy: { type: Schema.Types.ObjectId },
 });
 ```
+
+> **Two distinct visibility concepts.** Org-level `recordVisibilityMode` (`CLINIC_ONLY` / `ORGANIZATION_WIDE`) governs whether records are shared *across clinics* in the organization. The clinic-level `recordVisibilityMode` (`OPEN` / `RESTRICTED`) governs *per-staff* assignment-based visibility within a single clinic. They are separate axes and use separate enum values.
+
+> **Subscription/trial** state is owned by the external billing system and surfaced via `subscriptionAccountId` + webhook; the platform does not store trial dates on the organization document.
 
 ---
 
@@ -78,10 +108,10 @@ const ClinicSchema = new Schema({
   language: { type: String, default: 'EN' },
   currency: { type: String }, // ISO 4217
   workingHours: [{
-    day: { type: Number, min: 0, max: 6 }, // 0=Sunday
+    day: { type: String, enum: ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'] },
     startTime: { type: String }, // HH:mm
     endTime: { type: String },   // HH:mm
-    isOpen: { type: Boolean, default: true },
+    closed: { type: Boolean, default: false },
   }],
   servicesOffered: [{ type: Schema.Types.ObjectId }],
   termsAndConditions: { type: String },
@@ -113,10 +143,10 @@ const StaffAvailabilitySchema = new Schema({
   clinicId: { type: Schema.Types.ObjectId, required: true },
   organizationId: { type: Schema.Types.ObjectId, required: true },
   schedule: [{
-    day: { type: Number, min: 0, max: 6 },
+    day: { type: String, enum: ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'] },
     startTime: { type: String }, // HH:mm
     endTime: { type: String },
-    available: { type: Boolean, default: true },
+    available: { type: Boolean, default: false },
   }],
   updatedAt: { type: Date, default: Date.now },
 });
@@ -202,7 +232,7 @@ export class ClinicService {
     // Currency enforcement check
     if (dto.currency) {
       const org = await this.orgRepo.findById(context.organizationId);
-      if (org.currencyPolicy === 'ENFORCE_SINGLE_CURRENCY' && dto.currency !== org.currency) {
+      if (org.currencyEnforcementPolicy === 'STRICT' && dto.currency !== org.currency) {
         throw new CurrencyEnforcementViolationError();
       }
     }
@@ -230,15 +260,16 @@ export class ClinicService {
 
 # 7. Visibility Mode
 
+Per-staff (assignment-based) visibility is governed by the **clinic-level** `recordVisibilityMode` (`OPEN` / `RESTRICTED`). The **org-level** `recordVisibilityMode` (`CLINIC_ONLY` / `ORGANIZATION_WIDE`) is a separate axis controlling cross-clinic record sharing and does not map onto the per-staff filter.
+
 ```typescript
-getEffectiveVisibilityMode(org: Organization, clinic: Clinic): 'OPEN' | 'RESTRICTED' {
-  // Organization-level RESTRICTED overrides clinic setting
-  if (org.recordVisibilityMode === 'RESTRICTED') return 'RESTRICTED';
-  return clinic.recordVisibilityMode;
+// Per-staff assignment visibility within a clinic
+getEffectiveStaffVisibilityMode(clinic: Clinic): 'OPEN' | 'RESTRICTED' {
+  return clinic.recordVisibilityMode; // OPEN | RESTRICTED
 }
 ```
 
-The visibility mode is consumed by the Access Resolution Engine to filter query results.
+The clinic-level visibility mode is consumed by the Access Resolution Engine to filter query results to records assigned to the requesting staff member (ClinicAdmins bypass the filter).
 
 ---
 
