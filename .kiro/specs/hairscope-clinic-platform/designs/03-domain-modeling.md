@@ -488,7 +488,12 @@ Owns:
 
 ```text
 DRAFT → ISSUED → PAID
-````
+DRAFT → CANCELLED
+ISSUED → CANCELLED
+ISSUED / PAID → REFUNDED / PARTIALLY_REFUNDED
+```
+
+> Invoices are created by a manual "Generate Invoice" action (not auto-generated on session completion). The platform records status, amount, references, and a free-text payment method label — it never processes payments or stores card/bank-account details.
 
 ---
 
@@ -557,8 +562,10 @@ DRAFT → SAVED → COMPLETED
 ### Lead
 
 ```text
-NEW → ASSIGNED → CONVERTED / LOST
+NEW → CONTACTED → QUALIFIED → CONVERTED / LOST
 ```
+
+> Assignment is tracked via `assignedStaffId`/`clinicId`, not as a lifecycle status. `ASSIGNED` is not a status.
 
 ### Appointment
 
@@ -571,6 +578,8 @@ SCHEDULED → CANCELLED / NO_SHOW
 
 ```text
 DRAFT → ISSUED → PAID
+DRAFT / ISSUED → CANCELLED
+ISSUED / PAID → REFUNDED / PARTIALLY_REFUNDED
 ```
 
 Lifecycles SHALL be explicit and enforced by owning modules.

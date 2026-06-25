@@ -113,8 +113,6 @@ The system SHALL ensure:
   - Patient
 - At creation, an Appointment SHALL NOT reference both Lead and Patient  
 - After Lead conversion, an Appointment MAY reference both Lead and Patient  
-- A Lead SHALL have at most one active Appointment  
-- A Patient SHALL have at most one active Appointment  
 - Lead-linked Appointments SHALL NOT create Sessions  
 - Patient-linked Appointments MAY initiate creation of one Draft Session according to domain workflow policy.  
 - When a Lead linked to an active Appointment converts into or links to a Patient:

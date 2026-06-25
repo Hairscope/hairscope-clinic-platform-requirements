@@ -60,13 +60,17 @@ It is the authoritative source of Session state.
 
 The Session aggregate SHALL contain:
 
-- Session  
-- GlobalImage  
-- TrichoscopyImage  
-- Annotation  
-- QuestionnaireResponse  
-- DoctorNote  
-- CatalogItemRecommendationReference  
+- Session
+- GlobalImage
+- TrichoscopyImage
+- RootPoint (follicle annotation; `source: AI | HUMAN`, soft-deletable)
+- HairStrand (strand annotation; `source: AI | HUMAN`, soft-deletable)
+- GlobalAnalysisData (structured global-image AI results + `overrides[]`)
+- QuestionnaireResponse
+- DoctorNote
+- CatalogItemRecommendationReference
+
+> Annotation data is modelled as individual `RootPoint` / `HairStrand` documents (matching the implemented schema) rather than a single `Annotation` type. They remain sub-entities of the Session aggregate, not independent aggregates.
 
 ---
 
@@ -123,13 +127,16 @@ that depend on external processing.
 
 # 8. Post-Completion Edits
 
-After completion, only the following fields SHALL remain editable:
+After completion, the following SHALL remain editable:
 
-- questionnaire responses  
-- catalog item recommendations  
-- doctor notes  
+- questionnaire responses
+- catalog item recommendations
+- doctor notes
+- AI analysis results — trichoscopy annotations (`RootPoint` / `HairStrand`, via soft-delete + `HUMAN` additions) and global analysis values (via an `overrides[]` audit trail)
 
-Clinical images and annotations SHALL remain immutable after completion.
+AI analysis results are editable because AI accuracy is not guaranteed; staff may correct any AI-produced value.
+
+The original captured image binaries SHALL remain immutable after completion — only their annotations/derived analysis are editable.
 
 Post-completion edits SHALL emit domain events for downstream updates.
 

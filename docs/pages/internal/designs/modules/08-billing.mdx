@@ -9,7 +9,7 @@
 The Billing module represents the financial record-keeping
 boundary of the platform.
 
-It generates, manages, and finalizes invoices for clinical sessions
+It generates, manages, issues, and cancels invoices for clinical sessions
 and product sales.
 
 The Billing module owns:
@@ -31,7 +31,7 @@ Invoices represent billing records, not financial settlement.
 
 The Billing module SHALL:
 
-- generate invoices from session completion events
+- generate invoices via a manual "Generate Invoice" action (optionally from a completed session)
 - support standalone invoices (product-only sales)
 - auto-sync invoice line items with session recommendations
 - support manual line item entry
@@ -107,29 +107,34 @@ The system SHALL ensure:
 - An Invoice belongs to exactly one Clinic
 - An Invoice belongs to exactly one Patient
 - Invoice numbers are sequential per Clinic and never reused
-- A FINALIZED Invoice is immutable (no line item changes)
+- An ISSUED Invoice is immutable (no line item changes); a wrong invoice is CANCELLED and regenerated
 - Total SHALL NOT be negative (clamped to 0)
 - Cumulative refunds SHALL NOT exceed Invoice total
-- Only FINALIZED Invoices may receive refunds
+- Only ISSUED or PAID Invoices may receive refunds
 - Auto-generated line items sync with session recommendations while DRAFT
 - Manual line items are never auto-removed
 - Zero-item and zero-total invoices are valid
+- The platform records a payment method label and amount only — never card/bank-account details
 
 ---
 
 # 7. Lifecycle
 
 ```text
-DRAFT → FINALIZED
-FINALIZED → REFUNDED
-FINALIZED → PARTIALLY_REFUNDED
+DRAFT → ISSUED → PAID
+DRAFT → CANCELLED
+ISSUED → CANCELLED
+ISSUED / PAID → REFUNDED
+ISSUED / PAID → PARTIALLY_REFUNDED
 PARTIALLY_REFUNDED → REFUNDED
 ```
 
 Rules:
 
 - `DRAFT` → editable, line items may be added/removed/modified
-- `FINALIZED` → locked, immutable, ready for patient
+- `ISSUED` → locked, immutable, ready for patient
+- `PAID` → payment recorded with a free-text method label (`CASH`/`CARD`/`BANK_TRANSFER`/`OTHER`); no payment-instrument details stored
+- `CANCELLED` → invoice voided (e.g., it was wrong); a new invoice is generated instead of editing
 - `REFUNDED` → full refund recorded
 - `PARTIALLY_REFUNDED` → partial refund(s) recorded, more may follow
 
@@ -142,18 +147,18 @@ Invoices are generated through two paths:
 ### Session-Linked Invoice
 
 ```text
-SessionCompleted event
+Staff clicks "Generate Invoice" on a session
     ↓
-Invoice auto-generated (DRAFT)
+Invoice created (DRAFT)
     ↓
-Line items populated from:
+Line items pre-populated from:
   - Appointment SERVICE (if linked)
   - Session recommendations
     ↓
-TreatmentPlanSigned / PrescriptionSigned events
-    ↓
-Invoice line items auto-updated with signed recommendations
+Staff reviews / adjusts, then ISSUES the invoice
 ```
+
+> Session completion does NOT auto-create an invoice. Signed Treatment Plan / Prescription documents may be used to *suggest* line items at generation time, but signing does not itself create or mutate an invoice.
 
 ### Standalone Invoice
 
@@ -179,7 +184,7 @@ While an Invoice is in DRAFT status:
 - Treatment Kit appears as a single line item with bundle price
 - Manual line items are NEVER affected by auto-sync
 
-Auto-sync stops when the Invoice is FINALIZED.
+Auto-sync stops when the Invoice is ISSUED.
 
 ---
 
@@ -207,18 +212,12 @@ Currency is inherited from Clinic configuration.
 The Billing module SHALL emit:
 
 - `InvoiceGenerated`
-- `InvoiceFinalized`
+- `InvoiceIssued`
 - `InvoiceRefunded`
 
 ## 11.2 Consumed
 
-The Billing module SHALL consume:
-
-- `SessionCompleted` → triggers invoice generation
-- `TreatmentPlanSigned` → updates invoice line items
-- `PrescriptionSigned` → ensures medication line items on invoice
-- `TreatmentPlanRegenerated` → syncs updated recommendations
-- `PrescriptionRegenerated` → syncs updated medications
+Billing consumes no events to create invoices — generation is a manual "Generate Invoice" action. Signed-document events (`TreatmentPlanSigned` / `PrescriptionSigned`) MAY be referenced to suggest line items at generation time but do not create or mutate invoices.
 
 ---
 
@@ -228,7 +227,7 @@ The Billing module SHALL consume:
 
 Invoices MAY reference Sessions.
 
-Session completion triggers invoice generation.
+Staff generate an invoice from a session via a manual action; session completion does not trigger generation.
 
 The Billing module does NOT own session state.
 
