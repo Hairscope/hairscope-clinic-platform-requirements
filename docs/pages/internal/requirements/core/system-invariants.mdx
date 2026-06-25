@@ -13,7 +13,7 @@
 | GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. OrganizationAdmins span all Clinics in their Organization. Staff may be transferred between Clinics within the same Organization by an OrganizationAdmin only. | DB constraint + resolver |
 | GI-4 | Every Organization has at least one active OrganizationAdmin at all times. | Deactivation + deletion guards |
 | GI-5 | Every Clinic has at least one active ClinicAdmin at all times. | Deactivation + deletion guards |
-| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation maintained). The platform assigns a `globalPatientId` (UUID) to each unique physical person at creation time via email or phone lookup. All Patient records for the same person across any Clinic or Organization share the same `globalPatientId`. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the **Hairscope Care App** only. Per-Clinic uniqueness on email and phone still applies. | DB unique constraint (per clinic) + global identity lookup on create |
+| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation maintained). The platform assigns a `globalPatientId` (UUID) to each Patient record at creation time. Records are linked under a shared `globalPatientId` ONLY through an explicit verified process (e.g., the **Hairscope Care App**) — never automatically by email or phone match. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the Hairscope Care App only. Per-Clinic uniqueness on email and phone still applies. | DB unique constraint (per clinic) + verified linking process |
 | GI-7 | A Patient may have at most one active Session (status: `Draft`) per `sessionType` per Clinic at any point in time. Only `Completed` Sessions contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. | Session create guard + progress graph query filter |
 | GI-8 | The OrganizationAdmin role cannot be granted permissions to `patients`, `appointments`, `billing`, or `catalog` modules under any configuration. OrganizationAdmins MAY access the `leads` module for assignment and unassigned lead management purposes. | Permission engine |
 | GI-9 | A Staff member's effective permissions are the union of all permissions granted by all their assigned roles. | Permission engine |
@@ -44,7 +44,7 @@
 | GI-20 | All timestamps are stored in UTC. | DB constraint + serializer |
 | GI-21 | All entity IDs are server-generated UUIDs (v4). Client-supplied IDs are rejected. | Resolver input validation |
 | GI-22 | Invoice numbers are sequential integers scoped per Clinic and are never reused. | DB sequence per Clinic |
-| GI-23 | An Invoice associated with a Completed Session is immutable once Finalized. | Invoice finalize guard |
+| GI-23 | An Invoice is immutable once Issued (`ISSUED`). A wrong invoice is moved to `CANCELLED` and regenerated rather than edited. | Invoice issue guard |
 | GI-24 | A Lead's status cannot be manually set to `Converted` - it is set only by the conversion process. | Lead status mutation guard |
 
 ---

@@ -86,7 +86,7 @@ Sessions cannot be accessed independently of a Patient. OrganizationAdmins do NO
    - Set status to `SAVED`
    - Emit a `SessionSaved` event
 7. WHEN `AIAnalysisCompleted` event is received for a `SAVED` Session, THE Platform SHALL set status to `COMPLETED` and emit `SessionCompleted`.
-8. WHEN a Session is in `COMPLETED` status, THE Platform SHALL allow editing of: questionnaire answers, recommendations, routines, and doctor's notes. No locking is applied — multiple staff may edit the same session and last save wins.
+8. WHEN a Session is in `COMPLETED` status, THE Platform SHALL allow editing of: questionnaire answers, recommendations, routines, doctor's notes, and AI analysis results (trichoscopy annotations and global analysis values). AI analysis results are editable because AI accuracy is not guaranteed — staff may correct any AI-produced value. No locking is applied — multiple staff may edit the same session and last save wins.
 9. WHEN a Staff member deletes a `DRAFT` Session, THE Platform SHALL permanently remove all Session data and emit `SessionDeleted`.
 10. IF a Staff member attempts to delete a `SAVED` or `COMPLETED` Session, THE Platform SHALL reject the deletion (GI-14).
 11. WHEN a Session is created, saved, completed, or deleted, THE Platform SHALL record the action in the AuditLog.

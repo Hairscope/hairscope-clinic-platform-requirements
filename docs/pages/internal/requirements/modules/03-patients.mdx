@@ -14,7 +14,7 @@
 - **Patient**: A person receiving or having received treatment at a Clinic. Scoped to the Clinic where the record was created.
 - **PatientPage**: The dedicated view for a single Patient showing profile, analysis history, medical documents, and treatment progress graph.
 - **TreatmentProgressGraph**: A time-series chart plotting hair count, thickness, and coverage metrics across all `COMPLETED` Sessions for a Patient. Only `COMPLETED` Sessions contribute - `DRAFT` and `SAVED` Sessions are excluded.
-- **globalPatientId**: A platform-wide UUID assigned to each unique physical person at Patient creation time, determined by email or phone lookup. Enables the **Hairscope Care App** to aggregate a patient's full cross-clinic treatment history. Never used for cross-clinic data access by Staff.
+- **globalPatientId**: A platform-wide UUID assigned to each Patient record at creation time. Records are linked under a shared `globalPatientId` only through an explicit verified process (e.g., the **Hairscope Care App**), never automatically by email or phone match. Enables the Care App to aggregate a patient's cross-clinic treatment history once verified. Never used for cross-clinic data access by Staff.
 - **MedicalDocument**: An image or PDF file uploaded to a Patient's profile with a title and optional description.
 - **GDPR_Erasure**: The process of anonymizing a Patient's personal identifiers in response to a verified right-to-erasure request. Does not delete clinical data.
 
@@ -84,9 +84,9 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 #### Acceptance Criteria
 
 1. THE Platform SHALL assign a `globalPatientId` (UUID v4) to every Patient record at creation time.
-2. WHEN a new Patient is being created, THE Platform SHALL perform a global lookup by `email` (if provided) and `phone` (if provided) to check if a `globalPatientId` already exists for that person across any Clinic or Organization. If neither email nor phone is provided, a new `globalPatientId` is always generated.
-3. IF a matching `globalPatientId` is found, THE Platform SHALL assign it to the new Patient record.
-4. IF no matching `globalPatientId` is found, THE Platform SHALL generate a new `globalPatientId` and assign it.
+2. WHEN a new Patient is created, THE Platform SHALL generate a NEW `globalPatientId` for that record. THE Platform SHALL NOT automatically link the record to existing Patient records in other Clinics based on `email` or `phone` match.
+3. Cross-clinic identity linking (associating multiple Patient records under a shared `globalPatientId`) SHALL occur ONLY through an explicit verification process — for example, patient-confirmed identity verification via the **Hairscope Care App**. Automatic linking based on matching contact details is prohibited, because it could incorrectly associate different individuals' medical data and create a privacy/legal violation.
+4. Until a verified link is established, each Patient record retains its own independently generated `globalPatientId`.
 5. THE `globalPatientId` SHALL be stored on every Patient record but SHALL NOT be exposed in any Staff-facing GraphQL query that could be used to access records from other Clinics.
 6. THE Platform SHALL reserve the `globalPatientId` exclusively for the **Hairscope Care App**, which will use it to aggregate the patient's full cross-clinic treatment journey. Patient-facing features are out of scope for this document.
 7. WHEN a GDPR erasure is processed for a Patient record, THE Platform SHALL anonymize the personal identifiers on that specific Clinic's Patient record only. Records in other Clinics sharing the same `globalPatientId` are unaffected unless separate erasure requests are submitted.
@@ -100,10 +100,10 @@ OrganizationAdmins do NOT have access to the `patients` module in any Clinic (GI
 
 #### Correctness Properties
 
-- For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics, email non-null): `P1.globalPatientId = P2.globalPatientId`.
-- For any two Patient records P1 and P2 where `P1.phone = P2.phone` (across any Clinics, phone non-null): `P1.globalPatientId = P2.globalPatientId`.
+- For any two Patient records P1 and P2 where `P1.email = P2.email` (across any Clinics, email non-null): they MAY remain distinct records with distinct `globalPatientId` values unless a verified link has been established.
+- At creation, each Patient record SHALL receive its own distinct `globalPatientId`. Two records SHALL share a `globalPatientId` only after a successful verified linking (e.g., via the Hairscope Care App).
 - For any Staff member S in Clinic C, no GraphQL query SHALL return Patient records from Clinic C' (C ≠ C') regardless of shared `globalPatientId`.
-- The `globalPatientId` lookup at creation time SHALL be atomic - concurrent Patient creations with the same email SHALL result in both records sharing the same `globalPatientId`, not two different ones.
+- Linking SHALL never be performed automatically on the basis of matching email or phone alone.
 
 ---
 

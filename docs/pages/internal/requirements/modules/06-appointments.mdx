@@ -207,9 +207,10 @@
 
 1. THE Platform SHALL allow Staff to reschedule any appointment in `SCHEDULED` or `CONFIRMED` status.
 2. THE Platform SHALL allow leads and patients to reschedule their own appointments via the AppointmentWebComponent.
-3. WHEN rescheduled, THE Platform SHALL send an email notification confirming the new date and time.
-4. WHEN rescheduled, THE Platform SHALL emit `AppointmentRescheduled` and record the change in the AuditLog including previous and new date/time.
-5. THE Platform SHALL prevent rescheduling to a slot already occupied by another appointment.
+3. Rescheduling is implemented internally as **delete-and-recreate**: THE Platform SHALL move the current appointment to `DELETED` (or `CANCELLED`) and create a new appointment for the new slot, linked back to the original via `rescheduledFrom`. The existing appointment is not mutated into a new scheduled instance.
+4. WHEN rescheduled, THE Platform SHALL send an email notification confirming the new date and time.
+5. WHEN rescheduled, THE Platform SHALL emit `AppointmentRescheduled` (carrying previous and new slot) and record the change in the AuditLog including previous and new date/time.
+6. THE Platform SHALL prevent rescheduling to a slot already occupied by another appointment.
 
 #### Failure Cases
 

@@ -86,7 +86,7 @@ The invite flow has two distinct phases with different actors:
 
 #### Acceptance Criteria
 
-1. WHEN a Staff member submits valid credentials, THE Platform SHALL issue a signed JWT containing: `staffId`, `organizationId`, `clinicId`, `roles`, `effectivePermissions`, and `exp`.
+1. WHEN a Staff member submits valid credentials, THE Platform SHALL issue a signed JWT containing identity and session scope only: `staffId`, `organizationId`, `clinicId`, `authSessionId`, `iat`, and `exp`. Roles, permissions, and entitlements SHALL NOT be embedded in the JWT — effective access is resolved server-side on every request (see designs `04-authentication.md` and `05-authorization.md`).
 2. IF credentials are invalid, THE Platform SHALL return an `INVALID_CREDENTIALS` error and SHALL NOT issue a token.
 3. IF the Staff member's status is `Inactive`, THE Platform SHALL return an `ACCOUNT_DEACTIVATED` error and SHALL NOT issue a token.
 4. THE Platform SHALL record every successful and failed authentication attempt in the AuditLog.
