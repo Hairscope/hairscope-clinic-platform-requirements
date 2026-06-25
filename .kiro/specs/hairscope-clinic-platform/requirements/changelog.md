@@ -4,6 +4,17 @@ All notable changes to the Hairscope Clinic Platform requirements are documented
 
 ---
 
+## v1.3.0 — 2026-06-25
+
+### Changed
+- **Billing reworked** — Invoice generation is now a manual **"Generate Invoice"** action (BIL-1); the platform no longer auto-generates on `SessionCompleted`. Invoice lifecycle is `DRAFT → ISSUED → PAID → REFUNDED / PARTIALLY_REFUNDED` plus `CANCELLED` (replaces `FINALIZED`). A wrong invoice is `CANCELLED` and regenerated (GI-23). Payment status may be recorded with a free-text **method** label (`CASH`/`CARD`/`BANK_TRANSFER`/`OTHER`) — the platform stores method + amount only and never card/bank-account details or processes payments (BIL-3). Refunds now apply to `ISSUED`/`PAID` invoices (BIL-7). `InvoiceFinalized` event → `InvoiceIssued`; audit actions updated (`issue`, `mark_paid`, `cancel`).
+- **JWT is identity-only** (IAM-2) — `staffId`, `organizationId`, `clinicId`, `authSessionId`, `iat`, `exp`. Roles/permissions/entitlements are no longer embedded; effective access is resolved server-side per request.
+- **globalPatientId no longer auto-links** (PAT-2, GI-6) — each Patient gets a new `globalPatientId` at creation; cross-clinic linking happens only through an explicit verified process (Hairscope Care App), never automatically by email/phone match, to avoid wrongly associating different individuals' medical data.
+- **Appointment rescheduling is delete-and-recreate** (APT-7) — the current appointment is moved to `DELETED`/`CANCELLED` and a new one is created (linked via `rescheduledFrom`); `AppointmentRescheduled` is still emitted.
+- **AI analysis results are editable** after completion (SES-1) — alongside questionnaire answers, recommendations, routines, and doctor's notes, staff may correct trichoscopy annotations and global analysis values (AI accuracy is not guaranteed).
+
+---
+
 ## v1.2.0 — 2026-05-24
 
 ### Changed

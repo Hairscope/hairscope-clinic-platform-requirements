@@ -57,7 +57,7 @@ Every state-changing operation on the following entities MUST produce an AuditLo
 | Appointment | create, reschedule, cancel, status_change |
 | Catalog Item | create, update, delete |
 | Treatment Kit | create, update, delete |
-| Invoice | generate, add_line_item, edit_line_item, remove_line_item, add_charge, edit_charge, remove_charge, finalize, refund_full, refund_partial |
+| Invoice | generate, add_line_item, edit_line_item, remove_line_item, add_charge, edit_charge, remove_charge, issue, mark_paid, cancel, refund_full, refund_partial |
 | Treatment Plan | generate, regenerate, share, download, edit_recommendation |
 | Prescription | generate, regenerate, share, download, edit_recommendation |
 | Clinical Report | generate, regenerate, share, download |

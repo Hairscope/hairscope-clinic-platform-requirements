@@ -109,16 +109,25 @@ Valid status transitions:
 ```
 InvoiceStatus
   DRAFT
-  FINALIZED
-  REFUNDED
+  ISSUED
+  PAID
   PARTIALLY_REFUNDED
+  REFUNDED
+  CANCELLED
 ```
 
 Valid status transitions:
-- `DRAFT → FINALIZED`
-- `FINALIZED → REFUNDED`
-- `FINALIZED → PARTIALLY_REFUNDED`
+- `DRAFT → ISSUED`
+- `DRAFT → CANCELLED`
+- `ISSUED → PAID`
+- `ISSUED → CANCELLED`
+- `ISSUED → REFUNDED`
+- `ISSUED → PARTIALLY_REFUNDED`
+- `PAID → REFUNDED`
+- `PAID → PARTIALLY_REFUNDED`
 - `PARTIALLY_REFUNDED → REFUNDED`
+
+> The platform records invoice status and a free-text payment **method** label (`CASH` / `CARD` / `BANK_TRANSFER` / `OTHER`) only. It never processes payments or stores card/bank-account details. A wrong invoice is moved to `CANCELLED` and a new one is generated.
 
 ---
 
@@ -457,7 +466,9 @@ AuditAction
   INVOICE_CHARGE_ADDED
   INVOICE_CHARGE_EDITED
   INVOICE_CHARGE_REMOVED
-  INVOICE_FINALIZED
+  INVOICE_ISSUED
+  INVOICE_PAID
+  INVOICE_CANCELLED
   INVOICE_REFUNDED_FULL
   INVOICE_REFUNDED_PARTIAL
 

@@ -30,7 +30,7 @@ These invariants must hold at all times across the entire system. Any operation 
 | GI-3 | Every Clinic-level Staff member is assigned to exactly one Clinic at a time. OrganizationAdmins span all Clinics in their Organization. A Staff member may be transferred between Clinics within the same Organization by an OrganizationAdmin - only one Clinic assignment is active at any time. |
 | GI-4 | Every Organization has at least one active OrganizationAdmin at all times. |
 | GI-5 | Every Clinic has at least one active ClinicAdmin at all times. |
-| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). However, the platform assigns a `globalPatientId` (UUID) to each unique physical person at Patient creation time, determined by email or phone lookup across the platform. All Patient records for the same person - across any Clinic or Organization - share the same `globalPatientId`. This enables the **Hairscope Care App** to aggregate the patient's full cross-clinic treatment journey. A Clinic cannot access another Clinic's Patient records via `globalPatientId` - it is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. Per-Clinic uniqueness constraints on email and phone still apply. |
+| GI-6 | Every Patient record is scoped to the Clinic where it was created (data isolation is maintained per Clinic). The platform assigns a `globalPatientId` (UUID) to each Patient record at creation time. Patient records are linked under a shared `globalPatientId` ONLY through an explicit verified process (e.g., the **Hairscope Care App**) — never automatically by email or phone match, to avoid incorrectly associating different individuals' medical data. The `globalPatientId` is a linking key for the Hairscope Care App only, not a cross-clinic data access mechanism for Staff. A Clinic cannot access another Clinic's Patient records via `globalPatientId`. Per-Clinic uniqueness constraints on email and phone still apply. |
 | GI-7 | A Patient may have at most one active Session per `sessionType` per Clinic at any point in time. A Session is active only when its status is `Draft`. Only Sessions with status `Completed` contribute to the Treatment Progress Graph and patient progress tracking. `Draft` and `Saved` Sessions are excluded from progress tracking. |
 | GI-8 | A Session in Saved or Completed status cannot be deleted. |
 | GI-9 | Audit log entries are immutable and are never reassigned, transferred, or deleted. |
@@ -210,7 +210,7 @@ Every state-changing operation on the following entities must produce an audit l
 - Appointments (create, reschedule, cancel, status change)
 - Catalog Items (create, update, delete)
 - Treatment Kits (create, update, delete)
-- Invoices (generate, add line item, edit line item, remove line item, add charge, edit charge, remove charge, finalize, refund_full, refund_partial)
+- Invoices (generate, add line item, edit line item, remove line item, add charge, edit charge, remove charge, issue, mark_paid, cancel, refund_full, refund_partial)
 - Clinical Reports (generate, regenerate, share, download)
 - Treatment Plans (generate, regenerate, share, download, edit recommendation)
 - Prescriptions (generate, regenerate, share, download, edit recommendation)
