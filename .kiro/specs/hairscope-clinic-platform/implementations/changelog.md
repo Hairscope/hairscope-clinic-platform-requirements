@@ -70,6 +70,17 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.1.4 — 2026-05-14
+
+### Fixed
+- AI analysis returns clinical findings only — removed the `recommendations` field from AI output; the Recommendation Engine generates treatment plans.
+- Treatment plan routines are per-line-item (modelled as `lineItems` with a nested `routine`), not plan-level.
+- Documented the AI Analysis → Recommendation Engine → Treatment Plan → staff-sign flow; AI analysis event payload no longer carries recommendations.
+
+> Note: this release shipped together with the correction set listed under v1.1.3 (the changelog and release tags were briefly off by one at the time).
+
+---
+
 ## v1.1.3 — 2026-05-14
 
 ### Fixed
