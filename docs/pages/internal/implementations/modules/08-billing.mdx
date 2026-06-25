@@ -1,6 +1,12 @@
 # Billing Module Implementation
 
-> Covers: Invoice lifecycle, line items from sessions/treatment plans, payment recording, auto-sync with sessions, and invoice PDF generation trigger.
+> Covers: Invoice lifecycle, line items from sessions/catalog, payment status recording (no payment processing), and invoice PDF generation.
+
+> **Status: not yet implemented in code.** This document reflects the agreed billing model and will be refined when the module is actually built. Key decisions captured below:
+> - The platform does **not** process payments and does **not** store card numbers or bank account details. It records the **amount**, references (patient, session, catalog items), the invoice **status**, and a free-text payment **method** label (`CASH` / `CARD` / `BANK_TRANSFER` / `OTHER`).
+> - Invoices are created from a manual **"Generate Invoice"** action in the frontend — **not** automatically on `SessionCompleted` and **not** on `TreatmentPlanSigned`.
+> - Invoice lifecycle: `DRAFT → ISSUED → PAID → REFUNDED / PARTIALLY_REFUNDED`, plus `CANCELLED`.
+> - If an invoice is wrong, staff **cancel** it (`CANCELLED`) and generate a fresh one rather than mutating an issued invoice.
 
 ---
 
@@ -40,7 +46,7 @@ const InvoiceSchema = new Schema({
   sessionId: { type: Schema.Types.ObjectId, index: true },
   status: {
     type: String,
-    enum: ['DRAFT', 'FINALIZED', 'PARTIALLY_PAID', 'PAID', 'VOID'],
+    enum: ['DRAFT', 'ISSUED', 'PAID', 'PARTIALLY_REFUNDED', 'REFUNDED', 'CANCELLED'],
     default: 'DRAFT',
   },
   lineItems: [{
@@ -79,8 +85,8 @@ InvoiceSchema.index({ clinicId: 1, invoiceNumber: 1 }, { unique: true });
 const PaymentSchema = new Schema({
   invoiceId: { type: Schema.Types.ObjectId, required: true, index: true },
   amount: { type: Number, required: true },
-  method: { type: String, enum: ['CASH', 'CARD', 'BANK_TRANSFER', 'OTHER'], required: true },
-  reference: { type: String },
+  method: { type: String, enum: ['CASH', 'CARD', 'BANK_TRANSFER', 'OTHER'], required: true }, // text label only — NO card/bank details stored
+  reference: { type: String }, // optional free-text reference (e.g. receipt no.), never card/account numbers
   paidAt: { type: Date, default: Date.now },
   organizationId: { type: Schema.Types.ObjectId, required: true },
   clinicId: { type: Schema.Types.ObjectId, required: true },
@@ -92,6 +98,8 @@ const PaymentSchema = new Schema({
 ---
 
 # 4. Invoice Service
+
+> The `finalize`/`recordPayment` methods below are illustrative and predate the agreed model. Under the current model, "finalize" corresponds to transitioning `DRAFT → ISSUED`, payment recording sets `ISSUED → PAID`, and a wrong invoice is moved to `CANCELLED` (then regenerated). Method names and refund handling (`REFUNDED` / `PARTIALLY_REFUNDED`) will be aligned when the module is implemented.
 
 ```typescript
 @Injectable()
@@ -225,7 +233,7 @@ export class PaymentService {
     if (invoice.balance <= 0) {
       invoice.status = 'PAID';
     } else {
-      invoice.status = 'PARTIALLY_PAID';
+      invoice.status = 'ISSUED'; // remains ISSUED until fully paid (no partial-payment status in the model)
     }
 
     await this.invoiceRepo.save(invoice, context);
@@ -238,29 +246,24 @@ export class PaymentService {
 
 ---
 
-# 6. Event Handlers
+# 6. Invoice Generation Trigger
 
-Billing starts after signed treatment approval. The `TreatmentPlanSigned` event is the primary trigger for invoice creation.
+Invoice creation is **manual**: a staff member clicks **"Generate Invoice"** in the frontend, which calls `createFromSession` (or a standalone-invoice mutation). Invoices are **not** created automatically on `SessionCompleted` or `TreatmentPlanSigned`.
+
+When generating from a session, line items are pre-populated from the session's recommended catalog items (and the linked appointment's SERVICE, if any); staff then review, adjust, and `ISSUE` the invoice. Signed Treatment Plan / Prescription documents may be used as a **source for suggested line items** at generation time, but signing them does not itself create or mutate an invoice.
+
+If an issued invoice is wrong, staff **cancel** it (status → `CANCELLED`) and generate a new one — issued invoices are not edited in place.
+
+The illustrative line-item population below shows how catalog references map to line items at generation time:
 
 ```typescript
 @Injectable()
 export class BillingEventHandler {
-  @OnEvent('TreatmentPlanSigned')
-  async handleTreatmentPlanSigned(event: TreatmentPlanSignedEvent): Promise<void> {
-    if (await this.idempotencyStore.isDuplicate(event.eventId)) return;
-
-    const plan = await this.treatmentPlanRepo.findById(event.payload.planId);
-    const context = {
-      staffId: event.payload.signedBy,
-      organizationId: event.payload.organizationId,
-      clinicId: event.payload.clinicId,
-    };
-
-    // Create invoice atomically with line items from the signed treatment plan
-    const invoiceNumber = await this.invoiceService.generateInvoiceNumber(context);
-    const clinic = await this.clinicRepo.findById(context.clinicId, context);
-
-    const lineItems = await Promise.all(
+  // Illustrative: builds line items from a session's signed treatment plan when the
+  // staff triggers "Generate Invoice". Not an automatic event subscription.
+  async buildLineItemsFromTreatmentPlan(planId: string, context: TenantContext): Promise<InvoiceLineItem[]> {
+    const plan = await this.treatmentPlanRepo.findById(planId, context);
+    return Promise.all(
       plan.routines.map(async (routine) => ({
         description: routine.itemName,
         catalogItemId: routine.catalogItemId,
@@ -269,29 +272,6 @@ export class BillingEventHandler {
         total: await this.getCatalogItemPrice(routine.catalogItemId),
       })),
     );
-
-    const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
-
-    await this.invoiceRepo.create({
-      invoiceNumber,
-      patientId: plan.patientId,
-      sessionId: plan.sessionId,
-      treatmentPlanId: plan.id,
-      status: 'DRAFT',
-      lineItems,
-      subtotal,
-      tax: 0,
-      discount: 0,
-      total: subtotal,
-      amountPaid: 0,
-      balance: subtotal,
-      currency: clinic.currency,
-      organizationId: context.organizationId,
-      clinicId: context.clinicId,
-      createdBy: context.staffId,
-    });
-
-    await this.idempotencyStore.markProcessed(event.eventId);
   }
 }
 ```

@@ -258,7 +258,7 @@ export class SlotAvailabilityService {
     const dayOfWeek = start.getDay();
     const clinicHours = clinic.workingHours.find(h => h.day === dayOfWeek);
 
-    if (!clinicHours?.isOpen) return false;
+    if (!clinicHours || clinicHours.closed) return false;
     if (!this.isWithinHours(start, end, clinicHours)) return false;
 
     // 2. Check at least one qualified staff is available
@@ -290,7 +290,7 @@ export class SlotAvailabilityService {
     const dayOfWeek = date.getDay();
     const clinicHours = clinic.workingHours.find(h => h.day === dayOfWeek);
 
-    if (!clinicHours?.isOpen) return [];
+    if (!clinicHours || clinicHours.closed) return [];
 
     // Get qualified staff for this service
     const qualifiedStaff = await this.catalogService.getQualifiedStaff(serviceId, { clinicId });
@@ -386,7 +386,7 @@ async cancelAffectedByWorkingHoursChange(
     const dayOfWeek = appointment.slotStart.getDay();
     const newHours = newWorkingHours.find(h => h.day === dayOfWeek);
 
-    if (!newHours?.isOpen || !this.isWithinHours(appointment, newHours)) {
+    if (!newHours || newHours.closed || !this.isWithinHours(appointment, newHours)) {
       await this.cancel(appointment.id, 'CLINIC_HOURS_CHANGED', context);
     }
   }

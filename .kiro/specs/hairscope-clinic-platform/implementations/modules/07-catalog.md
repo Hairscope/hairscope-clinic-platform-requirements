@@ -2,6 +2,8 @@
 
 > Covers: Catalog items (SERVICE/MEDICATION/COSMETIC/SUPPLEMENT), Treatment Kits, Routines with dosage/frequency/duration/timeSlots, qualified staff, and pricing.
 
+> **Current code vs target design.** The backend currently implements a simpler `products` collection (type `SERVICE`/`MEDICINE`/`COSMETIC`/`SUPPLEMENT`, with `purchaseLink` and `isActive`) — see `18-collection-schemas.md`. The richer CatalogItem + Treatment Kit + structured Routine model described below is the **target**; the full design (including `MEDICATION` vs `MEDICINE` naming, routines, kits, qualified staff, and document generation ownership) will be finalized when the catalog module is reworked in code.
+
 ---
 
 # 1. Module Structure

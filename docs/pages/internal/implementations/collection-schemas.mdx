@@ -123,6 +123,7 @@ Does NOT extend BaseDocument — it IS the top of the tenant hierarchy.
 | `termsType` | String (enum) | — | — | `NONE` | `NONE`, `URL`, `CONTENT` |
 | `termsContent` | String | — | — | — | Rich text T&C content |
 | `termsUrl` | String | — | — | — | External T&C URL |
+| `treatmentRecommendationMode` | String (enum) | — | — | `STAGE_SCALE` | `STAGE_SCALE`, `HAIRSCORE` — strategy for matching custom treatment data |
 | `createdAt` | Date | — | — | `Date.now` | — |
 | `updatedAt` | Date | — | — | `Date.now` | — |
 | `createdBy` | ObjectId | — | — | — | — |
@@ -205,6 +206,32 @@ Tracks specific dates when a clinic is closed (holidays, events, etc.). Used by 
 
 **Indexes:**
 - `{ staffId: 1, clinicId: 1 }` — **unique**
+
+---
+
+### Collection: `customtreatmentdata` ✅
+
+Per-organization, per-language treatment descriptions matched to a hairloss stage (or hair-score range). Used by report/recommendation generation to render stage descriptions and treatment copy in the clinic's language. Collection name is `customtreatmentdata` (explicit, set via schema `collection` option).
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `language` | String | ✅ | ✅ (compound) | — | Locale code (e.g., `en`, `ar`, `es`) |
+| `matchingStrategy` | String (enum) | — | — | `STAGE_SCALE` | `STAGE_SCALE`, `HAIRSCORE` |
+| `hairlossScale` | String | ✅ | ✅ (compound) | — | `Norwood` or `Ludwig` |
+| `hairlossStage` | String | ✅ | ✅ (compound) | — | Stage identifier (`1`, `2`, `3`, …) |
+| `gender` | String (enum) | — | — | `null` | `MALE`, `FEMALE` — used for `HAIRSCORE` strategy |
+| `minHairScore` | Number | — | — | `0` | 0-100 (HAIRSCORE strategy range start) |
+| `maxHairScore` | Number | — | — | `100` | 0-100 (HAIRSCORE strategy range end) |
+| `stageDescription` | String | — | — | `''` | Stage description text |
+| `treatmentShortDescription` | String | — | — | `''` | Short treatment copy |
+| `treatmentLongDescription` | String | — | — | `''` | Long treatment copy |
+| `previewImageUrl` | String | — | — | — | GCS path |
+| `stageImageUrl` | String | — | — | — | GCS path |
+| `treatmentImageUrl` | String | — | — | — | GCS path |
+| + BaseSchemaFields (org-scoped; `clinicId` unused) |
+
+**Indexes:**
+- `{ organizationId: 1, language: 1, hairlossScale: 1, hairlossStage: 1 }` — **unique**
 
 ---
 
@@ -306,6 +333,9 @@ Tracks session lifecycle and metadata. Questionnaires, images, AI analysis, and 
 | `stressScore` | Number | — | — | — | Computed stress score |
 | `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
 | `aiAnalysisCompletedAt` | Date | — | — | — | When AI finished |
+| `thumbnailUrl` | String | — | — | `''` | Thumbnail (first/primary image) for session lists |
+| `imageCount` | Number | — | — | `0` | Cached count of images on the session |
+| `sequence` | Number | — | — | `0` | Ordering within the patient's session history |
 | `savedAt` | Date | — | — | — | When moved to SAVED |
 | `completedAt` | Date | — | — | — | When completed |
 | `deletedAt` | Date | — | — | — | When soft-deleted |
@@ -318,7 +348,7 @@ Tracks session lifecycle and metadata. Questionnaires, images, AI analysis, and 
 
 ---
 
-### Collection: `sessionquestionnaires` 🔲
+### Collection: `sessionquestionnaires` ✅
 
 One document per question-answer per session.
 
@@ -336,7 +366,7 @@ One document per question-answer per session.
 
 ---
 
-### Collection: `sessionimages` 🔲
+### Collection: `sessionimages` ✅
 
 Stores all captured images — both global and trichoscopy. Per-image AI status tracked here.
 
@@ -370,7 +400,7 @@ Stores all captured images — both global and trichoscopy. Per-image AI status 
 
 ---
 
-### Collection: `globalanalysisdata` 🔲
+### Collection: `globalanalysisdata` ✅
 
 One document per global image. Structured AI results (no raw LLM text). Overrides array for doctor corrections.
 
@@ -379,7 +409,7 @@ One document per global image. Structured AI results (no raw LLM text). Override
 | `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
 | `patientId` | ObjectId | ✅ | ✅ | — | Patient |
 | `sessionImageId` | ObjectId | ✅ | ✅ (unique) | — | Reference to `sessionimages._id` |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `hairlossScale` | String | — | — | — | e.g., "Norwood", "Ludwig" |
 | `hairlossStage` | String | — | — | — | e.g., "Stage 3" |
 | `hairCoverage` | Number | — | — | — | Coverage % |
@@ -408,7 +438,7 @@ One document per global image. Structured AI results (no raw LLM text). Override
 
 ---
 
-### Collection: `rootpoints` 🔲
+### Collection: `rootpoints` ✅
 
 One document per detected/added follicle point. Soft-deleted points preserved for AI training.
 
@@ -418,7 +448,7 @@ One document per detected/added follicle point. Soft-deleted points preserved fo
 | `patientId` | ObjectId | ✅ | — | — | Patient |
 | `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
 | `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `x` | Number | ✅ | — | — | X coordinate (0-1) |
 | `y` | Number | ✅ | — | — | Y coordinate (0-1) |
 | `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
@@ -431,7 +461,7 @@ One document per detected/added follicle point. Soft-deleted points preserved fo
 
 ---
 
-### Collection: `hairstrands` 🔲
+### Collection: `hairstrands` ✅
 
 One document per detected/added hair strand. Two-point representation (root + end).
 
@@ -441,7 +471,7 @@ One document per detected/added hair strand. Two-point representation (root + en
 | `patientId` | ObjectId | ✅ | — | — | Patient |
 | `sessionImageId` | ObjectId | ✅ | ✅ | — | Reference to `sessionimages._id` |
 | `imageType` | String (enum) | ✅ | — | — | `TRICHOSCOPY` |
-| `model` | String | — | — | — | AI model identifier |
+| `aiModel` | String | — | — | — | AI model identifier (named `aiModel` to avoid Mongoose `Document.model` conflict) |
 | `p1x` | Number | ✅ | — | — | Root X (0-1) |
 | `p1y` | Number | ✅ | — | — | Root Y (0-1) |
 | `p2x` | Number | ✅ | — | — | End X (0-1) |
@@ -456,7 +486,7 @@ One document per detected/added hair strand. Two-point representation (root + en
 
 ---
 
-### Collection: `reportdata` 🔲
+### Collection: `reportdata` ✅
 
 One document per session. Tracks report version and latest PDF URL. Old versions accessible via GCS path convention.
 
@@ -622,7 +652,7 @@ The following collections are designed but not yet built in the backend.
 | `invoiceNumber` | String | ✅ | ✅ (unique compound) | — | Sequential: `INV-000001` |
 | `patientId` | ObjectId | ✅ | ✅ | — | Billed patient |
 | `sessionId` | ObjectId | — | ✅ | — | Linked session |
-| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `FINALIZED`, `PARTIALLY_PAID`, `PAID`, `VOID` |
+| `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `ISSUED`, `PAID`, `PARTIALLY_REFUNDED`, `REFUNDED`, `CANCELLED` |
 | `lineItems` | Array | — | — | — | Invoice line items |
 | `lineItems[].description` | String | ✅ | — | — | Item description |
 | `lineItems[].catalogItemId` | ObjectId | — | — | — | Catalog reference |
@@ -653,7 +683,7 @@ The following collections are designed but not yet built in the backend.
 |-------|------|----------|---------|---------|-------------|
 | `invoiceId` | ObjectId | ✅ | ✅ | — | Parent invoice |
 | `amount` | Number | ✅ | — | — | Payment amount |
-| `method` | String (enum) | ✅ | — | — | `CASH`, `CARD`, `BANK_TRANSFER`, `OTHER` |
+| `method` | String (enum) | ✅ | — | — | `CASH`, `CARD`, `BANK_TRANSFER`, `OTHER` — text label only. NO card numbers or bank account details are ever stored. |
 | `reference` | String | — | — | — | Transaction reference |
 | `paidAt` | Date | — | — | `Date.now` | Payment timestamp |
 | + BaseSchemaFields |
