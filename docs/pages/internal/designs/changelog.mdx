@@ -14,6 +14,26 @@ All notable changes to the Hairscope Clinic Platform design documents are docume
 
 ---
 
+## v1.0.2 — 2026-05-24
+
+### Changed
+- Unified module numbering across requirements, designs, and implementations (0=Infra, 1=IAM, 2=Org, 3=Patients, 4=Sessions, 5=Leads, 6=Appointments, 7=Catalog, 8=Billing, 9=Communication, 10=Audit).
+- Renumbered design module files from `03-patients` onward (previously started at `01-patients`).
+- Updated Nextra `_meta.ts` navigation files to match.
+
+### Removed
+- Redundant `05-products.md` design (merged into the Catalog module).
+
+---
+
+## v1.0.1 — 2026-05-14
+
+### Changed
+- File uploads are modelled as GraphQL mutations rather than HTTP endpoints.
+- Architecture diagram updated: HTTP endpoints cover downloads and webhooks only (uploads moved to GraphQL).
+
+---
+
 ## v1.0.0 — 2026-05-13
 
 ### Initial Release
