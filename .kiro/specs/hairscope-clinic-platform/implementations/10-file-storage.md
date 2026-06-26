@@ -206,8 +206,9 @@ export class FileUploadResolver {
   ): Promise<FileUploadResponse> {
     const { createReadStream, filename, mimetype } = await file;
 
-    // Validate file type
-    const allowed = /^(image\/(jpeg|png|webp)|application\/pdf)$/;
+    // Validate file type — accept common modern image formats (incl. iPhone HEIC/HEIF) + PDF.
+    // HEIC/HEIF should be transcoded to a web-displayable format (JPEG/WEBP) on ingestion.
+    const allowed = /^(image\/(jpeg|png|webp|heic|heif|avif|gif)|application\/pdf)$/;
     if (!allowed.test(mimetype)) throw new InvalidFileTypeError();
 
     const stream = createReadStream();

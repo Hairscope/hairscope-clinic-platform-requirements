@@ -341,8 +341,8 @@ export class FileUploadResolver {
 ```typescript
 @InputType()
 export class FileUploadInput {
-  @Field(() => FileCategory)
-  category: FileCategory;
+  @Field(() => FileType)
+  type: FileType;
 
   @Field(() => ID, { nullable: true })
   entityId?: string;
@@ -357,6 +357,8 @@ export class FileUploadResponse {
   url: string;
 }
 ```
+
+> The upload enum is named **`FileType`** (aligns with `shared/api-contracts.md` §8). Accepted MIME types are all common modern image formats — including iPhone **HEIC/HEIF** — plus `application/pdf`; HEIC/HEIF are transcoded to a web-displayable format on ingestion.
 
 ## 7.3 File Downloads
 
