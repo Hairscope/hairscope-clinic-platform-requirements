@@ -114,6 +114,16 @@ Determines feature availability and limits based on subscription.
 
 Generates recommendations based on provided context.
 
+The Recommendation Engine matches a session's analysis outcome to clinic/organization-configured treatment content and proposed routines:
+
+- **CustomTreatmentData** — per-organization, per-language treatment descriptions (stage description, short/long treatment copy, imagery) keyed by hairloss scale + stage, or by a hair-score range.
+- **`treatmentRecommendationMode`** (organization setting) — selects the matching strategy: `STAGE_SCALE` (match on Norwood/Ludwig scale + stage) or `HAIRSCORE` (match on a computed hair-score range, optionally gender-specific).
+- **Routines** are sourced from the Catalog (per catalog item / treatment kit) and attached to recommended items.
+
+Given the session analysis (hairloss stage and/or hair score, gender, locale) as input, the engine deterministically selects the matching `CustomTreatmentData` entry and assembles the recommended treatment content + routines. As the platform and AI mature, additional diagnosis and suggestion logic will extend this engine without changing module boundaries.
+
+The engine remains stateless and side-effect free: it reads the provided `CustomTreatmentData` and catalog routines as input and returns a recommendation result; the application layer persists any resulting Treatment Plan and emits events.
+
 ---
 
 ## 4.4 AI Models (Worker Service)

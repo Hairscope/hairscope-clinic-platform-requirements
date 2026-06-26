@@ -160,6 +160,8 @@ Owns:
 - role assignments
 - status
 
+> Footnote: Staff carry a `userType` of `CLINIC_STAFF`, `PLATFORM_SUPPORT`, or `PLATFORM_ADMIN`. `PLATFORM_SUPPORT`/`PLATFORM_ADMIN` are Hairscope-internal users for customer support, with cross-tenant access that is always audit-logged; they are not clinic employees.
+
 ---
 
 ### Role (Aggregate Root)
@@ -205,6 +207,8 @@ Owns:
 ---
 
 # 5. Organization Domain
+
+> Implementation note: although Organization is a distinct bounded context here, the Organization/Clinic aggregates and the IAM aggregates (Staff, Role) are colocated in a single **IAM module** in code — a standalone organization module cannot operate without clinics, staff, and roles. The conceptual boundaries below still hold.
 
 ## Aggregates
 

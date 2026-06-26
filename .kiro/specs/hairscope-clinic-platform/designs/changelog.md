@@ -4,6 +4,18 @@ All notable changes to the Hairscope Clinic Platform design documents are docume
 
 ---
 
+## v1.2.0 — 2026-06-25
+
+### Added
+- **Recommendation Engine** (`09-engine-architecture.md`) — documented `CustomTreatmentData` (per-org, per-language treatment content keyed by hairloss scale+stage or hair-score range) and the organization `treatmentRecommendationMode` (`STAGE_SCALE` / `HAIRSCORE`) matching strategy; routines sourced from Catalog. Extensible for future diagnosis/suggestions.
+- **Cross-clinic access** (`05-authorization.md`) — documented that reading another clinic's non-clinical details is permission-driven (effective permissions + org `recordVisibilityMode` `CLINIC_ONLY`/`ORGANIZATION_WIDE`), never role-name-driven; clinical data stays clinic-isolated (GI-8).
+- Footnote on the Staff aggregate (`03-domain-modeling.md`) describing the `PLATFORM_SUPPORT`/`PLATFORM_ADMIN` `userType` (Hairscope-internal, audit-logged cross-tenant support users).
+
+### Changed
+- Domain modeling notes that Organization/Clinic aggregates are colocated with IAM aggregates in a single IAM module in code.
+
+---
+
 ## v1.1.0 — 2026-06-25
 
 ### Changed
