@@ -168,8 +168,10 @@ enum FileType {
 | Constraint | Value |
 |------------|-------|
 | Max file size | 10 MB |
-| Accepted types for images | `image/jpeg`, `image/png` |
-| Accepted types for documents | `image/jpeg`, `image/png`, `application/pdf` |
+| Accepted image types | All common modern image formats, including `image/jpeg`, `image/png`, `image/webp`, `image/heic`/`image/heif` (iOS/iPhone), `image/avif`, and `image/gif`. Platforms SHOULD normalize/transcode HEIC/HEIF to a web-displayable format (e.g., JPEG/WEBP) on ingestion. |
+| Accepted document types | The above image types plus `application/pdf` |
+
+> The accepted-type list is intentionally permissive toward modern mobile camera formats (notably iPhone HEIC/HEIF) so captures from any device are accepted. Server-side validation still enforces the max size and rejects non-image/non-PDF content.
 
 ### Response
 

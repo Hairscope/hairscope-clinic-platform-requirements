@@ -307,6 +307,8 @@
 
 **User Story:** As a ClinicAdmin or OrganizationAdmin, I want to restrict record visibility so that staff only see records assigned to them, ensuring HIPAA minimum-necessary compliance.
 
+> **Scope of this requirement:** ORG-9 governs *per-staff, assignment-based* visibility **within a single clinic** via the clinic-level `recordVisibilityMode` = `OPEN` / `RESTRICTED`. Organization-wide *cross-clinic* visibility is a separate axis (org-level `recordVisibilityMode` = `CLINIC_ONLY` / `ORGANIZATION_WIDE`) defined in ORG-11.
+
 #### Visibility Modes
 
 | Mode | Behaviour |
@@ -374,3 +376,26 @@
 - After reassignment of record R from Staff A to Staff B: `R.assignedTo = B.id`.
 - Attribution fields on R SHALL remain unchanged after reassignment.
 - In `RESTRICTED` visibility mode: after reassignment from A to B, A SHALL no longer see R and B SHALL now see R.
+
+---
+
+### ORG-11: Cross-Clinic Visibility (Organization-Wide Access)
+
+**User Story:** As a multi-clinic operator, I want certain staff to view details of all clinics in the organization (without exposing patient clinical data) so that organization-level oversight is possible while clinical records stay clinic-isolated.
+
+> **Two distinct visibility axes.** This requirement (organization-wide cross-clinic access) is separate from ORG-9 (per-staff, assignment-based visibility *within* a single clinic). ORG-9 uses clinic-level `recordVisibilityMode` = `OPEN` / `RESTRICTED`. ORG-11 uses the **organization-level** `recordVisibilityMode` = `CLINIC_ONLY` / `ORGANIZATION_WIDE`.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL support an Organization-level `recordVisibilityMode` setting with values `CLINIC_ONLY` (default) and `ORGANIZATION_WIDE`.
+2. Cross-clinic access SHALL be **permission-driven, not role-driven**. A role is only a combination of permissions; the ability to view other clinics' details is granted by an organization-wide access permission and the org's `ORGANIZATION_WIDE` setting — it is NOT hardcoded to the `OrganizationAdmin` role. Any role that is granted this permission confers the access.
+3. WHEN the organization is `ORGANIZATION_WIDE`, a staff member holding the organization-wide access permission SHALL be able to view the details of all Clinics in the organization (profiles, working hours, staff rosters, catalog, leads-for-assignment, dashboards).
+4. Cross-clinic access SHALL NEVER expose patient clinical data — Patient records and their Sessions (images, AI analysis, annotations, reports), medical documents, and invoices remain isolated to the owning Clinic regardless of `ORGANIZATION_WIDE`. This preserves GI-8 (no clinical-module access for organization-scoped oversight).
+5. WHEN the organization is `CLINIC_ONLY`, staff SHALL only view details of the Clinic(s) they belong to, even if granted the organization-wide access permission.
+6. WHEN the setting is changed, THE Platform SHALL apply it on the next request and record the change in the AuditLog.
+
+#### Correctness Properties
+
+- For any staff member S with the organization-wide access permission in an `ORGANIZATION_WIDE` organization: S SHALL be able to read non-clinical details of every Clinic in the organization.
+- For any staff member (regardless of permission): no cross-clinic query SHALL return Patient records, Sessions, medical documents, or invoices belonging to a Clinic the staff member does not belong to.
+- Cross-clinic visibility SHALL be determined by the effective permission set + org setting, never by the name of a role.
