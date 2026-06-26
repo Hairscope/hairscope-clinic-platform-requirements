@@ -4,6 +4,16 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.4.1 — 2026-06-25
+
+### Changed
+- **File uploads** (`07-graphql.md`, `10-file-storage.md`) — accepted MIME types broadened to all common modern image formats, including iPhone **HEIC/HEIF** (plus `avif`/`gif`), alongside `application/pdf`; HEIC/HEIF transcoded to a web-displayable format on ingestion. The GraphQL upload enum is aligned to **`FileType`** (was `FileCategory`).
+
+### Documentation
+- **Collection schemas** (`18-collection-schemas.md`) — added a footnote on `staffs.userType` (`PLATFORM_SUPPORT`/`PLATFORM_ADMIN` are Hairscope-internal, audit-logged support users) and a note that `AnnotationSource` (`AI`/`HUMAN`) on `rootpoints`/`hairstrands` records who created each annotation.
+
+---
+
 ## v1.4.0 — 2026-06-25
 
 ### Changed

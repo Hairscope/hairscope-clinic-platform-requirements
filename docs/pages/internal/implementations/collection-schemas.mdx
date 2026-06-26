@@ -56,6 +56,8 @@ export const BaseSchemaFields = {
 - `{ status: 1 }`
 - `{ userType: 1 }`
 
+> Footnote: `userType` `PLATFORM_SUPPORT` / `PLATFORM_ADMIN` are Hairscope-internal users for customer support, with audit-logged cross-tenant access; they are not clinic employees. `CLINIC_STAFF` is the default for all clinic users.
+
 ---
 
 ### Collection: `roles` ✅
@@ -440,7 +442,7 @@ One document per global image. Structured AI results (no raw LLM text). Override
 
 ### Collection: `rootpoints` ✅
 
-One document per detected/added follicle point. Soft-deleted points preserved for AI training.
+One document per detected/added follicle point. Soft-deleted points preserved for AI training. The `source` field (`AnnotationSource`: `AI` | `HUMAN`) records who created the annotation and appears on every annotation collection (`rootpoints`, `hairstrands`).
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
