@@ -145,6 +145,14 @@ Reject if:
 - organization mismatch
 - clinic access is not permitted
 
+### Cross-Clinic Access (permission-driven)
+
+Whether a staff member may read **another clinic's** (non-clinical) details within the same organization is determined by the **effective permission set + the organization's `recordVisibilityMode`** (`CLINIC_ONLY` / `ORGANIZATION_WIDE`), never by the *name* of a role (a role is only a combination of permissions). See requirements ORG-11.
+
+- `CLINIC_ONLY`: clinic access is limited to the clinic(s) the staff belongs to.
+- `ORGANIZATION_WIDE`: a staff member holding the organization-wide access permission may read non-clinical details of all clinics in the organization.
+- Patient clinical data (Patients, Sessions, medical documents, invoices) SHALL remain clinic-isolated regardless of this setting (preserves GI-8). Cross-clinic access never reaches clinical modules.
+
 ---
 
 ## 4.3 Account Status
