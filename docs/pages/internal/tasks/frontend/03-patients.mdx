@@ -111,7 +111,7 @@
 ### Task 13: Medical Documents Section
 - [ ] 13.1 Create `src/components/modules/patients/MedicalDocuments.tsx`
 - [ ] 13.2 Grid display of uploaded documents (thumbnail + title)
-- [ ] 13.3 Upload button with file picker (JPEG, PNG, PDF, max 10MB)
+- [ ] 13.3 Upload button with file picker (all common modern image types incl. iPhone HEIC/HEIF, plus PDF; max 10MB)
 - [ ] 13.4 Upload form: title (required), description (optional)
 - [ ] 13.5 Delete document with confirmation dialog
 - [ ] 13.6 Click to preview/download document

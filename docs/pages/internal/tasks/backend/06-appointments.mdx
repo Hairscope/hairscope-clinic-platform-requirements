@@ -9,7 +9,7 @@
 - [x] 2.1–2.2 Add error codes and domain errors
 
 ### Task 3: Appointment Service
-- [x] 3.1–3.5 Implement book, reschedule, cancel, complete, markNoShow
+- [x] 3.1–3.5 Implement book, reschedule (delete current → create new, linked via `rescheduledFrom`; still emits `AppointmentRescheduled`), cancel, complete, markNoShow
 - [x] 3.6 Write unit tests
 - [x] 3.7 Write property test: valid status transitions
 

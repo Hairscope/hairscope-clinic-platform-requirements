@@ -86,9 +86,10 @@
 - [ ] 11.1 Create `src/app/(dashboard)/settings/organization/page.tsx`
 - [ ] 11.2 Organization details section (name, currency enforcement policy)
 - [ ] 11.3 Clinics list with create/deactivate/reactivate actions
-- [ ] 11.4 Record visibility mode toggle (OPEN/RESTRICTED)
+- [ ] 11.4 Clinic-level record visibility toggle (`OPEN`/`RESTRICTED`, per-staff assignment) AND org-level cross-clinic visibility (`CLINIC_ONLY`/`ORGANIZATION_WIDE`, ORG-11 — permission-driven, non-clinical details only)
 - [ ] 11.5 Lead assignment mode toggle (AUTO_ASSIGN/MANUAL_ASSIGN)
-- [ ] 11.6 Wrap in PermissionGate — OrganizationAdmin only
+- [ ] 11.6 Treatment recommendation mode toggle (`STAGE_SCALE`/`HAIRSCORE`) — Recommendation Engine matching strategy
+- [ ] 11.7 Wrap in PermissionGate — OrganizationAdmin only
 
 ### Task 12: Staff Availability Page
 - [ ] 12.1 Create `src/app/(dashboard)/settings/availability/page.tsx`
