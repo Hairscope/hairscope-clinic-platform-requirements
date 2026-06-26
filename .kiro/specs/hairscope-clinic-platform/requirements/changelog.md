@@ -4,6 +4,16 @@ All notable changes to the Hairscope Clinic Platform requirements are documented
 
 ---
 
+## v1.4.0 — 2026-06-25
+
+### Added
+- **ORG-11: Cross-Clinic Visibility (Organization-Wide Access)** — defines the organization-level `recordVisibilityMode` (`CLINIC_ONLY` / `ORGANIZATION_WIDE`) as a distinct axis from ORG-9's per-staff, within-clinic visibility. Cross-clinic access is **permission-driven, not role-driven** (a role is only a combination of permissions; org-wide access is a grantable permission, not hardcoded to `OrganizationAdmin`). Cross-clinic access exposes non-clinical clinic details only — patient sessions, clinical data, medical documents, and invoices remain clinic-isolated (preserves GI-8). Added a clarifier to ORG-9 distinguishing the two visibility axes.
+
+### Changed
+- **File-upload contract** (`shared/api-contracts.md` §8, PAT-4) — accepted upload types broadened to all common modern image formats, including iPhone **HEIC/HEIF**, plus `application/pdf`; HEIC/HEIF should be transcoded to a web-displayable format on ingestion. The GraphQL enum remains `FileType`.
+
+---
+
 ## v1.3.0 — 2026-06-25
 
 ### Changed
