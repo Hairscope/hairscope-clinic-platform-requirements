@@ -5,19 +5,19 @@
 > **TBD (deferred).** The current backend implements a simpler `products` collection (type `SERVICE`/`MEDICINE`/`COSMETIC`/`SUPPLEMENT`, with `purchaseLink`, `isActive`). The richer CatalogItem + Treatment Kit + structured Routine + digital-signature/document-generation model below is the **target** and is deferred — these tasks will be finalized when the catalog module is reworked in code (and the requirements/design for it are confirmed).
 
 ### Task 1: Catalog Item Schema and Repository
-- [x] 1.1–1.3 Create schema and repository with unit tests
+- 1.1–1.3 Create schema and repository with unit tests
 
 ### Task 2: Treatment Kit Schema and Repository
-- [x] 2.1–2.3 Create schema and repository with unit tests
+- 2.1–2.3 Create schema and repository with unit tests
 
 ### Task 3: Catalog Item Service
-- [x] 3.1–3.4 Implement CRUD with currency validation, deactivation, unit tests
+- 3.1–3.4 Implement CRUD with currency validation, deactivation, unit tests
 
 ### Task 4: Treatment Kit Service
-- [x] 4.1–4.3 Implement CRUD with price calculation, unit tests
+- 4.1–4.3 Implement CRUD with price calculation, unit tests
 
 ### Task 5: Catalog Resolvers
-- [x] 5.1–5.5 Create resolvers, DTOs, integration tests
+- 5.1–5.5 Create resolvers, DTOs, integration tests
 
 ### Task 6: Catalog Module Registration
-- [x] 6.1–6.4 Create module, wire into AppModule, barrel export
+- 6.1–6.4 Create module, wire into AppModule, barrel export
