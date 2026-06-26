@@ -8,8 +8,8 @@
 |---|--------|--------|--------|
 | 0 | Infrastructure (scaffold) | `feature/initial-scaffold` | ✅ Complete |
 | 1 | [IAM](./01-iam.md) | `feature/auth-iam` | ✅ Complete |
-| 2 | [Organization](./02-organization.md) | `feature/organization` | Not started |
-| 3 | [Patients](./03-patients.md) | `feature/patients` | Not started |
+| 2 | [Organization](./02-organization.md) | `feature/organization` | ✅ Complete |
+| 3 | [Patients](./03-patients.md) | `feature/patients` | ✅ Complete |
 | 4 | [Sessions](./04-sessions.md) | `feature/sessions` | Not started |
 | 5 | [Leads](./05-leads.md) | `feature/leads` | Not started |
 | 6 | [Appointments](./06-appointments.md) | `feature/appointments` | Not started |

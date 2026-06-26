@@ -28,8 +28,8 @@
 
 ### Task 3: Annotation Service
 - [ ] 3.1 Create `src/services/annotation.service.ts`
-- [ ] 3.2 Add GET_IMAGE_ANNOTATIONS query
-- [ ] 3.3 Add SAVE_ANNOTATIONS mutation (follicles + strands batch)
+- [ ] 3.2 Add queries for `rootpoints` and `hairstrands` by `sessionImageId` (each carries `source: AI | HUMAN`)
+- [ ] 3.3 Add mutations to add/bulk-add and soft-delete points/strands; add global-analysis override mutation (edit AI values with reason). AI results are editable after COMPLETED. The frontend computes on-screen metrics from these raw points (the backend computes the same for the PDF).
 
 ### Task 4: Report Service
 - [ ] 4.1 Create `src/services/report.service.ts`

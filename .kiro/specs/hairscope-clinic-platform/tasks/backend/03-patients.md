@@ -10,9 +10,9 @@
 - [x] 2.1–2.2 Add error codes and domain errors
 
 ### Task 3: Patient Service
-- [x] 3.1–3.5 Implement CRUD, globalPatientId resolution, age calculation, search
+- [x] 3.1–3.5 Implement CRUD, `globalPatientId` assignment (new id per record — NO automatic cross-clinic linking by email/phone; verified manual linking is **TBD**, see PAT-2), age calculation, search
 - [x] 3.6–3.7 Write unit tests
-- [x] 3.8–3.9 Write property tests: duplicate prevention, age calculation
+- [x] 3.8–3.9 Write property tests: duplicate prevention, age calculation, and that distinct records receive distinct `globalPatientId` (no auto-link)
 
 ### Task 4: GDPR Erasure
 - [x] 4.1–4.2 Implement gdprErase with confirmation requirement

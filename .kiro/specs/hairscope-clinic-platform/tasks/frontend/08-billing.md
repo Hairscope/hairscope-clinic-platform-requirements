@@ -20,7 +20,7 @@
 - [ ] 1.9 Add REMOVE_MISC_CHARGE mutation
 - [ ] 1.10 Add ADD_DISCOUNT mutation
 - [ ] 1.11 Add REMOVE_DISCOUNT mutation
-- [ ] 1.12 Add FINALIZE_INVOICE mutation
+- [ ] 1.12 Add ISSUE_INVOICE, MARK_PAID (records amount + free-text method label `CASH`/`CARD`/`BANK_TRANSFER`/`OTHER`, no card/bank details), and CANCEL_INVOICE mutations
 - [ ] 1.13 Add RECORD_REFUND mutation
 - [ ] 1.14 Add EXPORT_INVOICE_PDF mutation (returns download URL)
 
@@ -38,7 +38,7 @@
 - [ ] 3.1 Create `src/hooks/useInvoiceList.ts`
 - [ ] 3.2 Apollo useQuery with INVOICES_LIST, page size 20
 - [ ] 3.3 Cursor-based pagination (loadMore via fetchMore)
-- [ ] 3.4 Status filter (DRAFT, FINALIZED, REFUNDED, PARTIALLY_REFUNDED)
+- [ ] 3.4 Status filter (DRAFT, ISSUED, PAID, PARTIALLY_REFUNDED, REFUNDED, CANCELLED)
 - [ ] 3.5 Date range filter
 - [ ] 3.6 Return `{ invoices, loading, error, hasNextPage, loadMore, setFilters, refetch }`
 
@@ -75,9 +75,9 @@
 - [ ] 7.5 Discounts section
 - [ ] 7.6 Totals breakdown: Subtotal, Discount, Taxable, Tax, Total
 - [ ] 7.7 Actions: Add Line Item, Add Misc Charge, Add Discount (DRAFT only)
-- [ ] 7.8 Finalize button (DRAFT only)
+- [ ] 7.8 Issue button (DRAFT → ISSUED); Mark Paid (ISSUED → PAID, capture method label); Cancel (DRAFT/ISSUED → CANCELLED, then regenerate)
 - [ ] 7.9 Export PDF button
-- [ ] 7.10 Record Refund button (FINALIZED only)
+- [ ] 7.10 Record Refund button (ISSUED/PAID only)
 - [ ] 7.11 Refund history section
 
 ---
@@ -89,7 +89,7 @@
 ### Task 8: Invoice Table
 - [ ] 8.1 Create `src/components/modules/billing/InvoiceTable.tsx`
 - [ ] 8.2 @tanstack/react-table: Invoice #, Patient, Date, Total (formatted with currency), Status, Actions
-- [ ] 8.3 Status badges: DRAFT=warning, FINALIZED=success, REFUNDED=danger, PARTIALLY_REFUNDED=orange
+- [ ] 8.3 Status badges: DRAFT=warning, ISSUED=info, PAID=success, PARTIALLY_REFUNDED=orange, REFUNDED=danger, CANCELLED=muted
 - [ ] 8.4 Row click navigates to invoice detail page
 
 ### Task 9: Add Line Item Modal
@@ -111,11 +111,11 @@
 - [ ] 11.4 Percentage validation: max 100
 - [ ] 11.5 Call ADD_DISCOUNT mutation
 
-### Task 12: Finalize Invoice Dialog
-- [ ] 12.1 Create `src/components/modules/billing/FinalizeInvoiceDialog.tsx`
-- [ ] 12.2 Confirmation message: invoice will be locked
-- [ ] 12.3 Display final totals summary
-- [ ] 12.4 Call FINALIZE_INVOICE mutation
+### Task 12: Issue / Pay / Cancel Invoice Dialogs
+- [ ] 12.1 Create `src/components/modules/billing/IssueInvoiceDialog.tsx` (and Mark-Paid + Cancel dialogs)
+- [ ] 12.2 Issue: confirmation that the invoice will be locked
+- [ ] 12.3 Mark Paid: capture free-text payment method label (no card/bank details); Cancel: reason + note that a new invoice should be generated
+- [ ] 12.4 Call ISSUE_INVOICE / MARK_PAID / CANCEL_INVOICE mutations
 - [ ] 12.5 On success: refetch invoice, show success toast
 
 ### Task 13: Record Refund Modal
@@ -123,7 +123,7 @@
 - [ ] 13.2 react-hook-form + zod: amount required, reason required, refundDate required
 - [ ] 13.3 Full refund toggle (auto-fills amount with invoice total)
 - [ ] 13.4 Remaining refundable amount display
-- [ ] 13.5 Error handling: REFUND_EXCEEDS_TOTAL
+- [ ] 13.5 Error handling: REFUND_EXCEEDS_TOTAL; enabled only for ISSUED/PAID invoices
 - [ ] 13.6 Call RECORD_REFUND mutation
 
 ### Task 14: Invoice Totals Breakdown
@@ -134,7 +134,7 @@
 
 ### Task 15: Billing Analytics Cards
 - [ ] 15.1 Create `src/components/modules/billing/BillingAnalyticsCards.tsx`
-- [ ] 15.2 Total revenue card (sum of finalized invoices)
+- [ ] 15.2 Total revenue card (sum of issued/paid invoices)
 - [ ] 15.3 Total refunds card
 - [ ] 15.4 Net revenue card
 - [ ] 15.5 Date range selector for analytics period

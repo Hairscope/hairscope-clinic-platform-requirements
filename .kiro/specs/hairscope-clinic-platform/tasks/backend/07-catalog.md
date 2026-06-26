@@ -2,6 +2,8 @@
 
 **Branch:** `feature/catalog-module`
 
+> **TBD (deferred).** The current backend implements a simpler `products` collection (type `SERVICE`/`MEDICINE`/`COSMETIC`/`SUPPLEMENT`, with `purchaseLink`, `isActive`). The richer CatalogItem + Treatment Kit + structured Routine + digital-signature/document-generation model below is the **target** and is deferred — these tasks will be finalized when the catalog module is reworked in code (and the requirements/design for it are confirmed).
+
 ### Task 1: Catalog Item Schema and Repository
 - [x] 1.1–1.3 Create schema and repository with unit tests
 

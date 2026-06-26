@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sessions-rework`
 
-> Reworked schema: separate collections for questionnaires, images, global analysis, rootpoints, hairstrands, and report data. No inline AI results on images. Frontend computes metrics from raw points.
+> Reworked schema: separate collections for questionnaires, images, global analysis, rootpoints, hairstrands, and report data. No inline AI results on images. The frontend computes metrics from raw points for on-screen display; the backend (Report Generation worker) computes the same metrics from raw points when rendering the PDF report. AI-produced data is editable (points/strands soft-delete + `HUMAN` additions; global values via `overrides[]`). The AI model identifier field is named **`aiModel`** (avoids Mongoose `Document.model` conflict).
 
 ---
 
@@ -28,17 +28,17 @@
 - [ ] 4.3 Create `SessionImageRepository`
 
 ### Task 5: Global analysis data schema
-- [ ] 5.1 Create `global-analysis-data.schema.ts` (sessionId, patientId, sessionImageId, model, hairlossScale, hairlossStage, hairCoverage, volumeRetained, highDensityZonePercent, midiumDensityZonePercent, lowDensityZonePercent, heatmapImagePath, overrides[], aiAnalysisStatus, aiAnalysisCompletedAt, failureReason, retriesRemaining, status)
+- [ ] 5.1 Create `global-analysis-data.schema.ts` (sessionId, patientId, sessionImageId, aiModel, hairlossScale, hairlossStage, hairCoverage, volumeRetained, highDensityZonePercent, midiumDensityZonePercent, lowDensityZonePercent, heatmapImagePath, overrides[], aiAnalysisStatus, aiAnalysisCompletedAt, failureReason, retriesRemaining, status)
 - [ ] 5.2 Add unique index `{ sessionImageId: 1 }`
 - [ ] 5.3 Create `GlobalAnalysisDataRepository`
 
 ### Task 6: Root points schema
-- [ ] 6.1 Create `root-point.schema.ts` (sessionId, patientId, sessionImageId, imageType, model, x, y, source, status)
+- [ ] 6.1 Create `root-point.schema.ts` (sessionId, patientId, sessionImageId, imageType, aiModel, x, y, source, status)
 - [ ] 6.2 Add indexes: `{ sessionImageId: 1, status: 1 }`, `{ sessionId: 1, status: 1 }`
 - [ ] 6.3 Create `RootPointRepository`
 
 ### Task 7: Hair strands schema
-- [ ] 7.1 Create `hair-strand.schema.ts` (sessionId, patientId, sessionImageId, imageType, model, p1x, p1y, p2x, p2y, source, status)
+- [ ] 7.1 Create `hair-strand.schema.ts` (sessionId, patientId, sessionImageId, imageType, aiModel, p1x, p1y, p2x, p2y, source, status)
 - [ ] 7.2 Add indexes: `{ sessionImageId: 1, status: 1 }`, `{ sessionId: 1, status: 1 }`
 - [ ] 7.3 Create `HairStrandRepository`
 
@@ -65,3 +65,25 @@
 - [ ] 11.4 Create `RootPointResolver` (query by sessionImageId, bulk add, soft delete)
 - [ ] 11.5 Create `HairStrandResolver` (query by sessionImageId, bulk add, soft delete)
 - [ ] 11.6 Create `ReportDataResolver`
+
+### Task 12: AI analysis services
+- [ ] 12.1 Create `GlobalAnalysisService` (store structured AI values per global image; no LLM text)
+- [ ] 12.2 Create `TrichoscopyAnalysisService` (bulk-insert AI `rootpoints` + `hairstrands` with `source: AI`)
+- [ ] 12.3 Consume `AIAnalysisCompleted` / `AIAnalysisFailed`; update per-image and session `aiAnalysisStatus`
+
+### Task 13: AI result editability (staff overrides)
+- [ ] 13.1 Allow editing AI results after COMPLETED (AI accuracy is not guaranteed)
+- [ ] 13.2 Points/strands: soft-delete (`status: DELETED`) + add new with `source: HUMAN` (preserve deleted for training)
+- [ ] 13.3 Global analysis: append to `overrides[]` (field, previousValue, newValue, reason, overriddenBy, overriddenAt)
+- [ ] 13.4 Record all edits in the AuditLog
+
+### Task 14: Report generation
+- [ ] 14.1 `ReportService` — manual "Generate Report" action (and regenerate); increments `reportVersion`
+- [ ] 14.2 Report Generation worker computes metrics (hair count, density, thickness, coverage) from raw `rootpoints`/`hairstrands` server-side and renders the PDF (Typst)
+- [ ] 14.3 Upload PDF to GCS via path convention `{org}/{clinic}/reports/{sessionId}/YYYY-MM-DD-v{N}.pdf`; update `reportdata.reportUrl`/`reportVersion`/`reportGeneratedAt`
+- [ ] 14.4 Frontend fetches and displays the backend-generated PDF (no client-side report rendering)
+
+### Task 15: Recommendations, Treatment Plan & Prescription
+- [ ] 15.1 Store session recommendation references (catalog items / kits) with per-line-item routines
+- [ ] 15.2 Treatment Plan / Prescription generation via the Catalog module (digital signature required) — see Module 7
+- [ ] 15.3 Recommendation content/matching is produced by the Recommendation Engine (CustomTreatmentData + org `treatmentRecommendationMode`) — see Module 2 / engine design

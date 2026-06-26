@@ -1,5 +1,7 @@
 # Module 7: Catalog — Frontend Tasks
 
+> **TBD (deferred).** The catalog backend currently exposes a simpler `products` model; the full CatalogItem + Treatment Kit + Routine + signature/document-generation frontend below is the **target** and is deferred until the catalog module rework is confirmed.
+
 > Implementation tasks for the Catalog module frontend (services, medications, cosmetics, supplements, treatment kits, routines, document generation).
 
 ---
