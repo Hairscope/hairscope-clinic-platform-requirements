@@ -14,6 +14,7 @@ packages/api/src/modules/sessions/
 │   ├── session-questionnaire.schema.ts
 │   ├── session-image.schema.ts
 │   ├── global-analysis-data.schema.ts
+│   ├── trichoscopy-analysis-data.schema.ts
 │   ├── root-point.schema.ts
 │   ├── hair-strand.schema.ts
 │   ├── report-data.schema.ts
@@ -24,6 +25,7 @@ packages/api/src/modules/sessions/
 │   ├── session-questionnaire.repository.ts
 │   ├── session-image.repository.ts
 │   ├── global-analysis-data.repository.ts
+│   ├── trichoscopy-analysis-data.repository.ts
 │   ├── root-point.repository.ts
 │   ├── hair-strand.repository.ts
 │   ├── report-data.repository.ts
@@ -42,6 +44,7 @@ packages/api/src/modules/sessions/
 │   ├── session.resolver.ts
 │   ├── session-image.resolver.ts
 │   ├── global-analysis-data.resolver.ts
+│   ├── trichoscopy-analysis-data.resolver.ts
 │   ├── root-point.resolver.ts
 │   ├── hair-strand.resolver.ts
 │   ├── report-data.resolver.ts
@@ -59,6 +62,7 @@ packages/api/src/modules/sessions/
 └── events/
     ├── session-event.handler.ts
     ├── ai-analysis-event.handler.ts
+    ├── analysis-job.producer.ts
     └── report-event.handler.ts
 ```
 
@@ -188,7 +192,34 @@ One document per global image. Stores the AI analysis result (hair loss scale, s
 
 ---
 
-## 2.5 Collection: `rootpoints`
+## 2.5 Collection: `trichoscopyanalysisdata`
+
+One document per trichoscopy image. Mirrors `globalanalysisdata`: stores structured AI outputs for a trichoscopy image — currently the hair-coverage percentage and the coverage mask image. Derived metrics (density, thickness, inter-follicular distance, terminal:vellus ratio) are **not** stored here; they are computed on read from `rootpoints`/`hairstrands`.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient (denormalized) |
+| `sessionImageId` | ObjectId | ✅ | ✅ (unique) | — | Reference to `sessionimages._id` (1:1) |
+| `aiModel` | String | — | — | — | AI model identifier (e.g. `tricho_coverage_v1`) |
+| `coveragePercent` | Number | — | — | — | Hair coverage % from the tricho-coverage model |
+| `coverageImagePath` | String | — | — | — | GCS path to the coverage mask image (signed on read) |
+| `overrides` | Array | — | — | — | Staff override audit trail (same shape as `globalanalysisdata`) |
+| `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `aiAnalysisCompletedAt` | Date | — | — | — | When coverage finished |
+| `failureReason` | String | — | — | — | Error if FAILED |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionImageId: 1 }` — **unique**
+- `{ sessionId: 1 }`
+
+> Coverage runs automatically during trichoscopy AI analysis and can be re-run via the `regenerateTrichoscopyImageCoverage` mutation. Regeneration deletes the previous `coverageImagePath` object from storage before writing the new mask, so masks are replaced (not accumulated).
+
+---
+
+## 2.6 Collection: `rootpoints`
 
 One document per detected/added follicle point. Stored from root detection AI model or added manually by staff. Soft-deleted points preserved for AI training.
 
@@ -211,7 +242,7 @@ One document per detected/added follicle point. Stored from root detection AI mo
 
 ---
 
-## 2.6 Collection: `hairstrands`
+## 2.7 Collection: `hairstrands`
 
 One document per detected/added hair strand. Stored from strand detection AI model or added manually by staff. Uses two points (p1, p2) to define the strand segment.
 
@@ -236,7 +267,7 @@ One document per detected/added hair strand. Stored from strand detection AI mod
 
 ---
 
-## 2.7 Collection: `reportdata`
+## 2.8 Collection: `reportdata`
 
 One document per session. Tracks report configuration and versioned PDF generation. Old PDFs accessible via GCS path convention: `{org}/{clinic}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf`
 
