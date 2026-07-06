@@ -4,6 +4,16 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.5.0 — 2026-07-06
+
+### Added
+- **New `trichoscopyanalysisdata` collection** (`18-collection-schemas.md`, `modules/04-sessions.md`) — one document per trichoscopy image, mirroring `globalanalysisdata`. Stores the hair-coverage percentage and the coverage mask image path from the tricho-coverage model. Derived metrics (density, thickness, IFD, ratios) remain computed on read from `rootpoints`/`hairstrands` and are not persisted. Coverage runs during trichoscopy AI analysis and on regeneration the previous mask object is deleted before the new one is written.
+
+### Changed
+- **`hairstrands`** (`18-collection-schemas.md`, `modules/04-sessions.md`) — documented the `thickness` field (strand thickness as a percentage of image width; falls back to `length/5` when absent).
+
+---
+
 ## v1.4.1 — 2026-06-25
 
 ### Changed

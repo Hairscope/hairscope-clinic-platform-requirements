@@ -257,6 +257,7 @@ One document per detected/added hair strand. Stored from strand detection AI mod
 | `p1y` | Number | ✅ | — | — | Root point Y (normalized 0-1) |
 | `p2x` | Number | ✅ | — | — | End point X (normalized 0-1) |
 | `p2y` | Number | ✅ | — | — | End point Y (normalized 0-1) |
+| `thickness` | Number | — | — | — | Strand thickness (% of image width); falls back to `length/5` when absent |
 | `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
 | `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
 | + BaseSchemaFields |

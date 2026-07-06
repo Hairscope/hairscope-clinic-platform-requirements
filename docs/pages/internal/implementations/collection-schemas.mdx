@@ -440,6 +440,33 @@ One document per global image. Structured AI results (no raw LLM text). Override
 
 ---
 
+### Collection: `trichoscopyanalysisdata` ✅
+
+One document per trichoscopy image. Mirror of `globalanalysisdata` for trichoscopy: stores structured AI outputs (hair-coverage % and the coverage mask image). Derived metrics (density, thickness, IFD, ratios) are **not** stored — they are computed on read from `rootpoints`/`hairstrands`.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `sessionId` | ObjectId | ✅ | ✅ | — | Parent session |
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `sessionImageId` | ObjectId | ✅ | ✅ (unique) | — | Reference to `sessionimages._id` |
+| `aiModel` | String | — | — | — | AI model identifier (e.g. `tricho_coverage_v1`) |
+| `coveragePercent` | Number | — | — | — | Hair coverage % from the tricho-coverage model |
+| `coverageImagePath` | String | — | — | — | GCS path to the coverage mask image (signed on read) |
+| `overrides[]` | Array | — | — | — | Staff override audit trail (same shape as `globalanalysisdata`) |
+| `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `aiAnalysisCompletedAt` | Date | — | — | — | When coverage finished |
+| `failureReason` | String | — | — | — | Error |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ sessionImageId: 1 }` — **unique**
+- `{ sessionId: 1 }`
+
+Coverage runs during trichoscopy AI analysis and can be re-run via `regenerateTrichoscopyImageCoverage`; regeneration deletes the previous `coverageImagePath` object before writing the new mask.
+
+---
+
 ### Collection: `rootpoints` ✅
 
 One document per detected/added follicle point. Soft-deleted points preserved for AI training. The `source` field (`AnnotationSource`: `AI` | `HUMAN`) records who created the annotation and appears on every annotation collection (`rootpoints`, `hairstrands`).
@@ -478,6 +505,7 @@ One document per detected/added hair strand. Two-point representation (root + en
 | `p1y` | Number | ✅ | — | — | Root Y (0-1) |
 | `p2x` | Number | ✅ | — | — | End X (0-1) |
 | `p2y` | Number | ✅ | — | — | End Y (0-1) |
+| `thickness` | Number | — | — | — | Strand thickness (% of image width); falls back to `length/5` when absent |
 | `source` | String (enum) | ✅ | — | — | `AI`, `HUMAN` |
 | `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
 | + BaseSchemaFields |
