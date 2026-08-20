@@ -4,6 +4,13 @@ All notable changes to the Hairscope Clinic Platform requirements are documented
 
 ---
 
+## v1.5.0 — 2026-07-24
+
+### Added
+- **ORG-12: First-Login Onboarding Wizard** (Deferred — specified for future implementation, not yet built). Defines a guided 5-step setup flow (Clinic Details, Working Hours, Clinic Settings, Invite Your Team, Terms & Conditions) shown once to the first OrganizationAdmin after self-registration (ORG-2) invite acceptance, collecting the remaining `ClinicProfile` (ORG-3) fields not captured at registration. Only Working Hours is mandatory to complete the wizard; every other step is skippable per-step or via a global "Skip setup." Tracked via `Organization.onboardingCompletedAt`; shown at most once per Organization and never to subsequently invited staff. Non-blocking — modules remain fully usable while onboarding is incomplete. Added glossary terms `OnboardingWizard`/`OnboardingStep`, error codes `ONBOARDING_WORKING_HOURS_REQUIRED`/`ONBOARDING_ALREADY_COMPLETED`, and the `OnboardingCompleted` event.
+
+---
+
 ## v1.4.0 — 2026-06-25
 
 ### Added

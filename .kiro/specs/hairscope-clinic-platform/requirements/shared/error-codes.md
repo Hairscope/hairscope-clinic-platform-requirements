@@ -82,6 +82,8 @@
 | `TRANSFER_RECORDS_UNRESOLVED` | Staff transfer blocked — assignedTo records in source Clinic must be reassigned first |
 | `CURRENCY_ENFORCEMENT_VIOLATION` | Clinic currency change rejected because the Organization enforces a single currency |
 | `VISIBILITY_MODE_ENFORCEMENT_VIOLATION` | Clinic visibility mode change rejected because the Organization enforces RESTRICTED mode |
+| `ONBOARDING_WORKING_HOURS_REQUIRED` | Onboarding cannot be completed — at least one non-closed working day is required (ORG-12) |
+| `ONBOARDING_ALREADY_COMPLETED` | Onboarding step submitted for an Organization that has already completed or skipped onboarding |
 
 ---
 

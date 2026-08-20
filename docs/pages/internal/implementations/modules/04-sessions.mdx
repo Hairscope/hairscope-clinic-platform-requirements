@@ -72,7 +72,7 @@ packages/api/src/modules/sessions/
 
 ## 2.1 Collection: `sessions`
 
-Tracks session lifecycle, metadata, doctor's observation note, and questionnaire results (rootCause, stressScore). Images, AI analysis, annotations, and reports live in their own collections.
+Tracks session lifecycle, metadata, clinical observation note, and questionnaire results (rootCause, stressScore). Images, AI analysis, annotations, and reports live in their own collections.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
@@ -81,7 +81,7 @@ Tracks session lifecycle, metadata, doctor's observation note, and questionnaire
 | `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SAVED`, `COMPLETED`, `DELETED` |
 | `assignedTo` | ObjectId | — | — | — | Staff member assigned |
 | `appointmentId` | ObjectId | — | — | — | Linked appointment (optional) |
-| `doctorsNote` | String | — | — | `''` | Doctor's observations |
+| `clinicalNote` | String | — | — | `''` | Staff clinical observations (role-neutral; not doctor-specific) |
 | `rootCause` | String | — | — | — | Determined root cause (from questionnaire) |
 | `stressScore` | Number | — | — | — | Computed stress score (from questionnaire) |
 | `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
@@ -279,6 +279,7 @@ One document per session. Tracks report configuration and versioned PDF generati
 | `reportUrl` | String | — | — | — | GCS path to latest PDF |
 | `reportVersion` | Number | — | — | `0` | Increments on every regeneration |
 | `reportGeneratedAt` | Date | — | — | — | When last PDF was generated |
+| `isOutdated` | Boolean | — | — | `false` | True when the generated PDF no longer reflects the latest data (e.g. a comparison was added to this session's report after generation). Cleared on the next `generateReport` run. |
 | + BaseSchemaFields |
 
 **Indexes:**
@@ -290,6 +291,40 @@ One document per session. Tracks report configuration and versioned PDF generati
 {organizationId}/{clinicId}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf
 ```
 Previous versions remain in GCS. Only the latest version number is stored in MongoDB. Frontend can construct URLs for any version by replacing `v{N}`.
+
+## 2.9 Collection: `sessioncomparisons`
+
+Created when a user clicks "Add to Report" on the compare-analysis page. Stores a point-in-time snapshot of the two images being compared (either 2 `TRICHOSCOPY` or 2 `GLOBAL` images — not mixed) and attaches to whichever of the two parent sessions is the newer one. Adding/updating a comparison flags that session's `reportdata.isOutdated = true`.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `attachedToSessionId` | ObjectId | ✅ | ✅ | — | The newer of the two sessions — this session's report renders the comparison |
+| `imageType` | String (enum) | ✅ | — | — | `GLOBAL`, `TRICHOSCOPY` — both sides must match |
+| `left` | Object | ✅ | — | — | Snapshot of the left image (see below) |
+| `right` | Object | ✅ | — | — | Snapshot of the right image (see below) |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**`left`/`right` snapshot shape:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sessionId` | ObjectId | Session this image belongs to |
+| `sessionImageId` | ObjectId | The compared image |
+| `sessionSequence` | Number | Session sequence number at snapshot time |
+| `sessionDate` | Date | Session `createdAt` at snapshot time |
+| `label` | String | Image label (`trichoscopyLabel` or `globalPosition`) |
+| `imageUrl` | String | GCS path to the image |
+| `metrics` | Mixed | Computed metrics snapshot — for `TRICHOSCOPY`: `totalHairs`, `terminalHairs`, `vellusHairs`, `terminalVellusRatio`, `avgHairWidth`, `density`, `avgIFD`, `hairPerFollicle`, `largeCount`, `mediumCount`, `smallCount`. For `GLOBAL`: `hairlossScale`, `hairlossStage`, `stageDescription`. |
+
+**Indexes:**
+- `{ attachedToSessionId: 1, status: 1 }`
+- `{ 'left.sessionImageId': 1, 'right.sessionImageId': 1 }` — used to find/update an existing comparison for the same unordered image pair instead of duplicating
+
+**Behavior notes:**
+- Re-adding the same pair of images updates the existing snapshot in place (no duplicates).
+- `sessionReportData.compare[]` (report JSON) is populated from this collection, filtered to comparisons where `attachedToSessionId` matches the session being reported on.
 
 ---
 
@@ -426,7 +461,7 @@ Shared formulas:
 - **Density** = hairCount / calibrated area (from `widthInMm` × `heightInMm`)
 - **Coverage** = from `globalanalysisdata.hairCoverage`
 
-> **AI result mutability:** All AI-produced data is editable by staff, because AI accuracy is not 100%. Trichoscopy points/strands are corrected via soft-delete (`status: DELETED`) plus new `source: HUMAN` additions; global analysis values are corrected via the `overrides[]` array on `globalanalysisdata`. Recomputed metrics (and any regenerated report) reflect the corrected data. This mirrors the editability already allowed for questionnaire answers, recommendations, and doctor's notes.
+> **AI result mutability:** All AI-produced data is editable by staff, because AI accuracy is not 100%. Trichoscopy points/strands are corrected via soft-delete (`status: DELETED`) plus new `source: HUMAN` additions; global analysis values are corrected via the `overrides[]` array on `globalanalysisdata`. Recomputed metrics (and any regenerated report) reflect the corrected data. This mirrors the editability already allowed for questionnaire answers, recommendations, and clinical notes.
 
 ---
 

@@ -19,6 +19,8 @@
 - **ReportHeader**: Clinic branding (logo, name, address) printed at the top of generated Reports. Customizable per Clinic.
 - **ReportTemplate**: The layout and structure of a generated report (Selfie Analysis Report or Trichoscopy/Hair Analysis Report). Set at Organization level and applies to all Clinics within the Organization.
 - **Dashboard**: Role-specific landing page showing business KPIs. Org-scoped for OrganizationAdmins; clinic-scoped for all other roles.
+- **OnboardingWizard**: A guided, multi-step setup flow shown to the registering user on their first login after accepting their invite (ORG-2). Collects the ClinicProfile fields not captured during self-registration. Distinct from Staff Invite Acceptance (IAM-1), which happens before the wizard and only sets the password.
+- **OnboardingStep**: One page of the OnboardingWizard, corresponding to a logical group of ClinicProfile/Organization fields (e.g., Clinic Details, Working Hours, Team Invites).
 
 ---
 
@@ -399,3 +401,54 @@
 - For any staff member S with the organization-wide access permission in an `ORGANIZATION_WIDE` organization: S SHALL be able to read non-clinical details of every Clinic in the organization.
 - For any staff member (regardless of permission): no cross-clinic query SHALL return Patient records, Sessions, medical documents, or invoices belonging to a Clinic the staff member does not belong to.
 - Cross-clinic visibility SHALL be determined by the effective permission set + org setting, never by the name of a role.
+
+---
+
+### ORG-12: First-Login Onboarding Wizard
+
+> **Status: Deferred.** This requirement is specified for future implementation. Self-registration (ORG-2) and invite acceptance (IAM-1) ship without it; the registering user lands directly on the Dashboard until this is built.
+
+**User Story:** As a newly self-registered clinic owner, I want to be guided through the remaining clinic setup steps right after I first log in, so that my clinic is fully configured without needing to hunt through Settings on my own.
+
+#### Rationale
+
+Self-registration (ORG-2) intentionally collects only the minimum fields needed to create the Organization, Clinic, and admin Staff account — `organizationName`, `clinicName`, `clinicAddress`, `timezone` (ORG-2 AC #5). Everything else in the full `ClinicProfile` (ORG-3 AC #1) — structured address, branding, working hours, language, currency, services, terms — is left unset. ORG-2 AC #7 explicitly allows the Admin to complete these "at any time after registration," but does not mandate when or how. The OnboardingWizard is the mechanism that prompts for it at the moment it is most useful: right after the user has a working session, before they've started using clinical modules.
+
+#### Onboarding Steps
+
+| Step | Fields Collected | Maps To | Skippable |
+|------|-------------------|---------|-----------|
+| 1. Clinic Details | `logo`, `phone`, `email`, `website`, structured `address` (street/city/state/postalCode) | ClinicProfile (ORG-3) | Yes |
+| 2. Working Hours | `workingHours` (per day: `startTime`, `endTime`, `closed`) | ClinicProfile (ORG-3) | No — see AC #4 |
+| 3. Clinic Settings | `language`, `currency`, `recordVisibilityMode` | ClinicProfile (ORG-3), ORG-9 | Yes (defaults: `EN`, unset currency, `OPEN`) |
+| 4. Invite Your Team | Zero or more staff invites (reuses IAM-1 invite flow) | Staff | Yes |
+| 5. Terms & Conditions | `termsType`, `termsContent` or `termsUrl` | ClinicProfile (ORG-3) | Yes (default: `NONE`) |
+
+#### Acceptance Criteria
+
+1. WHEN a Staff member completes invite acceptance (IAM-1) for a Staff record created via self-registration (ORG-2) AND the Organization has not completed onboarding, THE Platform SHALL redirect the user to the OnboardingWizard instead of the Dashboard on first login.
+2. THE Platform SHALL track onboarding completion at the Organization level (not per-Staff) via an `onboardingCompletedAt` timestamp (`null` until completed).
+3. THE Platform SHALL allow the user to navigate between onboarding steps freely (back/forward) and SHALL persist entered data after each step, so the wizard can be resumed later without data loss if the user closes the browser mid-flow.
+4. Step 2 (Working Hours) SHALL be the only mandatory step — THE Platform SHALL require at least one day configured as not-closed before the wizard can be marked complete. All other steps MAY be skipped.
+5. THE Platform SHALL provide a "Skip for now" action on skippable steps and a "Skip setup" action available from any step that exits the wizard entirely, applying only the fields entered so far and leaving the rest at their ORG-3 schema defaults.
+6. WHEN the wizard is completed or skipped, THE Platform SHALL set `onboardingCompletedAt` to the current time and redirect to the Dashboard. THE Platform SHALL NOT show the OnboardingWizard again for that Organization, even if some fields remain at their defaults.
+7. THE Platform SHALL allow an OrganizationAdmin or ClinicAdmin to complete any field the wizard collected via the standard Settings pages (ORG-3) at any time after onboarding, whether the wizard was completed or skipped.
+8. IF a second Staff member is invited (via ORG-2's own invite, or a subsequent staff invite) and logs in before the OrganizationAdmin has completed or skipped onboarding, THE Platform SHALL send that Staff member directly to the Dashboard, not the OnboardingWizard. Only the original self-registering user (first OrganizationAdmin) sees the wizard.
+9. THE Platform SHALL NOT block access to any module (Patients, Appointments, Billing, etc.) while onboarding is incomplete or skipped. The wizard is a guided prompt, not a hard gate, except for AC #4.
+10. WHEN the "Invite Your Team" step (Step 4) is used to send one or more invites, THE Platform SHALL apply the same validation and email flow as the standard staff invite (IAM-1) — duplicate email, invalid email, etc. all use existing IAM-1 error codes.
+11. WHEN onboarding is completed or skipped, THE Platform SHALL record the action in the AuditLog, including which steps were completed vs. skipped.
+
+#### Failure Cases
+
+| Condition | Error Code |
+|-----------|------------|
+| Attempting to mark onboarding complete with all days `closed` in Working Hours | `ONBOARDING_WORKING_HOURS_REQUIRED` |
+| Non-OrganizationAdmin/non-ClinicAdmin Staff member reaching the wizard directly (e.g., via deep link) | `FORBIDDEN` |
+| Submitting an onboarding step for an Organization that already completed onboarding | `ONBOARDING_ALREADY_COMPLETED` |
+
+#### Correctness Properties
+
+- For any Organization O, the OnboardingWizard SHALL be shown at most once across O's lifetime — after `onboardingCompletedAt` is set (by completion or skip), it SHALL NOT be shown again regardless of how many fields remain unset.
+- For any Organization O with `onboardingCompletedAt = null`, every ClinicProfile field not yet entered SHALL retain its ORG-3 schema default — partial completion SHALL NOT leave fields in an invalid intermediate state.
+- Skipping the wizard (fully or per-step) SHALL never delete or override data entered in an earlier step of the same session.
+- Only the first OrganizationAdmin created by self-registration (ORG-2) SHALL ever be routed to the OnboardingWizard; all subsequently invited Staff SHALL go directly to the Dashboard.
