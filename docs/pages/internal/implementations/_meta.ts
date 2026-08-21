@@ -20,5 +20,7 @@ export default {
   deployment: 'Deployment',
   versioning: 'Versioning',
   'environment-config': 'Environment Config',
+  'recommendations-treatment-plan-checklist': 'Recommendations & Treatment Plan Checklist',
+  'recommendation-treatment-plan-reference': 'Recommendation and Treatment Plan Reference',
   modules: 'Module Implementations'
 }

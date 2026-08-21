@@ -27,6 +27,15 @@
 
 ---
 
+## Cross-cutting Implementation Checklists
+
+| # | Document | Covers |
+|---|----------|--------|
+| 20 | [Recommendations & Treatment Plan Checklist](./20-recommendations-treatment-plan-checklist.md) | Recommendation Engine, treatment documents, signatures, PDFs, frontend flow, and release gates |
+| 21 | [Recommendation and Treatment Plan Reference](./21-recommendation-treatment-plan-reference.md) | Current CatalogItem, ProtocolTemplate, TreatmentPlan, routine, document, and future engine behavior |
+
+---
+
 ## Module Implementations
 
 | # | Module | Covers |
