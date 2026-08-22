@@ -199,10 +199,7 @@ Snapshots ensure that changing, deactivating, renaming, or deleting a CatalogIte
 - `sortOrder` controls the order in the editor and generated documents.
 - `status` uses soft removal so history and audit records are preserved.
 
-There are two instruction concepts:
-
-1. **Routine instructions** are embedded inside the structured routine and describe how to follow the schedule.
-2. **Recommendation instructions** are the top-level `TreatmentRecommendation.instructions` field. If staff do not provide them, the selected protocol's instructions are copied as the default.
+The structured routine is the only routine-level representation. Patient-facing instructions remain in the top-level `TreatmentRecommendation.instructions` field and are not duplicated inside the routine.
 
 ## 6. Structured TreatmentRoutine
 
@@ -211,21 +208,33 @@ Routine data is stored by the API as structured JSON, but staff use the structur
 The backend supports five discriminated routine types:
 
 ```typescript
-INTERVAL | TIMES_PER_DAY | SPECIFIC_DAYS | SESSION_PLAN | AS_NEEDED
+INTERVAL | DAILY | SPECIFIC_DAYS | SESSION_PLAN | AS_NEEDED
 ```
 
 All variants may use these common optional fields:
 
 ```text
 duration: { value, unit }
-instructions
+routeOrArea
 ```
 
-Valid duration/frequency units are:
+Valid duration and frequency units are:
 
 ```text
-DAY | WEEK | MONTH | YEAR
+HOURS | DAY | WEEK | MONTH | YEAR
 ```
+
+A schedule slot separates time-of-day from the relationship to food:
+
+```typescript
+interface ScheduleSlot {
+  timeOfDay: 'MORNING' | 'MIDDAY' | 'AFTERNOON' | 'EVENING' | 'NIGHT' | 'ANY_TIME'
+  mealRelation: 'BEFORE' | 'WITH' | 'AFTER' | 'NONE'
+  dosage: string
+}
+```
+
+The meal relationship is deliberately unqualified: `BEFORE` means before a meal, `WITH` means with a meal, `AFTER` means after a meal, and `NONE` means the meal relationship does not matter.
 
 ### `INTERVAL`
 
@@ -234,43 +243,44 @@ Used when something happens at a repeating interval.
 ```json
 {
   "type": "INTERVAL",
-  "interval": 2,
-  "unit": "WEEK",
-  "duration": { "value": 6, "unit": "MONTH" },
-  "instructions": "Use consistently during the treatment period."
+  "interval": 8,
+  "unit": "HOURS",
+  "dosage": "1 tablet",
+  "duration": { "value": 3, "unit": "DAY" }
 }
 ```
 
 The fields are:
 
 - `interval`: positive integer between uses.
-- `unit`: day, week, month, or year.
+- `unit`: hours, days, weeks, months, or years.
+- `dosage`: required dosage or application instruction.
 - `duration`: optional total treatment duration.
-- `instructions`: optional routine instructions.
+- `routeOrArea`: optional application route or body area.
 
-### `TIMES_PER_DAY`
+### `DAILY`
 
-Used for medication, supplement, or topical daily schedules.
+Used for medication, supplement, or topical daily schedules. Each slot may carry a different dosage.
 
 ```json
 {
-  "type": "TIMES_PER_DAY",
+  "type": "DAILY",
   "timesPerDay": 2,
-  "timings": ["MORNING_ANYTIME", "EVENING_ANYTIME"],
-  "quantity": "1 tablet",
-  "duration": { "value": 3, "unit": "MONTH" }
+  "slots": [
+    { "timeOfDay": "MORNING", "mealRelation": "NONE", "dosage": "2 tablets" },
+    { "timeOfDay": "NIGHT", "mealRelation": "NONE", "dosage": "1 tablet" }
+  ],
+  "duration": { "value": 3, "unit": "MONTH" },
+  "routeOrArea": "Oral"
 }
 ```
 
 The fields are:
 
-- `timesPerDay`: positive integer, maximum 24.
-- `timings`: one or more time-of-day values.
-- `quantity`: optional dosage or quantity text.
+- `slots`: one or more structured schedule slots with required dosage.
+- `timesPerDay`: required number of daily uses from 1 to 24; the number of schedule slots must exactly match this value.
 - `duration`: optional total treatment duration.
-- `instructions`: optional routine instructions.
-
-The frontend presents timing checkboxes such as morning, before breakfast, after lunch, evening, after dinner, and bedtime.
+- `routeOrArea`: optional route or application area.
 
 ### `SPECIFIC_DAYS`
 
@@ -279,20 +289,25 @@ Used when treatment is performed on selected weekdays.
 ```json
 {
   "type": "SPECIFIC_DAYS",
+  "timesPerDay": 1,
   "days": ["MONDAY", "WEDNESDAY", "FRIDAY"],
-  "frequency": { "interval": 1, "unit": "WEEK" },
-  "duration": { "value": 3, "unit": "MONTH" }
+  "repeatCycle": { "interval": 1, "unit": "WEEK" },
+  "slots": [
+    { "timeOfDay": "EVENING", "mealRelation": "NONE", "dosage": "Apply thinly" }
+  ],
+  "duration": { "value": 3, "unit": "MONTH" },
+  "routeOrArea": "Face & Neck"
 }
 ```
 
 The fields are:
 
+- `timesPerDay`: required number of daily uses from 1 to 24; the number of schedule slots must exactly match this value.
 - `days`: one or more weekdays.
-- `frequency`: optional repeating cycle.
+- `repeatCycle`: optional repeating cycle.
+- `slots`: exactly `timesPerDay` structured daily-use entries.
 - `duration`: optional total treatment duration.
-- `instructions`: optional routine instructions.
-
-The frontend presents weekday checkboxes and an optional repeat-frequency control.
+- `routeOrArea`: optional route or application area.
 
 ### `SESSION_PLAN`
 
@@ -303,17 +318,18 @@ Used for scheduled clinical sessions.
   "type": "SESSION_PLAN",
   "frequency": { "interval": 1, "unit": "MONTH" },
   "totalSessions": 6,
-  "duration": { "value": 6, "unit": "MONTH" }
+  "duration": { "value": 6, "unit": "MONTH" },
+  "routeOrArea": "Scalp"
 }
 ```
 
 The fields are:
 
 - `frequency.interval`: number between sessions.
-- `frequency.unit`: day, week, month, or year.
+- `frequency.unit`: hours, days, weeks, months, or years.
 - `totalSessions`: positive number of sessions.
 - `duration`: optional overall duration.
-- `instructions`: optional routine instructions.
+- `routeOrArea`: optional treatment area.
 
 This is commonly used for services such as PRP. A Medication cannot use this routine type.
 
@@ -324,28 +340,36 @@ Used when a treatment does not follow a fixed schedule.
 ```json
 {
   "type": "AS_NEEDED",
-  "reason": "Use when scalp irritation occurs."
+  "reason": "Use when scalp irritation occurs.",
+  "dosage": "Apply a thin layer",
+  "maxPerDay": 3,
+  "minimumWaitHours": 4,
+  "routeOrArea": "Irritated scalp area"
 }
 ```
 
 The fields are:
 
-- `reason`: optional explanation for as-needed use.
+- `reason`: required explanation for as-needed use.
+- `dosage`: required dosage or application instruction.
+- `maxPerDay`: optional maximum number of uses in one day.
+- `minimumWaitHours`: optional minimum interval between uses.
 - `duration`: optional duration.
-- `instructions`: optional routine instructions.
+- `routeOrArea`: optional route or application area.
 
 ### Routine validation
 
 The frontend and backend validate the routine before it is saved. Validation includes:
 
+- Canonical discriminated routine types only.
 - Required variant-specific fields.
 - Positive numeric values.
-- Valid day, timing, duration, and frequency values.
-- At least one timing for `TIMES_PER_DAY`.
-- At least one day for `SPECIFIC_DAYS`.
-- Required frequency and total sessions for `SESSION_PLAN`.
-- Maximum `timesPerDay` of 24.
-- Maximum routine instruction length of 5,000 characters.
+- Valid time-of-day, meal, duration, and frequency values.
+- Required dosage on interval, daily, specific-day, and as-needed schedules.
+- Valid meal relationships for every schedule slot.
+- At least one schedule slot for `DAILY` and `SPECIFIC_DAYS`.
+- Required reason and dosage for `AS_NEEDED`.
+- Required `timesPerDay` between 1 and 24 for `DAILY`, with exactly that many schedule slots.
 - Catalog-specific restrictions.
 
 The API stores the routine as structured data. GraphQL exposes it as `routineJson`, and the frontend serializes/deserializes it at the API boundary.
@@ -366,7 +390,7 @@ This is the manual creation area. Staff use:
 6. **Instructions** — records patient-specific recommendation instructions.
 7. **Add** — creates the TreatmentRecommendation.
 
-When the CatalogItem changes, the current protocol, routine, and instructions are cleared so values from one item cannot be accidentally reused.
+When the CatalogItem changes, the current protocol, routine, and instructions are cleared so values from one item cannot be accidentally reused for another.
 
 ### Treatment Plan tab
 

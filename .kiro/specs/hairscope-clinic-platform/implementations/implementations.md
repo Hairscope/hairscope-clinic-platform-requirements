@@ -33,6 +33,11 @@
 |---|----------|--------|
 | 20 | [Recommendations & Treatment Plan Checklist](./20-recommendations-treatment-plan-checklist.md) | Recommendation Engine, treatment documents, signatures, PDFs, frontend flow, and release gates |
 | 21 | [Recommendation and Treatment Plan Reference](./21-recommendation-treatment-plan-reference.md) | Current CatalogItem, ProtocolTemplate, TreatmentPlan, routine, document, and future engine behavior |
+| 22 | [Routine Type: Every Interval](./22-routine-type-every-interval.md) | When and how to use the Every Interval routine type |
+| 23 | [Routine Type: Daily Schedule](./23-routine-type-daily-schedule.md) | When and how to use the Daily Schedule routine type |
+| 24 | [Routine Type: Specific Days](./routine-type-specific-days.md) | When and how to use the Specific days routine type |
+| 25 | [Routine Type: Session Plan](./routine-type-session-plan.md) | When and how to use the Session Plan routine type |
+| 26 | [Routine Type: As Needed](./routine-type-as-needed.md) | When and how to use the As Needed routine type |
 
 ---
 

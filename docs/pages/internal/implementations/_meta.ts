@@ -22,5 +22,10 @@ export default {
   'environment-config': 'Environment Config',
   'recommendations-treatment-plan-checklist': 'Recommendations & Treatment Plan Checklist',
   'recommendation-treatment-plan-reference': 'Recommendation and Treatment Plan Reference',
+  'routine-type-every-interval': 'Routine Type: Every Interval',
+  'routine-type-daily-schedule': 'Routine Type: Daily Schedule',
+  'routine-type-specific-days': 'Routine Type: Specific Days',
+  'routine-type-session-plan': 'Routine Type: Session Plan',
+  'routine-type-as-needed': 'Routine Type: As Needed',
   modules: 'Module Implementations'
 }
