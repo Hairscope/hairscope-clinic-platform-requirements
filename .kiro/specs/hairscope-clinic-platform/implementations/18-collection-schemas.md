@@ -518,22 +518,23 @@ One document per detected/added hair strand. Two-point representation (root + en
 
 ### Collection: `reportdata` ✅
 
-One document per session. Tracks report version and latest PDF URL. Old versions accessible via GCS path convention.
+One document per session and report language. Each language has its own latest PDF URL, version sequence, and outdated state. Older PDF versions remain accessible in GCS.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
-| `sessionId` | ObjectId | ✅ | ✅ (unique) | — | Parent session (1:1) |
+| `sessionId` | ObjectId | ✅ | ✅ (compound unique) | — | Parent session |
 | `patientId` | ObjectId | ✅ | ✅ | — | Patient |
-| `reportUrl` | String | — | — | — | GCS path to latest PDF |
-| `reportVersion` | Number | — | — | `0` | Increments on regeneration |
-| `reportGeneratedAt` | Date | — | — | — | When last generated |
-| `isOutdated` | Boolean | — | — | `false` | True when the PDF no longer reflects the latest data (e.g. a comparison was added after generation); cleared on next `generateReport` |
+| `reportLanguage` | String | ✅ | ✅ (compound unique) | `en` | Report language code, e.g. `en`, `es` |
+| `reportUrl` | String | — | — | — | GCS path to latest PDF for this language |
+| `reportVersion` | Number | — | — | `0` | Increments independently per language |
+| `reportGeneratedAt` | Date | — | — | — | When this language variant was generated |
+| `isOutdated` | Boolean | — | — | `false` | True when the PDF no longer reflects current session data |
 | + BaseSchemaFields |
 
 **Indexes:**
-- `{ sessionId: 1 }` — **unique**
+- `{ sessionId: 1, reportLanguage: 1 }` — **unique**
 
-**PDF Path Convention:** `{orgId}/{clinicId}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf`
+**PDF Path Convention:** `{organizationId}/{clinicId}/reports/{sessionId}/{reportLanguage}/YYYY-MM-DD-v{version}.pdf`
 
 ---
 

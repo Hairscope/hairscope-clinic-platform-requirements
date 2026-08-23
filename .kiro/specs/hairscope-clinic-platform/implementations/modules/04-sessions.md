@@ -270,27 +270,28 @@ One document per detected/added hair strand. Stored from strand detection AI mod
 
 ## 2.8 Collection: `reportdata`
 
-One document per session. Tracks report configuration and versioned PDF generation. Old PDFs accessible via GCS path convention: `{org}/{clinic}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf`
+One document per session and report language. Each language has its own versioned PDF and outdated state. Older PDFs remain accessible in GCS.
 
 | Field | Type | Required | Indexed | Default | Description |
 |-------|------|----------|---------|---------|-------------|
-| `sessionId` | ObjectId | ✅ | ✅ (unique) | — | Parent session (1:1) |
+| `sessionId` | ObjectId | ✅ | ✅ (compound unique) | — | Parent session |
 | `patientId` | ObjectId | ✅ | ✅ | — | Patient |
-| `reportUrl` | String | — | — | — | GCS path to latest PDF |
-| `reportVersion` | Number | — | — | `0` | Increments on every regeneration |
-| `reportGeneratedAt` | Date | — | — | — | When last PDF was generated |
-| `isOutdated` | Boolean | — | — | `false` | True when the generated PDF no longer reflects the latest data (e.g. a comparison was added to this session's report after generation). Cleared on the next `generateReport` run. |
+| `reportLanguage` | String | ✅ | ✅ (compound unique) | `en` | Report language code |
+| `reportUrl` | String | — | — | — | GCS path to latest PDF for this language |
+| `reportVersion` | Number | — | — | `0` | Increments independently per language |
+| `reportGeneratedAt` | Date | — | — | — | When this language variant was generated |
+| `isOutdated` | Boolean | — | — | `false` | True when the PDF no longer reflects latest session data |
 | + BaseSchemaFields |
 
 **Indexes:**
-- `{ sessionId: 1 }` — **unique**
-- `{ patientId: 1 }`
+- `{ sessionId: 1, reportLanguage: 1 }` — **unique**
 
 **PDF Path Convention:**
 ```
-{organizationId}/{clinicId}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf
+{organizationId}/{clinicId}/reports/{sessionId}/{reportLanguage}/YYYY-MM-DD-v{version}.pdf
 ```
-Previous versions remain in GCS. Only the latest version number is stored in MongoDB. Frontend can construct URLs for any version by replacing `v{N}`.
+
+The `reportVersion` counter is independent for each language. For example, English and Spanish can both have `v1`. When session data changes, all language variants are marked outdated; generating one language clears only that language's outdated flag.
 
 ## 2.9 Collection: `sessioncomparisons`
 
@@ -438,11 +439,11 @@ SessionSaved event
 
 # 6. Report Generation
 
-- User clicks "Regenerate Report" button
-- Backend increments `reportVersion`, generates PDF via Typst
-- Uploads to GCS at: `{org}/{clinic}/reports/{sessionId}/YYYY-MM-DD-v{N}.pdf`
-- Updates `reportdata.reportUrl` and `reportdata.reportGeneratedAt`
-- Previous versions remain accessible in GCS (no DB history array needed)
+- User clicks "Generate Report" or "Regenerate Report" for the active UI language
+- Backend increments that language's `reportVersion`, generates the PDF via Typst
+- Uploads to GCS at: `{organizationId}/{clinicId}/reports/{sessionId}/{reportLanguage}/YYYY-MM-DD-v{version}.pdf`
+- Upserts the `reportdata` document identified by `(sessionId, reportLanguage)`
+- Previous versions and other language variants remain accessible
 
 ---
 
