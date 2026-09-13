@@ -4,6 +4,16 @@ All notable changes to the Hairscope Clinic Platform design documents are docume
 
 ---
 
+## v1.3.0 — 2026-09-13
+
+### Added
+- **Deployment Architecture** (`14-deployment-architecture.md`) — new §4.4 External Access: an environment SHALL be reachable through its own hostname(s), and where an application exposes more than one externally addressable surface, each surface gets a distinct hostname per environment with routing between surfaces enforced by the application rather than assumed from network topology; TLS terminates at the edge. New §4.5 Configuration and Secrets: configuration keys live in source control, values never do; secret values exist only in a developer's local uncommitted environment or the deployment platform's secret storage.
+
+### Changed
+- **Deployment Architecture** (`14-deployment-architecture.md`) §4.1 Environment Types — now names the three environments actually in use (`dev`/`staging`/`main`→production) instead of a four-environment list that included a `testing` environment never adopted. §4.3 Isolation — clarified that non-production environments may share underlying compute as long as each keeps separate processes, ports, and data stores, while production runs on infrastructure isolated from non-production.
+
+---
+
 ## v1.2.0 — 2026-06-25
 
 ### Added

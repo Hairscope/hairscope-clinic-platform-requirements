@@ -164,12 +164,16 @@ and asynchronous workflows.
 
 ## 4.1 Environment Types
 
-The system SHALL support multiple environments, including:
+The system SHALL support three environments:
 
-- development  
-- testing  
-- staging  
-- production  
+- development (`dev`)
+- staging (`staging`)
+- production (`main`)
+
+Each environment corresponds to a deployment branch of the same name
+(`main` for production). Concrete branch-to-environment mapping, hosting,
+and promotion mechanics are implementation concerns — see
+**15-deployment.md**.
 
 ---
 
@@ -192,6 +196,47 @@ Each environment SHALL have isolated:
 - storage  
 - event processing  
 - observability  
+
+Isolation is logical, not necessarily physical. Non-production environments
+MAY share underlying compute infrastructure provided each environment keeps
+separate processes, network ports, and data stores, so that one environment
+cannot read or affect another's state.
+
+Production SHALL run on infrastructure isolated from non-production
+environments.
+
+## 4.4 External Access
+
+Each environment SHALL be reachable through its own set of hostnames.
+
+Where an application is split into multiple externally addressable surfaces
+(for example, a public surface and an administrative surface), each surface
+SHALL have a distinct hostname per environment, and routing between surfaces
+SHALL be enforced by the application, not assumed from network topology
+alone.
+
+TLS termination SHALL occur at the edge of the deployment, ahead of the
+application runtime.
+
+---
+
+## 4.5 Configuration and Secrets
+
+Runtime configuration SHALL be externalized from application code.
+
+Configuration keys SHALL be declared in source control; configuration
+values SHALL NOT be.
+
+Secret values SHALL exist only in:
+
+- the developer's local, uncommitted environment  
+- the deployment platform's secret storage  
+
+Secret values SHALL NEVER be committed to source control, regardless of
+environment.
+
+Concrete file conventions and variable inventories are implementation
+concerns — see **16-environment-config.md**.
 
 ---
 
