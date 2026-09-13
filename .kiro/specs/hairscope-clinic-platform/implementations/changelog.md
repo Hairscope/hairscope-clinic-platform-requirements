@@ -4,6 +4,16 @@ All notable changes to the Hairscope Clinic Platform implementation documents ar
 
 ---
 
+## v1.6.0 — 2026-09-13
+
+### Changed
+- **Deployment** (`15-deployment.md`) — rewritten to match the deployment model actually in use: three deployment branches (`dev`/`staging`/`main`) each mapping 1:1 to an environment; `dev` and `staging` share one non-production VM while `main` always deploys to a dedicated production VM, each repository owning its own directory on either VM so deploys never clobber each other. Documented the two-file environment-file convention (`.env.example` + `.env.local`, nothing else committed), GitHub Environments/variables/secrets as the actual source of deployed configuration, MongoDB as a managed service with Redis and PostgreSQL running in VM containers, committed nginx configuration per environment (no secret values) including the case of an application exposing more than one externally addressable surface from a single deployment, the DNS → nginx → certbot → third-party-webhook ordering, and rollback by re-pointing a compose file at a previously tagged image. Replaced the single illustrative `deploy.yml`/`ci.yml` with the generic shape every repository follows.
+
+### Added
+- **Environment Configuration** (`16-environment-config.md`) — documented the `.env.example`-as-inventory convention (every key the app reads lives there; no other `.env.*` file is part of the pipeline), hostnames/ports as ordinary `.env.example` keys resolved through GitHub repository variables per environment, and the variables-vs-secrets split within a GitHub Environment.
+
+---
+
 ## v1.5.0 — 2026-07-06
 
 ### Added

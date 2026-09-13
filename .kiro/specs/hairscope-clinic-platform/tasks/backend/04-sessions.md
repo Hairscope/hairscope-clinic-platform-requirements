@@ -80,7 +80,7 @@
 ### Task 14: Report generation
 - 14.1 `ReportService` — manual "Generate Report" action (and regenerate); increments `reportVersion`
 - 14.2 Report Generation worker computes metrics (hair count, density, thickness, coverage) from raw `rootpoints`/`hairstrands` server-side and renders the PDF (Typst)
-- 14.3 Upload PDF to GCS via path convention `{org}/{clinic}/reports/{sessionId}/YYYY-MM-DD-v{N}.pdf`; update `reportdata.reportUrl`/`reportVersion`/`reportGeneratedAt`
+- 14.3 Upload PDF to GCS via path convention `{org}/{clinic}/reports/{sessionId}/{reportLanguage}/YYYY-MM-DD-v{N}.pdf`; upsert the language-specific `reportdata` record by `(sessionId, reportLanguage)`
 - 14.4 Frontend fetches and displays the backend-generated PDF (no client-side report rendering)
 
 ### Task 15: Recommendations, Treatment Plan & Prescription

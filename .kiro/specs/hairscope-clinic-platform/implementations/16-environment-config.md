@@ -1,22 +1,52 @@
 # Environment Configuration
 
-> Covers: Environment variables, NestJS ConfigModule setup, validation, per-environment overrides, and secrets handling.
+> Covers: environment variable files, the ConfigModule setup, validation,
+> hostnames and ports, and secrets handling.
+
+This document describes the environment-configuration convention shared by
+every deployed Hairscope repository. See **15-deployment.md** for how these
+values reach a running deployment.
 
 ---
 
-# 1. ConfigModule Setup
+# 1. File Convention
 
-## 1.1 Root Configuration
+A repository SHALL commit exactly two environment files:
+
+| File | Committed | Purpose |
+|------|-----------|---------|
+| `.env.example` | Yes | Every variable and secret key the application can read, with no real values. This is the canonical inventory of configuration. |
+| `.env.local` | Yes, as a template with placeholder values | The subset of variables needed to run the application on a developer's machine. Each developer overwrites the placeholders locally; the file itself is never rewritten with real secrets and committed back. |
+
+No other `.env.*` file is required by, or read by, the deployment pipeline.
+A developer MAY keep additional files such as `.env.dev`, `.env.staging`,
+or `.env.prod` purely as their own private, gitignored record of the real
+values already configured in GitHub for each environment — convenient for
+remembering what a VM is running, but not part of the deployment mechanism.
+Deployed environments get their configuration from GitHub Environments
+(Section 5), not from any file in the repository.
+
+`.gitignore` SHALL exclude every `.env*` file except `.env.example`.
+
+Adding a new configuration value to the application SHALL come with an
+addition to `.env.example` in the same change, so the file never drifts
+out of date with what the code actually reads.
+
+---
+
+# 2. ConfigModule Setup
+
+## 2.1 Root Configuration
 
 ```typescript
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+      envFilePath: '.env.local',
       validationSchema: envValidationSchema,
       validationOptions: {
         abortEarly: true,
@@ -28,179 +58,74 @@ import * as Joi from 'joi';
 export class AppModule {}
 ```
 
-## 1.2 Validation Schema
+In a deployed environment, the process's real environment variables are
+already set by the deployment platform (Section 5) before the application
+starts, so `.env.local` is absent and `envFilePath` simply has nothing to
+load — `ConfigModule` falls through to `process.env` either way.
+
+## 2.2 Validation Schema
+
+The validation schema SHALL mirror `.env.example` — every key declared
+there SHALL have a corresponding validator here, `.required()` unless the
+application has a safe default.
 
 ```typescript
 const envValidationSchema = Joi.object({
-  // Runtime
   NODE_ENV: Joi.string().valid('development', 'staging', 'production').default('development'),
   PORT: Joi.number().default(3000),
 
-  // Database
   MONGODB_URI: Joi.string().required(),
-
-  // Redis
   REDIS_URL: Joi.string().required(),
 
-  // Authentication
   JWT_PRIVATE_KEY: Joi.string().required(),
   JWT_PUBLIC_KEY: Joi.string().required(),
   JWT_ACCESS_EXPIRY: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRY: Joi.string().default('30d'),
 
-  // GCP
-  GCP_PROJECT_ID: Joi.string().required(),
-  GCS_BUCKET: Joi.string().required(),
-  GCS_KEY_FILE: Joi.string().required(),
-
-  // Email
-  SMTP_HOST: Joi.string().default('mail.smtp2go.com'),
-  SMTP_PORT: Joi.number().default(2525),
-  SMTP_USER: Joi.string().required(),
-  SMTP_PASS: Joi.string().required(),
-  EMAIL_FROM_NAME: Joi.string().default('Hairscope'),
-  EMAIL_FROM_ADDRESS: Joi.string().default('noreply@hairscope.ai'),
-
-  // Firebase
-  FIREBASE_PROJECT_ID: Joi.string().required(),
-  FIREBASE_CLIENT_EMAIL: Joi.string().required(),
-  FIREBASE_PRIVATE_KEY: Joi.string().required(),
-
-  // Typst
-  TYPST_TEMPLATE_DIR: Joi.string().default('typst/templates'),
-
-  // AI
-  AI_API_URL: Joi.string().optional(),
-  AI_API_KEY: Joi.string().optional(),
-
-  // App
   APP_URL: Joi.string().required(),
   CORS_ORIGINS: Joi.string().default('http://localhost:3000'),
 });
 ```
 
----
-
-# 2. Environment Variables
-
-## 2.1 Core
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `NODE_ENV` | Runtime environment | `development` | No |
-| `PORT` | API server port | `3000` | No |
-| `APP_URL` | Public application URL | — | Yes |
-| `CORS_ORIGINS` | Comma-separated allowed origins | `http://localhost:3000` | No |
-
-## 2.2 Database
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `MONGODB_URI` | MongoDB connection string | — | Yes |
-
-## 2.3 Redis
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `REDIS_URL` | Redis connection URL | — | Yes |
-
-## 2.4 Authentication
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `JWT_PRIVATE_KEY` | RS256 private key (PEM) | — | Yes |
-| `JWT_PUBLIC_KEY` | RS256 public key (PEM) | — | Yes |
-| `JWT_ACCESS_EXPIRY` | Access token lifetime | `15m` | No |
-| `JWT_REFRESH_EXPIRY` | Refresh token lifetime | `30d` | No |
-
-## 2.5 Google Cloud
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `GCP_PROJECT_ID` | GCP project identifier | — | Yes |
-| `GCS_BUCKET` | GCS bucket name | — | Yes |
-| `GCS_KEY_FILE` | Path to service account key | — | Yes |
-
-## 2.6 Email (SMTP2Go)
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `SMTP_HOST` | SMTP server host | `mail.smtp2go.com` | No |
-| `SMTP_PORT` | SMTP server port | `2525` | No |
-| `SMTP_USER` | SMTP username | — | Yes |
-| `SMTP_PASS` | SMTP password/API key | — | Yes |
-| `EMAIL_FROM_NAME` | Sender display name | `Hairscope` | No |
-| `EMAIL_FROM_ADDRESS` | Sender email address | `noreply@hairscope.ai` | No |
-
-## 2.7 Firebase (Push Notifications)
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `FIREBASE_PROJECT_ID` | Firebase project ID | — | Yes |
-| `FIREBASE_CLIENT_EMAIL` | Service account email | — | Yes |
-| `FIREBASE_PRIVATE_KEY` | Service account private key | — | Yes |
-
-## 2.8 Typst (PDF Generation)
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `TYPST_TEMPLATE_DIR` | Path to Typst templates | `typst/templates` | No |
-
-## 2.9 AI Integration
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `AI_API_URL` | External AI service URL | — | No |
-| `AI_API_KEY` | AI service API key | — | No |
-
-## 2.10 Worker Ports
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `WORKER_REMINDER_PORT` | Reminder worker health port | `3001` | No |
-| `WORKER_NOTIFICATION_PORT` | Notification worker health port | `3002` | No |
-| `WORKER_REPORT_PORT` | Report worker health port | `3004` | No |
-
----
-
-# 3. Per-Environment Files
-
-## 3.1 File Hierarchy
+If a required environment variable is missing at startup, the application
+SHALL fail fast with a clear error message and SHALL NOT start with invalid
+configuration:
 
 ```text
-.env                  → Shared defaults (committed, no secrets)
-.env.development      → Local development overrides
-.env.staging          → Staging environment
-.env.production       → Production (on server only, never committed)
+Error: Config validation error: "MONGODB_URI" is required
 ```
 
-## 3.2 .env (Shared Defaults)
+---
+
+# 3. Hostnames and Ports
+
+Every environment's externally reachable hostname(s) and the port the
+application listens on SHALL be declared as keys in `.env.example`.
+
+If an application exposes only one externally addressable surface, one
+`APP_URL`-style key is enough. If it exposes more than one surface under
+different hostnames (see **14-deployment-architecture.md** §4.4), each
+surface SHALL have its own key, so the pipeline can bake or inject the
+right value per environment without guessing:
 
 ```env
-NODE_ENV=development
+# .env.example — illustrative
+APP_URL=
 PORT=3000
-SMTP_HOST=mail.smtp2go.com
-SMTP_PORT=2525
-EMAIL_FROM_NAME=Hairscope
-EMAIL_FROM_ADDRESS=noreply@hairscope.ai
-TYPST_TEMPLATE_DIR=typst/templates
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_EXPIRY=30d
 ```
 
-## 3.3 .env.development
+The real value of each such key, per environment, is configuration, not a
+secret: it SHALL be stored as a GitHub repository **variable** scoped to the
+matching GitHub Environment (Section 5), never as a secret and never
+hardcoded in a workflow file.
 
-```env
-MONGODB_URI=mongodb://localhost:27017/hairscope-dev?replicaSet=rs0
-REDIS_URL=redis://localhost:6379
-APP_URL=http://localhost:3000
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-GCS_BUCKET=hairscope-dev-files
-```
+---
 
-## 3.4 .env.example
+# 4. .env.example Contents
 
-A `.env.example` SHALL be committed with all required variables (no values):
+`.env.example` SHALL list every key the application reads, grouped by
+concern, with no values (or a safe, non-secret local default where one
+genuinely exists, such as a local port number):
 
 ```env
 # Core
@@ -220,43 +145,61 @@ JWT_PUBLIC_KEY=
 JWT_ACCESS_EXPIRY=15m
 JWT_REFRESH_EXPIRY=30d
 
-# GCP
-GCP_PROJECT_ID=
-GCS_BUCKET=
-GCS_KEY_FILE=
-
-# Email
-SMTP_HOST=mail.smtp2go.com
-SMTP_PORT=2525
-SMTP_USER=
-SMTP_PASS=
-EMAIL_FROM_NAME=Hairscope
-EMAIL_FROM_ADDRESS=noreply@hairscope.ai
-
-# Firebase
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-
-# Typst
-TYPST_TEMPLATE_DIR=typst/templates
-
-# AI (optional)
-AI_API_URL=
-AI_API_KEY=
+# Third-party integrations
+# (one block per integration; group related keys together)
 
 # CORS
 CORS_ORIGINS=http://localhost:3000
 ```
 
+A reviewer SHALL be able to read `.env.example` alone and know every piece
+of configuration the application depends on, without reading the source
+code.
+
 ---
 
-# 4. Configuration Access
+# 5. Secrets Handling
 
-## 4.1 Typed Configuration
+## 5.1 Where Values Live
+
+| Location | Contents | Committed |
+|----------|----------|-----------|
+| `.env.example` | Keys only | Yes |
+| `.env.local` | Placeholder values for local development | Yes (placeholders only) |
+| Developer's local machine | Real local/dev credentials, if different from the placeholders | Never |
+| GitHub Environment: `development` | Real dev values (variables + secrets) | N/A — lives in GitHub, not the repo |
+| GitHub Environment: `staging` | Real staging values | N/A |
+| GitHub Environment: `production` | Real production values | N/A |
+
+## 5.2 Rules
+
+- Secret values SHALL NEVER be committed to source control, in any file, in
+  any environment.
+- Non-secret configuration (hostnames, ports, flags) SHALL be a GitHub
+  **variable**; credentials SHALL be a GitHub **secret**. Both are scoped to
+  a GitHub Environment, never left ungrouped at the repository level, so a
+  workflow reading `${{ vars.X }}` or `${{ secrets.X }}` under
+  `environment: staging` can only ever see staging's own values.
+- Rotating a secret SHALL NOT require an application code change — only an
+  update to the value in the relevant GitHub Environment, followed by a
+  redeploy.
+
+## 5.3 Multi-line Values
+
+Multi-line values (e.g. a PEM key) SHALL use `\n` escaping when stored as a
+single-line environment variable:
+
+```env
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBg...\n-----END PRIVATE KEY-----\n"
+```
+
+---
+
+# 6. Configuration Access
+
+## 6.1 Typed Configuration
 
 ```typescript
-// packages/shared/src/config/app.config.ts
 export interface AppConfig {
   port: number;
   env: 'development' | 'staging' | 'production';
@@ -272,7 +215,7 @@ export const appConfig = registerAs('app', (): AppConfig => ({
 }));
 ```
 
-## 4.2 Usage in Services
+## 6.2 Usage in Services
 
 ```typescript
 @Injectable()
@@ -284,47 +227,3 @@ export class SomeService {
   }
 }
 ```
-
----
-
-# 5. Secrets Handling
-
-## 5.1 Rules
-
-- Secrets SHALL NEVER be committed to source control
-- `.env.production` SHALL exist only on the production server
-- `.env.development` MAY contain local development secrets (not production)
-- `.gitignore` SHALL include: `.env.development`, `.env.staging`, `.env.production`
-- `.env` and `.env.example` MAY be committed (no secrets)
-
-## 5.2 Key Generation
-
-JWT keys SHALL be generated per environment:
-
-```bash
-# Generate RS256 key pair
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
-```
-
-## 5.3 Multi-line Keys in .env
-
-Multi-line keys SHALL use `\n` escaping:
-
-```env
-JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBg...\n-----END PRIVATE KEY-----\n"
-```
-
----
-
-# 6. Runtime Validation
-
-If required environment variables are missing at startup, the application SHALL fail fast with a clear error message:
-
-```text
-Error: Config validation error: "MONGODB_URI" is required
-```
-
-The application SHALL NOT start with invalid configuration.
-
----

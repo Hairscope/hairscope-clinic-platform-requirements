@@ -330,7 +330,7 @@ Tracks session lifecycle and metadata. Questionnaires, images, AI analysis, and 
 | `status` | String (enum) | — | — | `DRAFT` | `DRAFT`, `SAVED`, `COMPLETED`, `DELETED` |
 | `assignedTo` | ObjectId | — | — | — | Staff member assigned |
 | `appointmentId` | ObjectId | — | — | — | Linked appointment (optional) |
-| `doctorsNote` | String | — | — | `''` | Doctor's observations |
+| `clinicalNote` | String | — | — | `''` | Staff clinical observations (role-neutral; not doctor-specific) |
 | `rootCause` | String | — | — | — | Determined root cause |
 | `stressScore` | Number | — | — | — | Computed stress score |
 | `aiAnalysisStatus` | String (enum) | — | — | `PENDING` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
@@ -527,12 +527,35 @@ One document per session. Tracks report version and latest PDF URL. Old versions
 | `reportUrl` | String | — | — | — | GCS path to latest PDF |
 | `reportVersion` | Number | — | — | `0` | Increments on regeneration |
 | `reportGeneratedAt` | Date | — | — | — | When last generated |
+| `isOutdated` | Boolean | — | — | `false` | True when the PDF no longer reflects the latest data (e.g. a comparison was added after generation); cleared on next `generateReport` |
 | + BaseSchemaFields |
 
 **Indexes:**
 - `{ sessionId: 1 }` — **unique**
 
 **PDF Path Convention:** `{orgId}/{clinicId}/reports/{sessionId}/YYYY-MM-DD-v{version}.pdf`
+
+---
+
+### Collection: `sessioncomparisons` ✅
+
+Created when a user clicks "Add to Report" on the compare-analysis page. Stores a snapshot of the two images being compared (2 `TRICHOSCOPY` or 2 `GLOBAL`, never mixed) and attaches to whichever of the two parent sessions is newer. Adding/updating a comparison flags that session's `reportdata.isOutdated = true`.
+
+| Field | Type | Required | Indexed | Default | Description |
+|-------|------|----------|---------|---------|-------------|
+| `patientId` | ObjectId | ✅ | ✅ | — | Patient |
+| `attachedToSessionId` | ObjectId | ✅ | ✅ | — | Newer of the two sessions — its report renders this comparison |
+| `imageType` | String (enum) | ✅ | — | — | `GLOBAL`, `TRICHOSCOPY` |
+| `left` | Object | ✅ | — | — | Snapshot: `sessionId`, `sessionImageId`, `sessionSequence`, `sessionDate`, `label`, `imageUrl`, `metrics` (Mixed) |
+| `right` | Object | ✅ | — | — | Same shape as `left` |
+| `status` | String (enum) | — | — | `ACTIVE` | `ACTIVE`, `DELETED` |
+| + BaseSchemaFields |
+
+**Indexes:**
+- `{ attachedToSessionId: 1, status: 1 }`
+- `{ 'left.sessionImageId': 1, 'right.sessionImageId': 1 }` — finds an existing comparison for the same unordered image pair (re-adding updates in place, no duplicates)
+
+`sessionReportData.compare[]` (report JSON) is populated from this collection, filtered by `attachedToSessionId`.
 
 ---
 

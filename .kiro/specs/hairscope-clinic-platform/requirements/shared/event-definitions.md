@@ -777,6 +777,28 @@ Emitted when a Clinic's working hours are updated and existing appointments are 
 
 ---
 
+## Onboarding Events
+
+### `OnboardingCompleted`
+Emitted when an Organization's first-login OnboardingWizard (ORG-12) is completed or skipped.
+
+**Payload:**
+```json
+{
+  "organizationId": "uuid",
+  "clinicId": "uuid",
+  "completedByStaffId": "uuid",
+  "completedSteps": ["CLINIC_DETAILS", "WORKING_HOURS", "CLINIC_SETTINGS", "INVITE_TEAM", "TERMS"],
+  "skippedSteps": ["CLINIC_DETAILS", "INVITE_TEAM", "TERMS"],
+  "wasSkippedEntirely": "boolean"
+}
+```
+
+**Consumers:**
+- None (informational, for observability and product analytics)
+
+---
+
 ## Event Versioning
 
 - Event schemas are versioned using `version` field in the envelope.
