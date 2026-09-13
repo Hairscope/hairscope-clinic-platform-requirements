@@ -1,267 +1,192 @@
 # Deployment
 
-> Covers: Docker containerization, GitHub Actions CI/CD, GCP Compute Engine deployment, environment promotion, health checks, and rollback strategy.
+> Covers: repository layout for deployment, environments and branches, VM
+> topology, Docker, nginx and TLS, GitHub Actions CI/CD, tagging and
+> changelogs, and rollback.
+
+This document describes the deployment model shared by every deployed
+Hairscope repository. It is written generically — a repository name, a
+service name, or a port number is a placeholder unless shown as a literal
+example from `hairscope-backend` or `hairscope-clinic-web`.
 
 ---
 
-# 1. Docker
+# 1. Environments and Branches
 
-## 1.1 API Dockerfile
+Every repository SHALL use exactly three deployment branches, one per
+environment:
+
+| Branch | Environment | Deploys to |
+|--------|-------------|------------|
+| `dev` | development | shared non-production VM |
+| `staging` | staging | shared non-production VM |
+| `main` | production | production VM |
+
+`dev` and `staging` SHALL share one VM. `main` SHALL always deploy to the
+dedicated production VM. This keeps a single non-production machine to
+maintain while still keeping the two pre-production environments isolated
+from each other (own processes, own ports, own data — see
+**14-deployment-architecture.md** §4.3).
+
+A repository MAY additionally use `feature/*` branches for local development.
+Those branches SHALL NOT trigger any deployment.
+
+---
+
+# 2. Environment Files
+
+Each repository SHALL commit exactly two environment files:
+
+| File | Committed | Contains |
+|------|-----------|----------|
+| `.env.example` | Yes | Every variable and secret **key** the app can use, with no values (or safe local defaults only) |
+| `.env.local` | Yes, as a template with placeholder values | The subset needed to run the app locally |
+
+`.env.example` is the single source of truth for what configuration exists.
+Adding a new required variable to the application SHALL come with an update
+to `.env.example` in the same change.
+
+No other `.env.*` file (`.env.dev`, `.env.staging`, `.env.prod`, etc.) is
+required by the deployment pipeline, and none SHALL be committed. A
+developer MAY keep such files locally, gitignored, purely as their own
+record of the real values already configured for a VM — the pipeline itself
+never reads them; it reads from GitHub Environments (Section 6).
+
+---
+
+# 3. Hostnames and Ports
+
+Each environment's hostnames and the port(s) the application listens on
+SHALL be declared as keys in `.env.example`, following the naming already
+used for URLs elsewhere in the file (e.g. an `APP_URL`-style key per
+environment, or one key per externally addressable surface if the
+application exposes more than one — see **14-deployment-architecture.md**
+§4.4).
+
+The actual per-environment values (the real hostname, the real port) are
+configuration, not secrets, and SHALL be set as GitHub **repository
+variables** scoped to the matching GitHub Environment (Section 6) — not as
+GitHub secrets, and not hardcoded in workflow files.
+
+---
+
+# 4. VM Topology
+
+## 4.1 Shared Non-Production VM
+
+`dev` and `staging` run as separate, independently addressable deployments
+on the same VM. Each repository SHALL own its own directory on that VM
+(e.g. `/opt/<repo>/dev`, `/opt/<repo>/staging`) so that one repository's
+deploy can never remove or overwrite another repository's containers.
+
+## 4.2 Production VM
+
+`main` deploys to a separate VM dedicated to production. The same
+one-directory-per-repository convention applies
+(`/opt/<repo>/production`).
+
+## 4.3 Managed vs. In-VM Services
+
+| Service | Where it runs |
+|---------|----------------|
+| MongoDB | Managed (e.g. MongoDB Atlas) — never self-hosted in a VM |
+| Redis | Runs in a container on the VM |
+| PostgreSQL (where a repository owns a relational store) | Runs in a container on the VM |
+
+Redis and PostgreSQL data SHALL persist on a Docker volume scoped to that
+repository's compose project, so a redeploy never loses data.
+
+---
+
+# 5. Docker
+
+## 5.1 Application Dockerfile
+
+Each deployable process (an API, a worker, a frontend) SHALL have its own
+Dockerfile under `docker/`, using a multi-stage build: a `builder` stage
+that installs dependencies and compiles, and a slim `production` stage that
+copies only the build output.
 
 ```dockerfile
-# docker/Dockerfile.api
+# docker/Dockerfile.api — illustrative shape, not literal for every repo
 FROM oven/bun:1 AS builder
-
 WORKDIR /app
 COPY package.json bun.lock ./
-COPY packages/api/package.json packages/api/
-COPY packages/shared/package.json packages/shared/
 RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build
 
-COPY packages/shared/ packages/shared/
-COPY packages/api/ packages/api/
-RUN bun run --filter=shared build
-RUN bun run --filter=api build
-
-# Production image
 FROM oven/bun:1-slim AS production
-
 WORKDIR /app
-COPY --from=builder /app/packages/api/dist ./dist
-COPY --from=builder /app/packages/api/node_modules ./node_modules
-COPY --from=builder /app/packages/shared/dist ./shared
-
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:3000/health || exit 1
-
 CMD ["bun", "run", "dist/main.js"]
 ```
 
-## 1.2 Worker Dockerfiles
+A frontend Dockerfile follows the same two-stage shape, building a
+production bundle in the builder stage and serving it from the production
+stage.
 
-Each worker SHALL have its own Dockerfile following the same pattern:
+## 5.2 Local Development Compose
 
-```dockerfile
-# docker/Dockerfile.worker-reminder
-FROM oven/bun:1 AS builder
-
-WORKDIR /app
-COPY package.json bun.lock ./
-COPY packages/worker-reminder/package.json packages/worker-reminder/
-COPY packages/shared/package.json packages/shared/
-RUN bun install --frozen-lockfile
-
-COPY packages/shared/ packages/shared/
-COPY packages/worker-reminder/ packages/worker-reminder/
-RUN bun run --filter=shared build
-RUN bun run --filter=worker-reminder build
-
-FROM oven/bun:1-slim AS production
-
-WORKDIR /app
-COPY --from=builder /app/packages/worker-reminder/dist ./dist
-COPY --from=builder /app/packages/worker-reminder/node_modules ./node_modules
-COPY --from=builder /app/packages/shared/dist ./shared
-
-EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD curl -f http://localhost:3001/health || exit 1
-
-CMD ["bun", "run", "dist/main.js"]
-```
-
-## 1.3 Report Worker (with Typst)
-
-```dockerfile
-# docker/Dockerfile.worker-report
-FROM oven/bun:1 AS builder
-
-WORKDIR /app
-COPY package.json bun.lock ./
-COPY packages/worker-report/package.json packages/worker-report/
-COPY packages/shared/package.json packages/shared/
-RUN bun install --frozen-lockfile
-
-COPY packages/shared/ packages/shared/
-COPY packages/worker-report/ packages/worker-report/
-RUN bun run --filter=shared build
-RUN bun run --filter=worker-report build
-
-FROM oven/bun:1-slim AS production
-
-# Install Typst
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://typst.community/typst-install/install.sh | sh && \
-    apt-get remove -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-ENV PATH="/root/.local/bin:$PATH"
-
-WORKDIR /app
-COPY --from=builder /app/packages/worker-report/dist ./dist
-COPY --from=builder /app/packages/worker-report/node_modules ./node_modules
-COPY --from=builder /app/packages/shared/dist ./shared
-COPY typst/templates ./typst/templates
-COPY typst/fonts ./typst/fonts
-COPY typst/assets ./typst/assets
-
-EXPOSE 3004
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD curl -f http://localhost:3004/health || exit 1
-
-CMD ["bun", "run", "dist/main.js"]
-```
-
-## 1.4 Docker Compose (Development)
-
-```yaml
-# docker/docker-compose.yml
-services:
-  mongodb:
-    image: mongo:8
-    command: ["--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}) }" | mongosh --quiet
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.api
-    ports:
-      - "3000:3000"
-    env_file: ../.env.local
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  worker-reminder:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.worker-reminder
-    env_file: ../.env.local
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  worker-notification:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.worker-notification
-    env_file: ../.env.local
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  worker-report:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.worker-report
-    env_file: ../.env.local
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-volumes:
-  mongodb_data:
-  redis_data:
-```
+A repository MAY provide `docker/docker-compose.yml` to run its own
+dependencies (Redis, Postgres, or a local Mongo replica set for testing)
+during local development. This file is for developer convenience and is
+not the file deployed to a VM.
 
 ---
 
-# 2. Node.js Fallback
+# 6. GitHub Actions CI/CD
 
-If Bun compatibility issues arise, Dockerfiles SHALL swap the base image and package manager:
+CI/CD is set up once per repository and requires no manual deployment steps
+afterward: every merge to `dev`, `staging`, or `main` triggers CI, and a
+successful CI run on a deploy branch triggers the matching deploy job.
 
-```dockerfile
-# Replace: FROM oven/bun:1 AS builder
-# With:    FROM node:24 AS builder
+## 6.1 GitHub Environments
 
-# Replace: RUN bun install --frozen-lockfile
-# With:    RUN npm install -g pnpm && pnpm install --frozen-lockfile
+Each repository SHALL define three GitHub **Environments**:
 
-# Replace: FROM oven/bun:1-slim AS production
-# With:    FROM node:24-slim AS production
+- `development`
+- `staging`
+- `production`
 
-# Replace: CMD ["bun", "run", "dist/main.js"]
-# With:    CMD ["node", "dist/main.js"]
-```
+Each Environment holds:
 
-No application code changes are required for the fallback.
+- **Variables** — non-secret configuration for that environment (hostnames,
+  ports, feature flags, public URLs). Read via `${{ vars.NAME }}`.
+- **Secrets** — credentials for that environment (API keys, database
+  passwords, signing secrets). Read via `${{ secrets.NAME }}`.
 
----
+The `production` Environment SHOULD require manual approval before a
+deployment job runs against it, so a merge to `main` does not release to
+customers unattended.
 
-# 3. GitHub Actions CI/CD
-
-## 3.1 Build and Test
+## 6.2 CI Workflow
 
 ```yaml
-# .github/workflows/ci.yml
+# .github/workflows/ci.yml — shape
 name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [dev, staging, main]
   pull_request:
-    branches: [main]
+    branches: [dev, staging, main]
 
 jobs:
-  lint:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run lint
-
-  test:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:8
-        ports: ['27017:27017']
-        options: --health-cmd "mongosh --eval 'db.runCommand({ping:1})'" --health-interval 10s
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
-        options: --health-cmd "redis-cli ping" --health-interval 10s
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run test:ci
-        env:
-          MONGODB_URI: mongodb://localhost:27017/hairscope-test?replicaSet=rs0
-          REDIS_URL: redis://localhost:6379
+      # install, lint, typecheck, test
 
   build:
+    if: github.event_name == 'push'
+    needs: [lint-and-test]
     runs-on: ubuntu-latest
-    needs: [lint, test]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -270,213 +195,189 @@ jobs:
           registry: gcr.io
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
+      # resolve an image tag per Section 8, then build & push
       - uses: docker/build-push-action@v5
         with:
-          context: .
-          file: docker/Dockerfile.api
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: gcr.io/${{ secrets.GCP_PROJECT }}/hairscope-api:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          push: true
+          tags: gcr.io/${{ secrets.GCP_PROJECT }}/<image-name>:${{ steps.tag.outputs.tag }}
 ```
 
-## 3.2 Deploy
+`lint-and-test` SHALL run on both pushes and pull requests. `build` SHALL
+run only on a push to a deploy branch — a pull request builds nothing and
+deploys nothing.
+
+## 6.3 Deploy Workflow
 
 ```yaml
-# .github/workflows/deploy.yml
+# .github/workflows/deploy.yml — shape
 name: Deploy
 
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [main]
+    branches: [dev, staging, main]
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  deploy-dev:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'dev'
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v4
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
+      # write this environment's env file + docker-compose.yml to the VM
+      # using ${{ vars.* }} and ${{ secrets.* }} from the `development`
+      # GitHub Environment, then:
+      #   docker compose pull && docker compose up -d --remove-orphans
 
-      - name: Deploy to GCE
-        run: |
-          gcloud compute ssh hairscope-server --zone=${{ secrets.GCP_ZONE }} --command="
-            cd /opt/hairscope &&
-            docker compose pull &&
-            docker compose up -d --remove-orphans &&
-            docker system prune -f
-          "
+  deploy-staging:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      # same shape, targeting the staging VM directory
+
+  deploy-production:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # same shape, targeting the production VM
 ```
+
+Each job pulls only from its matching GitHub Environment, so a bug that
+leaks a staging value into a workflow file cannot reach production — the
+values themselves are never in the file.
+
+## 6.4 Required Secrets (shared across repositories)
+
+- `GCP_SA_KEY` — GCP service-account JSON with Compute SSH and GCR
+  push/pull permissions.
+- `GCP_PROJECT`, `GCE_INSTANCE`, `GCP_ZONE` — target GCP project and VM.
+
+Repository-specific secrets (database credentials, signing keys,
+third-party API keys) are declared per Environment as described in Section
+6.1, and their required keys SHALL appear in `.env.example`.
 
 ---
 
-# 4. GCP Compute Engine
+# 7. nginx and TLS
 
-## 4.1 Server Setup
+Each repository SHALL commit its own nginx site configuration(s) under
+`deploy/nginx/`, one file per environment, containing no secret values —
+only hostnames, ports, and proxy rules.
 
-| Resource | Specification |
-|----------|--------------|
-| Machine Type | e2-standard-2 (2 vCPU, 8 GB RAM) |
-| OS | Ubuntu 22.04 LTS |
-| Disk | 50 GB SSD |
-| Region | Based on clinic locations |
-| Firewall | HTTP (80), HTTPS (443), SSH (22) |
+```nginx
+# deploy/nginx/<repo>-dev.conf — shape
+server {
+    listen 80;
+    server_name <dev-hostname>;
 
-## 4.2 Production Docker Compose
-
-```yaml
-# /opt/hairscope/docker-compose.yml (on GCE instance)
-services:
-  api:
-    image: gcr.io/${GCP_PROJECT}/hairscope-api:${IMAGE_TAG}
-    ports:
-      - "3000:3000"
-    env_file: .env.production
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-
-  worker-reminder:
-    image: gcr.io/${GCP_PROJECT}/hairscope-worker-reminder:${IMAGE_TAG}
-    env_file: .env.production
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  worker-notification:
-    image: gcr.io/${GCP_PROJECT}/hairscope-worker-notification:${IMAGE_TAG}
-    env_file: .env.production
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  worker-report:
-    image: gcr.io/${GCP_PROJECT}/hairscope-worker-report:${IMAGE_TAG}
-    env_file: .env.production
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1G
+    location / {
+        proxy_pass http://127.0.0.1:<dev-port>;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
 ```
 
-MongoDB and Redis SHALL be managed services (MongoDB Atlas, Redis Cloud) in production.
+Where an application exposes more than one externally addressable surface
+(for example, a public-facing surface and an administrative surface served
+from the same deployment), each surface SHALL get its own `server_name`
+block proxying to the same backing port, and the application itself SHALL
+decide which routes each hostname may answer — nginx routes by hostname to
+the right port; the application enforces which paths belong to which
+surface. This avoids an nginx path allowlist that must be kept in sync by
+hand every time a route is added.
+
+TLS is issued and renewed with certbot, once per hostname, after DNS and
+nginx are in place:
+
+```sh
+sudo cp deploy/nginx/<repo>-dev.conf /etc/nginx/sites-available/<repo>-dev
+sudo ln -sf /etc/nginx/sites-available/<repo>-dev /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d <dev-hostname>
+```
+
+certbot's HTTP-01 challenge requires the hostname's DNS record to already
+resolve to the VM and port 80 to already be reachable, so the order is
+always: DNS record → nginx config → certbot. A webhook or callback URL
+registered with a third party (e.g. a payment gateway) SHALL be registered
+only after TLS is confirmed live, since most such providers validate
+reachability before accepting the URL.
 
 ---
 
-# 5. Health Checks
+# 8. Tagging, Versioning, and Changelog
 
-## 5.1 API Health Endpoint
+Every deployment SHALL be tagged and versioned, and every version SHALL
+have a changelog entry, so that any past deployment can be identified and,
+if necessary, rolled back to.
+
+| Branch | Image tag | Example |
+|--------|-----------|---------|
+| `dev` | `dev-<short-sha>` | `dev-a1b2c3d` |
+| `staging` | `rc-<version>` | `rc-1.4.0` |
+| `main` | `<version>` | `1.4.0` |
+
+Full versioning rules, branch promotion flow, and changelog format are
+defined in **19-versioning.md** and apply identically here — this document
+only fixes the image-tag convention above, since it is the deployment
+pipeline that reads it.
+
+---
+
+# 9. Rollback
+
+Because every deployed image is tagged with its version (Section 8) and
+retained in the registry, rolling back an environment is: point that
+environment's compose file at the previous tag and re-run
+`docker compose pull && docker compose up -d` — no rebuild required.
+
+```bash
+# On the target VM, inside that repository's environment directory
+sed -i 's/:<bad-tag>/:<previous-good-tag>/' docker-compose.yml
+docker compose pull && docker compose up -d --remove-orphans
+```
+
+Database migrations SHALL be forward-compatible so that a rollback of
+application code never requires a schema reversal: new fields SHALL be
+nullable or defaulted, so that the previous version of the code continues
+to run correctly against the newer schema.
+
+---
+
+# 10. Health Checks
+
+Each deployed process SHALL expose a `/health` endpoint (or equivalent, for
+a frontend) that a container `HEALTHCHECK` and, if used, a load balancer can
+poll.
 
 ```typescript
 @Controller('health')
 export class HealthController {
-  constructor(
-    private readonly health: HealthCheckService,
-    private readonly db: MongooseHealthIndicator,
-    private readonly redis: RedisHealthIndicator,
-    private readonly email: EmailHealthIndicator,
-    private readonly eventSystem: EventSystemHealthIndicator,
-  ) {}
-
   @Get()
   @Public()
-  async check() {
-    return this.health.check([
-      () => this.db.pingCheck('mongodb'),
-      () => this.redis.pingCheck('redis'),
-      () => this.email.isHealthy(),
-      () => this.eventSystem.isHealthy(),
-    ]);
-  }
-
-  @Get('ready')
-  @Public()
-  async readiness() {
-    return this.health.check([
-      () => this.db.pingCheck('mongodb'),
-      () => this.redis.pingCheck('redis'),
-    ]);
-  }
-}
-```
-
-## 5.2 Worker Health Endpoints
-
-Each worker SHALL expose a `/health` endpoint:
-
-```typescript
-@Controller('health')
-export class WorkerHealthController {
-  @Get()
   async check() {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 }
 ```
 
----
-
-# 6. Rollback Strategy
-
-## 6.1 Rollback Procedure
-
-Any previous version can be redeployed with a fresh build from the corresponding Git commit. Old Docker images are not retained.
-
-```bash
-# Rollback: trigger a fresh build and deploy from the target commit
-# Option 1: Revert commit and push to main
-git revert <bad-commit-sha>
-git push origin main
-
-# Option 2: Manually trigger CI workflow on a specific SHA
-gh workflow run ci.yml --ref <target-sha>
-```
-
-## 6.2 Database Migrations
-
-Migrations SHALL be forward-compatible.
-
-Rollback SHALL NOT require database schema reversal.
-
-New fields SHALL be nullable or have defaults to support running old code against new schema.
-
----
-
-# 7. Environment Promotion
-
-```text
-dev → staging → main (production)
-```
-
-| Environment | Branch | Trigger | Approval |
-|-------------|--------|---------|----------|
-| Development | `dev` | Push/merge to `dev` | Automatic |
-| Staging | `staging` | Merge from `dev` to `staging` | Automatic |
-| Production | `main` | Merge from `staging` to `main` | Manual approval |
-
-See **19-versioning.md** for full branch strategy, version bumps, and release flow.
-
----
-
-# 8. Secrets Management
-
-Secrets SHALL be stored in GitHub Actions secrets and injected as environment variables.
-
-Production secrets SHALL be stored in `.env.production` on the GCE instance (not in source control).
-
-Secret rotation SHALL not require redeployment — workers SHALL reload configuration on restart.
-
----
+A process with dependencies it needs to be healthy (a database, a cache)
+SHALL check those dependencies here rather than only reporting that the
+process itself is running.
