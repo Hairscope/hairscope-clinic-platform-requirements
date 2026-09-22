@@ -9,3 +9,15 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Node / Next.js (docs site under docs/)
+node_modules/
+.next/
+out/
+dist/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
