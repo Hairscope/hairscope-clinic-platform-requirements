@@ -1,0 +1,24 @@
+{
+  "name": "hairscope-platform-docs",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@types/nprogress": "^0.2.3",
+    "next": "14.2.15",
+    "next-auth": "^4.24.14",
+    "nextra": "3.2.5",
+    "nextra-theme-docs": "3.2.5",
+    "nprogress": "^0.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "typescript": "5.5.3"
+  }
+}

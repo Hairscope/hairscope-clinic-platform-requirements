@@ -1,0 +1,72 @@
+# Changelog — Designs
+
+All notable changes to the Hairscope Clinic Platform design documents are documented here. Latest entries are at the top.
+
+---
+
+## v1.3.0 — 2026-09-13
+
+### Added
+- **Deployment Architecture** (`14-deployment-architecture.md`) — new §4.4 External Access: an environment SHALL be reachable through its own hostname(s), and where an application exposes more than one externally addressable surface, each surface gets a distinct hostname per environment with routing between surfaces enforced by the application rather than assumed from network topology; TLS terminates at the edge. New §4.5 Configuration and Secrets: configuration keys live in source control, values never do; secret values exist only in a developer's local uncommitted environment or the deployment platform's secret storage.
+
+### Changed
+- **Deployment Architecture** (`14-deployment-architecture.md`) §4.1 Environment Types — now names the three environments actually in use (`dev`/`staging`/`main`→production) instead of a four-environment list that included a `testing` environment never adopted. §4.3 Isolation — clarified that non-production environments may share underlying compute as long as each keeps separate processes, ports, and data stores, while production runs on infrastructure isolated from non-production.
+
+---
+
+## v1.2.0 — 2026-06-25
+
+### Added
+- **Recommendation Engine** (`09-engine-architecture.md`) — documented `CustomTreatmentData` (per-org, per-language treatment content keyed by hairloss scale+stage or hair-score range) and the organization `treatmentRecommendationMode` (`STAGE_SCALE` / `HAIRSCORE`) matching strategy; routines sourced from Catalog. Extensible for future diagnosis/suggestions.
+- **Cross-clinic access** (`05-authorization.md`) — documented that reading another clinic's non-clinical details is permission-driven (effective permissions + org `recordVisibilityMode` `CLINIC_ONLY`/`ORGANIZATION_WIDE`), never role-name-driven; clinical data stays clinic-isolated (GI-8).
+- Footnote on the Staff aggregate (`03-domain-modeling.md`) describing the `PLATFORM_SUPPORT`/`PLATFORM_ADMIN` `userType` (Hairscope-internal, audit-logged cross-tenant support users).
+
+### Changed
+- Domain modeling notes that Organization/Clinic aggregates are colocated with IAM aggregates in a single IAM module in code.
+
+---
+
+## v1.1.0 — 2026-06-25
+
+### Changed
+- **Sessions design** (`modules/04-sessions.md`) — AI analysis results are now editable after completion (alongside questionnaire responses, recommendations, and doctor notes); only the original captured image binaries remain immutable. Annotation data is modelled as `RootPoint` / `HairStrand` documents (+ `GlobalAnalysisData` with an `overrides[]` audit trail) to match the implemented schema, as sub-entities of the Session aggregate (not independent aggregates).
+- **Billing design** (`modules/08-billing.md`) — Invoice lifecycle is now `DRAFT → ISSUED → PAID → REFUNDED / PARTIALLY_REFUNDED` plus `CANCELLED` (replaces `FINALIZED`). Invoice creation is a manual "Generate Invoice" action — Billing consumes no events to create invoices and does not auto-generate on `SessionCompleted`; signed documents only suggest line items. Payment is recorded as a free-text method label with no card/bank-account details. `InvoiceFinalized` event → `InvoiceIssued`.
+- **Domain modeling** (`03-domain-modeling.md`) — Invoice lifecycle aligned to the above. Lead lifecycle corrected to `NEW → CONTACTED → QUALIFIED → CONVERTED / LOST`; `ASSIGNED` is not a status (assignment is tracked via `assignedStaffId`).
+- **Appointments design** (`modules/06-appointments.md`) — Dropped the "at most one active appointment per Lead/Patient" invariant (per-patient appointment caps deferred).
+
+---
+
+## v1.0.2 — 2026-05-24
+
+### Changed
+- Unified module numbering across requirements, designs, and implementations (0=Infra, 1=IAM, 2=Org, 3=Patients, 4=Sessions, 5=Leads, 6=Appointments, 7=Catalog, 8=Billing, 9=Communication, 10=Audit).
+- Renumbered design module files from `03-patients` onward (previously started at `01-patients`).
+- Updated Nextra `_meta.ts` navigation files to match.
+
+### Removed
+- Redundant `05-products.md` design (merged into the Catalog module).
+
+---
+
+## v1.0.1 — 2026-05-14
+
+### Changed
+- File uploads are modelled as GraphQL mutations rather than HTTP endpoints.
+- Architecture diagram updated: HTTP endpoints cover downloads and webhooks only (uploads moved to GraphQL).
+
+---
+
+## v1.0.0 — 2026-05-13
+
+### Initial Release
+- 16 platform design documents covering system architecture through performance
+- 6 module design documents (Patients, Sessions, Leads, Appointments, Catalog, Billing)
+- Architecture aligned with requirements v1.1.1
+
+### Key Architectural Decisions
+- Modular Monolith Core with isolated modules
+- Stateless Engines for decision computation
+- Separate Worker Services for async infrastructure (Reminder, Notification, AI Models, Report Generation)
+- Event-driven cross-module communication via Transactional Outbox
+- Identity-only JWT with transparent token rotation (IAM-9 compliance)
+- Communication Policy Module owns business rules; Worker Services execute them

@@ -1,0 +1,469 @@
+# ============================================================
+# HAIRSCOPE CLINIC PLATFORM — GraphQL Schema
+# Version: 1.0.0 | Derived from requirements v1.0.0 (Final)
+# ============================================================
+# Rules:
+#   - All mutations are atomic (full rollback on any failure)
+#   - All timestamps are UTC ISO 8601
+#   - All IDs are server-generated UUID v4 (client-supplied IDs rejected)
+#   - Relay cursor-based pagination on all list queries (>20 records)
+#   - Deny by default; effective permissions = union of all assigned roles
+#   - Organization_Admin cannot access: patients, leads, appointments, billing, products
+#   - assignedStaffId and qualifiedStaff are NEVER returned in patient/lead-facing queries
+# ============================================================
+
+
+# ─────────────────────────────────────────────────────────────
+# SCALARS
+# ─────────────────────────────────────────────────────────────
+
+scalar UUID       # UUID v4, server-generated
+scalar DateTime   # ISO 8601 UTC — e.g. "2025-04-21T10:30:00Z"
+scalar JSON       # Opaque JSON blob (audit log snapshots)
+scalar URL        # Valid URL string
+
+
+# ─────────────────────────────────────────────────────────────
+# ENUMS
+# ─────────────────────────────────────────────────────────────
+
+enum StaffStatus {
+  PENDING_REGISTRATION
+  ACTIVE
+  INACTIVE
+}
+
+enum ClinicStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SessionType {
+  HAIR_ANALYSIS
+  SKIN_TREATMENT
+  HAIR_REMOVAL
+  SCALP_TREATMENT
+  LASER_TREATMENT
+  CONSULTATION
+}
+
+enum SessionStatus {
+  DRAFT
+  SAVED
+  COMPLETED
+  DELETED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum LeadSource {
+  MANUAL
+  WEBHOOK
+  SELFIE_ANALYSIS
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum LeadActionType {
+  WHATSAPP
+  EMAIL
+  FACEBOOK_MESSAGE
+  PHONE_CALL
+  IN_PERSON_MEETING
+  OTHER
+}
+
+enum LeadAssignmentMode {
+  AUTO_ASSIGN
+  MANUAL_ASSIGN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ProductType {
+  COSMETIC
+  MEDICAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINALIZED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum AsyncOperationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  EDIT
+  DELETE
+}
+
+enum PermissionModule {
+  PATIENTS       # Covers sessions as sub-resource
+  LEADS
+  APPOINTMENTS
+  PRODUCTS
+  BILLING
+  DASHBOARD
+  ORGANIZATION   # Covers staff, clinic_settings, roles as sub-resources
+  AUDIT_LOG
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum GenderAssignedAtBirth {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum GlobalImagePosition {
+  ANTERIOR
+  FRONTAL
+  RIGHT_LATERAL
+  LEFT_LATERAL
+  POSTERIOR
+  LEFT_TEMPORAL
+  RIGHT_TEMPORAL
+  SUPERIOR
+  TOP_OF_THE_HEAD
+  VERTEX
+}
+
+enum TrichoscopyPosition {
+  P1_FRONTAL           # Mandatory
+  P2_LEFT_TEMPORAL     # Mandatory
+  P3_RIGHT_TEMPORAL    # Mandatory
+  P4_TOP_OF_HEAD       # Mandatory
+  P5_CROWN             # Mandatory
+  P6_OCCIPITAL         # Mandatory
+  ADDITIONAL           # Any extra images beyond the 6 mandatory
+}
+
+enum HeadDiagram {
+  FRONT
+  LEFT
+  RIGHT
+  BACK
+}
+
+enum QuestionnaireCategory {
+  DAILY_HABITS
+  MEDICAL_CONDITIONS
+  PHYSICAL_OR_EMOTIONAL_SHOCK
+  HAIRSTYLING_AND_TREATMENTS
+  GENETICS
+  STRESS_TEST                  # Separate stress questionnaire (~10 questions)
+}
+
+enum AnnotationSource {
+  AI
+  HUMAN
+}
+
+enum AnnotationType {
+  FOLLICLE   # Circle marker placed at a point
+  STRAND     # 3-point rectangle (root, direction, thickness)
+}
+
+enum ReportTemplateType {
+  SELFIE_ANALYSIS_REPORT
+  HAIR_ANALYSIS_REPORT
+}
+
+enum AuditAction {
+  # Staff
+  STAFF_CREATED STAFF_UPDATED STAFF_DEACTIVATED STAFF_REACTIVATED STAFF_DELETED STAFF_TRANSFERRED
+  # Roles & Permissions
+  ROLE_CREATED ROLE_UPDATED ROLE_DELETED PERMISSION_UPDATED
+  # Org & Clinic
+  ORGANIZATION_CREATED CLINIC_CREATED CLINIC_UPDATED CLINIC_DEACTIVATED CLINIC_REACTIVATED
+  # Patient
+  PATIENT_CREATED PATIENT_UPDATED PATIENT_GDPR_ERASED
+  # Session
+  SESSION_CREATED SESSION_SAVED SESSION_COMPLETED SESSION_DELETED ANNOTATION_EDIT_SAVED
+  # Medical Docs
+  MEDICAL_DOCUMENT_UPLOADED MEDICAL_DOCUMENT_DELETED
+  # Lead
+  LEAD_CREATED LEAD_UPDATED LEAD_CONVERTED LEAD_DELETED
+  # Appointment
+  APPOINTMENT_CREATED APPOINTMENT_RESCHEDULED APPOINTMENT_CANCELLED APPOINTMENT_STATUS_CHANGED
+  # Product
+  PRODUCT_CREATED PRODUCT_UPDATED PRODUCT_DELETED
+  # Invoice
+  INVOICE_GENERATED INVOICE_CHARGE_ADDED INVOICE_CHARGE_EDITED INVOICE_CHARGE_REMOVED INVOICE_FINALIZED INVOICE_REFUNDED
+  # Report
+  REPORT_GENERATED REPORT_REGENERATED REPORT_SHARED
+  # Auth
+  LOGIN_SUCCESS LOGIN_FAILURE LOGOUT INVITE_SENT INVITE_USED INVITE_EXPIRED INVITE_CANCELLED
+  # Data transfer & Plan
+  STAFF_DELETION_TRANSFER PLAN_UPDATED
+  # Webhook & WebComponent config
+  WEBHOOK_SOURCE_CREATED WEBHOOK_SOURCE_UPDATED WEBHOOK_SOURCE_DELETED
+  API_KEY_GENERATED API_KEY_REVOKED
+  LEAD_ASSIGNMENT_MODE_CHANGED
+  REPORT_TEMPLATE_UPDATED
+  STAFF_AVAILABILITY_UPDATED
+  CONSENT_UPDATED
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# RELAY PAGINATION
+# ─────────────────────────────────────────────────────────────
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# UNIONS
+# ─────────────────────────────────────────────────────────────
+
+# An appointment can be booked for either a Lead or an existing Patient
+union AppointmentBooker = Patient | Lead
+
+
+# ─────────────────────────────────────────────────────────────
+# ERROR TYPE
+# All mutations return errors in this shape alongside nullable payload data.
+# ─────────────────────────────────────────────────────────────
+
+type UserError {
+  code: String!       # From shared/error-codes.md registry
+  message: String!    # Human-readable; safe to display
+  field: String       # Present for VALIDATION_ERROR
+  traceId: UUID!      # For debugging; never expose stack traces
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# ASYNC OPERATIONS
+# ─────────────────────────────────────────────────────────────
+
+type AsyncOperation {
+  id: UUID!
+  status: AsyncOperationStatus!
+  resourceType: String!
+  resourceId: UUID!
+  failureReason: String         # Present only on FAILED status
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# IDENTITY & ORGANIZATION TYPES
+# ─────────────────────────────────────────────────────────────
+
+type Organization {
+  id: UUID!
+  name: String!
+  leadAssignmentMode: LeadAssignmentMode!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  clinics: [Clinic!]!
+  staffCount: Int!
+}
+
+type Clinic {
+  id: UUID!
+  organizationId: UUID!
+  name: String!
+  address: ClinicAddress!
+  email: String
+  phone: String
+  website: URL
+  logo: URL
+  timezone: String              # IANA timezone e.g. "Asia/Kolkata". Required before appointments usable.
+  workingHours: [DaySchedule!]!
+  reportHeader: ReportHeader!
+  termsAndConditions: String
+  status: ClinicStatus!
+  taxRate: Float!               # Percentage applied to invoices
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ClinicAddress {
+  street: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+}
+
+type DaySchedule {
+  day: DayOfWeek!
+  isOpen: Boolean!
+  startTime: String             # "HH:MM" local — null when closed
+  endTime: String               # "HH:MM" local — null when closed
+}
+
+type ReportHeader {
+  clinicName: String!
+  address: String
+  phone: String
+  email: String
+  logoUrl: URL
+}
+
+type ReportTemplate {
+  id: UUID!
+  organizationId: UUID!
+  templateType: ReportTemplateType!
+  configuration: JSON!          # Sections, ordering, branding elements
+  updatedAt: DateTime!
+}
+
+type Staff {
+  id: UUID!
+  organizationId: UUID!
+  clinicId: UUID!
+  email: String!                # Immutable after invite
+  firstName: String
+  lastName: String
+  phone: String
+  specialization: String
+  experience: String
+  status: StaffStatus!
+  roles: [Role!]!
+  effectivePermissions: [EffectivePermission!]!
+  # Staff_Availability — NEVER exposed to patients or leads
+  availability: [StaffDayAvailability!]!
+  invitedBy: UUID               # Attribution: Staff ID of inviting admin
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type StaffConnection {
+  edges: [StaffEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type StaffEdge {
+  cursor: String!
+  node: Staff!
+}
+
+type StaffDayAvailability {
+  day: DayOfWeek!
+  available: Boolean!
+  startTime: String             # "HH:MM"
+  endTime: String               # "HH:MM"
+}
+
+type Role {
+  id: UUID!
+  clinicId: UUID!
+  name: String!
+  permissions: [PermissionGrant!]!
+  isSystemRole: Boolean!        # true for Organization_Admin, Clinic_Admin
+  isDeletable: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type PermissionGrant {
+  module: PermissionModule!
+  action: PermissionAction!
+}
+
+type EffectivePermission {
+  module: PermissionModule!
+  actions: [PermissionAction!]!
+}
+
+type AuthPayload {
+  accessToken: String!
+  staff: Staff!
+  expiresAt: DateTime!
+}
+
+type Invite {
+  id: UUID!
+  clinicId: UUID!
+  email: String!
+  roles: [UUID!]!
+  expiresAt: DateTime!
+  usedAt: DateTime
+  cancelledAt: DateTime
+  createdAt: DateTime!
+}
+
+type ConsentRecord {
+  id: UUID!
+  patientId: UUID!
+  clinicId: UUID!
+  consentType: String!
+  granted: Boolean!
+  recordedBy: UUID!             # Staff ID
+  timestamp: DateTime!
+}
+
+type AuditLogEntry {
+  id: UUID!
+  timestamp: DateTime!
+  organizationId: UUID!
+  clinicId: UUID                # null for org-level actions
+  actorId: UUID!
+  actorName: String!            # Snapshot at write time; never updated
+  action: AuditAction!
+  resourceType: String!
+  resourceId: UUID!
+  before: JSON                  # null for creates
+  after: JSON                   # null for deletes
+  ipAddress: String
+  userAgent: String
+  traceId: UUID!
+}
+
+type AuditLogConnection {
+  edges: [AuditLogEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type AuditLogEdge {
+  cursor: String!
+  node: AuditLogEntry!
+}

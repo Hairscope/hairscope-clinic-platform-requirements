@@ -34,7 +34,7 @@
 | `INVALID_CREDENTIALS` | 401 | Email or password is incorrect |
 | `ACCOUNT_DEACTIVATED` | 403 | Staff account is inactive |
 | `PLAN_LIMIT_EXCEEDED` | 403 | Feature not available on current subscription plan |
-| `ORG_SCOPE_VIOLATION` | 403 | Organization_Admin attempted to access a clinical module |
+| `ORG_SCOPE_VIOLATION` | 403 | OrganizationAdmin attempted to access a clinical module |
 | `CROSS_ORG_ACCESS_DENIED` | 403 | Request targets data outside the user's Organization |
 
 ---
@@ -49,7 +49,8 @@
 | `INVITE_REVOKED` | Invite token was invalidated by a resend |
 | `INVITE_CANCELLED` | Invite was cancelled by an Admin |
 | `EMAIL_ALREADY_EXISTS` | Email address already has an Active or Inactive Staff record in this Clinic |
-| `EMAIL_ALREADY_INVITED` | Email address already has a Pending_Registration Staff record in this Clinic |
+| `EMAIL_ALREADY_INVITED` | Email address already has a PendingRegistration Staff record in this Clinic |
+| `RESET_TOKEN_EXPIRED` | Password reset token has expired, already been used, or does not exist |
 
 ---
 
@@ -69,15 +70,20 @@
 
 | Code | Description |
 |------|-------------|
-| `LAST_CLINIC_ADMIN` | Operation would leave a Clinic with no active Clinic_Admin |
-| `LAST_ORG_ADMIN` | Operation would leave an Organization with no active Organization_Admin |
+| `LAST_CLINIC_ADMIN` | Operation would leave a Clinic with no active ClinicAdmin |
+| `LAST_ORG_ADMIN` | Operation would leave an Organization with no active OrganizationAdmin |
 | `LAST_ACTIVE_CLINIC` | Operation would leave an Organization with no active Clinic |
 | `RECIPIENT_REQUIRED` | Staff deletion requires at least one data reassignment recipient |
 | `RECIPIENT_INACTIVE` | Selected recipient is inactive |
 | `TRANSFER_FAILED` | Reassignment failed mid-operation; full rollback applied |
-| `ROLE_NOT_EDITABLE` | Attempted to edit a fixed system role (e.g., Organization_Admin) |
-| `ROLE_NOT_DELETABLE` | Attempted to delete a system role (Organization_Admin or Clinic_Admin) |
+| `ROLE_NOT_EDITABLE` | Attempted to edit a fixed system role (e.g., OrganizationAdmin) |
+| `ROLE_NOT_DELETABLE` | Attempted to delete a system role (OrganizationAdmin or ClinicAdmin) |
 | `CROSS_ORG_TRANSFER_DENIED` | Inter-clinic transfer attempted across different Organizations |
+| `TRANSFER_RECORDS_UNRESOLVED` | Staff transfer blocked — assignedTo records in source Clinic must be reassigned first |
+| `CURRENCY_ENFORCEMENT_VIOLATION` | Clinic currency change rejected because the Organization enforces a single currency |
+| `VISIBILITY_MODE_ENFORCEMENT_VIOLATION` | Clinic visibility mode change rejected because the Organization enforces RESTRICTED mode |
+| `ONBOARDING_WORKING_HOURS_REQUIRED` | Onboarding cannot be completed — at least one non-closed working day is required (ORG-12) |
+| `ONBOARDING_ALREADY_COMPLETED` | Onboarding step submitted for an Organization that has already completed or skipped onboarding |
 
 ---
 
@@ -97,12 +103,12 @@
 | Code | Description |
 |------|-------------|
 | `SESSION_NOT_FOUND` | Session does not exist or is outside scope |
-| `ACTIVE_SESSION_EXISTS` | Patient already has an active (Draft or Saved) Session |
+| `ACTIVE_SESSION_EXISTS` | Patient already has an active (Draft) Session for the same `sessionType` |
 | `SESSION_NOT_DELETABLE` | Session is in Saved or Completed status and cannot be deleted |
 | `SESSION_SAVE_VALIDATION` | Session does not meet save requirements (missing images, etc.) |
-| `TRICHOSCOPY_COUNT_INVALID` | Session has fewer than 6 Trichoscopy_Images |
+| `TRICHOSCOPY_COUNT_INVALID` | Session has fewer than 6 TrichoscopyImages |
 | `TRICHOSCOPY_MANDATORY_POSITION_MISSING` | One or more of the 6 mandatory trichoscopy positions (P1 Frontal, P2 Left Temporal, P3 Right Temporal, P4 Top of Head, P5 Crown, P6 Occipital) is missing |
-| `FRONTAL_IMAGE_REQUIRED` | Session must have at least one Frontal Global_Image |
+| `FRONTAL_IMAGE_REQUIRED` | Session must have at least one Frontal GlobalImage |
 | `SESSION_LOCKED` | Session is Saved or Completed; image capture is not allowed |
 
 ---
@@ -117,7 +123,7 @@
 | `CONVERSION_DUPLICATE_PHONE` | A Patient with this phone already exists; conversion blocked |
 | `INVALID_STATUS_TRANSITION` | Attempted lead status change is not permitted |
 | `INVALID_LEAD_REASSIGNMENT` | Lead cannot be reassigned in its current status (must be NEW or LOST) |
-| `NO_ELIGIBLE_STAFF` | No active Staff member with lead access found in the Clinic for Round_Robin assignment |
+| `NO_ELIGIBLE_STAFF` | No active Staff member with lead access found in the Clinic for RoundRobin assignment |
 
 ---
 
@@ -129,8 +135,9 @@
 | `SLOT_NOT_AVAILABLE` | Selected appointment slot is already occupied |
 | `SLOT_OUTSIDE_WORKING_HOURS` | Selected slot is outside the Clinic's configured working hours |
 | `INVALID_APPOINTMENT_STATUS_TRANSITION` | Attempted status transition is not in the valid set |
-| `APPOINTMENT_NOT_CANCELLABLE` | Appointment is in Completed or No_Show status |
+| `APPOINTMENT_NOT_CANCELLABLE` | Appointment is in Completed or NoShow status |
 | `CLINIC_TIMEZONE_NOT_SET` | Clinic timezone must be configured before appointments can be booked or displayed |
+| `CLINIC_CURRENCY_NOT_SET` | Clinic currency must be configured before catalog items can be created |
 | `SERVICE_NO_QUALIFIED_STAFF` | Service has no qualified staff configured; cannot be booked until at least one qualified staff member is assigned |
 
 ---
@@ -140,9 +147,9 @@
 | Code | Description |
 |------|-------------|
 | `INVOICE_NOT_FOUND` | Invoice does not exist or is outside scope |
-| `INVOICE_ALREADY_FINALIZED` | Invoice is Finalized and cannot be edited |
+| `INVOICE_ALREADY_FINALIZED` | Invoice is Issued (or later) and cannot be edited |
 | `INVOICE_CHARGE_VALIDATION` | Misc charge is missing description or amount |
-| `INVOICE_NOT_REFUNDABLE` | Invoice must be in FINALIZED status to record a refund |
+| `INVOICE_NOT_REFUNDABLE` | Invoice must be in ISSUED or PAID status to record a refund |
 | `REFUND_EXCEEDS_TOTAL` | Refund amount exceeds the Invoice total or cumulative refunds exceed total |
 
 ---
@@ -167,3 +174,6 @@
 | `CONFIRMATION_REQUIRED` | Destructive operation requires explicit confirmation flag |
 | `NOT_FOUND` | Generic not found (use specific codes where available) |
 | `RATE_LIMITED` | Request rate limit exceeded |
+| `SIGNATURE_REQUIRED` | Staff member must upload a digital signature before generating Treatment Plans or Prescriptions |
+| `NO_RECOMMENDATIONS` | Cannot generate Treatment Plan — session has no recommendations |
+| `NO_MEDICATION_RECOMMENDATIONS` | Cannot generate Prescription — session has no MEDICATION recommendations |
